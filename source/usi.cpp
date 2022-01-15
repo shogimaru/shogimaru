@@ -4,6 +4,7 @@
 #include "search.h"
 #include "thread.h"
 #include "tt.h"
+#include "command.h"
 #include "testcmd/unit_test.h"
 
 #include <sstream>
@@ -811,8 +812,10 @@ void USI::loop(int argc, char* argv[])
 	{
 		if (cmds.size() == 0)
 		{
-			if (!std::getline(cin, cmd)) // 入力が来るかEOFがくるまでここで待機する。
+			cmd = Command::instance().wait();
+			if (cmd.empty()) {
 				cmd = "quit";
+			}
 		} else {
 			// 積んであるコマンドがあるならそれを実行する。
 			// 尽きれば"quit"だと解釈してdoループを抜ける仕様にすることはできるが、
@@ -918,7 +921,7 @@ void USI::loop(int argc, char* argv[])
 		else if (token == "bench") bench_cmd(pos, is);
 
 		// 現在の局面を表示する。(デバッグ用)
-		else if (token == "d") cout << pos << endl;
+		else if (token == "d") sync_cout << pos << sync_endl;
 
 		// USI Commands from File
 		else if (token == "f") {
@@ -936,7 +939,7 @@ void USI::loop(int argc, char* argv[])
 		}
 
 		// 現在の局面について評価関数を呼び出して、その値を返す。
-		else if (token == "eval") cout << "eval = " << Eval::compute_eval(pos) << endl;
+		else if (token == "eval") sync_cout << "eval = " << Eval::compute_eval(pos) << sync_endl;
 		else if (token == "evalstat") Eval::print_eval_stat(pos);
 
 		// この実行ファイルをコンパイルしたコンパイラの情報を出力する。
@@ -967,19 +970,20 @@ void USI::loop(int argc, char* argv[])
 
 		// この局面での指し手をすべて出力
 		else if (token == "moves") {
+            sync_cout;
 			for (auto m : MoveList<LEGAL_ALL>(pos))
-				cout << m.move << ' ';
-			cout << endl;
+				usi::cmd << m.move << ' ';
+			usi::cmd << sync_endl;
 		}
 
 		// この局面の手番側がどちらであるかを返す。BLACK or WHITE
-		else if (token == "side") cout << (pos.side_to_move() == BLACK ? "black":"white") << endl;
+		else if (token == "side") sync_cout << (pos.side_to_move() == BLACK ? "black":"white") << sync_endl;
 
 		// この局面が詰んでいるかの判定
-		else if (token == "mated") cout << pos.is_mated() << endl;
+		else if (token == "mated") sync_cout << pos.is_mated() << sync_endl;
 
 		// この局面のhash keyの値を出力
-		else if (token == "key") cout << hex << pos.state()->key() << dec << endl;
+		else if (token == "key") sync_cout << hex << pos.state()->key() << dec << sync_endl;
 
 		// 探索の終了を待機するコマンド("stop"は送らずに。goコマンドの終了を待機できて便利。)
 		else if (token == "wait") Threads.main()->wait_for_search_finished();
@@ -989,7 +993,7 @@ void USI::loop(int argc, char* argv[])
 
 #if defined(MATE_1PLY) && defined(LONG_EFFECT_LIBRARY)
 		// この局面での1手詰め判定
-		else if (token == "mate1") cout << pos.mate1ply() << endl;
+		else if (token == "mate1") sync_cout << pos.mate1ply() << sync_endl;
 #endif
 		
 #if defined (ENABLE_TEST_CMD)

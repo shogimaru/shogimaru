@@ -360,7 +360,7 @@ namespace USI {
 			if (it == Options.end())
 			{
 				// 違うのか。何の形式で書こうとしているのだろうか…。
-				std::cout << "Error : option name not found : " << token0 << std::endl;
+				usi::cmd << "Error : option name not found : " << token0 << std::endl;
 				return;
 			}
 
@@ -402,7 +402,7 @@ namespace USI {
 				else if (option_type == "combo" ) Options[name].overwrite(Option(combo_list, value));
 			}
 			else
-				std::cout << "Error : option name not found : " << name << std::endl;
+				usi::cmd << "Error : option name not found : " << name << std::endl;
 		}
 
 	}

@@ -7,6 +7,11 @@
 #include "usi.h"
 #include "misc.h"
 
+int abs(int j)
+{
+    return (j < 0) ? -j : j;
+}
+
 // ファイルの中身を出力する。
 void print_file(const std::string& path)
 {
@@ -23,13 +28,16 @@ void print_file(const std::string& path)
 //  main()
 // ----------------------------------------
 
-int main(int argc, char* argv[])
+//int main(int argc, char* argv[])
+int YaneuraOu()
 {
 	// 起動時に説明書きを出力。
 	print_file("startup_info.txt");
 
 	// --- 全体的な初期化
 
+	int argc = 1;
+	char* argv[] = { (char*)"." };
 	CommandLine::init(argc,argv);
 	USI::init(Options);
 	Bitboards::init();

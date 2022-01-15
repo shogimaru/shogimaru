@@ -717,9 +717,9 @@ SKIP_SEARCH:;
 		// pvにはbestmoveのときの読み筋(PV)が格納されているので、ponderとしてpv[1]があればそれを出力してやる。
 		// また、pv[1]がない場合(rootでfail highを起こしたなど)、置換表からひねり出してみる。
 		if (bestThread->rootMoves[0].pv.size() > 1 || bestThread->rootMoves[0].extract_ponder_from_tt(rootPos, ponder_candidate))
-			std::cout << " ponder " << bestThread->rootMoves[0].pv[1];
+			usi::cmd << " ponder " << bestThread->rootMoves[0].pv[1];
 
-		std::cout << sync_endl;
+		usi::cmd << sync_endl;
 	}
 }
 
@@ -1163,7 +1163,7 @@ void Thread::search()
 
 				double fallingEval = (318 + 6 * (mainThread->bestPreviousScore - bestValue)
 					+ 6 * (mainThread->iterValue[iterIdx] - bestValue)) / 825.0;
-				fallingEval = std::clamp(fallingEval, 0.5, 1.5);
+				fallingEval = Math::clamp(fallingEval, 0.5, 1.5);
 
 				// If the bestMove is stable over several iterations, reduce time accordingly
 				// もしbestMoveが何度かのiterationにおいて安定しているならば、思考時間もそれに応じて減らす

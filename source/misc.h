@@ -13,6 +13,7 @@
 #include <condition_variable>
 
 #include "types.h"
+#include "usibus.h"
 
 // --------------------
 //  engine info
@@ -188,8 +189,10 @@ static TimePoint now() {
 enum SyncCout { IO_LOCK, IO_UNLOCK };
 std::ostream& operator<<(std::ostream&, SyncCout);
 
-#define sync_cout std::cout << IO_LOCK
+//#define sync_cout std::cout << IO_LOCK
 #define sync_endl std::endl << IO_UNLOCK
+#define sync_cout usi::cmd << (IO_LOCK)
+//#define sync_endl usi::endl << (IO_UNLOCK)
 
 // --------------------
 //       乱数

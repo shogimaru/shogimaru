@@ -37,6 +37,11 @@
 #include <emmintrin.h>
 #elif defined(__ARM_NEON)
 #include <arm_neon.h>
+#include <mm_malloc.h> // for _mm_alloc()
+#else
+#if defined (__GNUC__)
+#include <mm_malloc.h> // for _mm_alloc()
+#endif
 #endif
 
 // ----------------------------
@@ -171,6 +176,13 @@ FORCE_INLINE int MSB64(uint64_t v) { ASSERT_LV3(v != 0); return uint32_t(v >> 32
 #endif
 
 #elif defined(__GNUC__) && ( defined(__i386__) || defined(__x86_64__) || defined(__ANDROID__) || defined(__ARM_ARCH) )
+
+FORCE_INLINE int LSB32(const u32 v) { ASSERT_LV3(v != 0); return __builtin_ctzll(v); }
+FORCE_INLINE int LSB64(const u64 v) { ASSERT_LV3(v != 0); return __builtin_ctzll(v); }
+FORCE_INLINE int MSB32(const u32 v) { ASSERT_LV3(v != 0); return 63 ^ __builtin_clzll(v); }
+FORCE_INLINE int MSB64(const u64 v) { ASSERT_LV3(v != 0); return 63 ^ __builtin_clzll(v); }
+
+#else
 
 FORCE_INLINE int LSB32(const u32 v) { ASSERT_LV3(v != 0); return __builtin_ctzll(v); }
 FORCE_INLINE int LSB64(const u64 v) { ASSERT_LV3(v != 0); return __builtin_ctzll(v); }
