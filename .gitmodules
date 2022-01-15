@@ -1,0 +1,3 @@
+[submodule "engines/YaneuraOu"]
+	path = engines/YaneuraOu
+	url = https://github.com/shogimaru/YaneuraOu.git
