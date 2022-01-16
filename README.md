@@ -1,28 +1,53 @@
 将棋丸
 ======
 
-ブラウザで本格将棋が指せることを目指して、 Qt/WebAssembly で将棋 GUI を作っています。
+ブラウザで本格将棋が指せることを目指して、Qt/WebAssemblyで将棋GUIを作っています。
 エンジンにはやねうら王を使用しています。
 
-ビルド環境
+開発環境
 ==========
- - [Emscripten](https://emscripten.org/)
- - [Qt for WebAssembly (multithread)](https://www.qt.io/)  
-   Qt Company がバイナリ提供しているものはシングルスレッド版です（2022年1月現在）。なので、マルチスレッド版はソースからビルドする必要があります。
+ - WebAssembly
+   - [Emscripten](https://emscripten.org/)
+   - [Qt for WebAssembly (multithread)](https://www.qt.io/)
+     Qt Company が提供しているWebAssembly向けバイナリはシングルスレッド版です（2022年1月現在）。マルチスレッド版はソースからビルドする必要があります。
 
+ - デスクトップ版
+   - コンパイラ （gccやclangなど）
+   - [Qt for Desktop](https://www.qt.io/) 
+   - [SDL](https://www.libsdl.org/)
+     Ubuntuならこんな感じでインストールする
+     `$ sudo apt-get install libsdl1.2-dev libsdl-mixer1.2-dev`
+
+ Linuxでしか動作確認していません..
 
 ビルド
 ======
+1. クローン
+ ```
+ $ git clone --recursive https://github.com/shogimaru/shogimaru.git
+ ```
+
+2. 将棋エンジン（やねうら王）をコンパイル
+ Makefileは適宜修正してください。
+ ```
+ $ cd engines/YaneuraOu/source/
+ $ make
+ ```
+
+3. 将棋丸をコンパイル
  - WebAssembly  
- Emscripten(2.0.6)環境を有効にした上で次のコマンドを実行
+ Emscripten(2.0.6)環境を有効にした上で次のコマンドを実行する。
  ```
  $ qmake -spec wasm-emscripten CONFIG+=release && make
  ```
 
  - デスクトップ版 (Qt6/Qt5)  
- 開発するときはこちらが便利
+ 開発するときはこちらが便利です。
  ```
- $ qmake -spec linux-clang CONFIG+=release
+ $ qmake CONFIG+=release && make
+ 
+ (clang の場合)
+ $ qmake -spec linux-clang CONFIG+=release && make
  ```
 
 レーティング戦
