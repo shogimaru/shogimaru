@@ -92,7 +92,7 @@ MainController::MainController(QWidget *parent) :
     _graph->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
     setWindowTitle("Shogimaru");
-    _ui->label->setText(QString::fromUtf8(u8"<b>将棋丸<\b> <span style='font-size: 18px; color: #555;'>Beta</span>"));
+    _ui->label->setText(QString::fromUtf8(u8"<b>将棋丸<\b>"));
 
     // Toolbar
     createToolBar();
@@ -226,8 +226,8 @@ void MainController::createInfoBox()
     _infoBox->setStyleSheet("QLabel{min-width: 360px;}");
 
     QString text = QString("<h3>") + tr("Shogimaru") + "</h3><br><table><tbody>";
-    text += QString("<tr><td>") + tr("Version") + "</td><td>Beta</td>";
-    text += QString("<tr><td>") + tr("YaneuraOu") + "</td><td>" + "7.0" + "</td>";
+    text += QString("<tr><td>") + tr("Version") + "</td><td>1.0</td>";
+    text += QString("<tr><td>") + tr("YaneuraOu") + "</td><td>" + "7.00" + "</td>";
     text += QString("<tr><td>Qt</td><td>") + QT_VERSION_STR + "</td>";
     text += QString("<tr><td>") + tr("Platform") + "</td><td>" + QSysInfo::prettyProductName() + "</td>";
     text += QString("</tbody></table>");

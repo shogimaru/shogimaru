@@ -5,30 +5,18 @@ CONFIG  += c++17
 CODECFORTR = UTF-8
 MOC_DIR  = .obj/
 OBJECTS_DIR = .obj/
+DEFINES += QT_DEPRECATED_WARNINGS
 
 wasm {
   CONFIG +=
-#  QT.global.enabled_features += thread
-  LIBS = engines/YaneuraOu/YaneuraOu.wasm
-  QMAKE_CXXFLAGS +=
-  QMAKE_LFLAGS += --preload-file assets/
-  QMAKE_LFLAGS += -lidbfs.js
-  QMAKE_LFLAGS += -s ASYNCIFY=1
-  QMAKE_WASM_PTHREAD_POOL_SIZE=16
-  QMAKE_WASM_TOTAL_MEMORY=900MB
-#  QMAKE_LFLAGS += -s TOTAL_MEMORY=1GB
-  # これはいずれ消したい
-#  QMAKE_LFLAGS += -Wl,--shared-memory,--no-check-features
-#  QMAKE_LFLAGS += -Wl,--no-check-features
+  LIBS = ../engines/YaneuraOu/source/YaneuraOu/YaneuraOu.wasm
   SOURCES += file_wasm.cpp
-  DESTDIR = ../html/
+  DESTDIR  = ../html/
 } else {
-  LIBS     = ../engines/YaneuraOu/YaneuraOu.a -lSDL -lSDL_mixer
+  LIBS = ../engines/YaneuraOu/source/YaneuraOu.a -lSDL -lSDL_mixer
   SOURCES += file.cpp
-  DESTDIR = ../
+  DESTDIR  = ../
 }
-
-DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \

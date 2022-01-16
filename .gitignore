@@ -1,2 +1,9 @@
+*~
+*.bak
+.qmake.stash
+.vscode
 **/.obj
+moc_*.cpp
 src/ui_*.h
+Makefile
+core
