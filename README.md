@@ -16,7 +16,9 @@
    - [Qt for Desktop](https://www.qt.io/) 
    - [SDL](https://www.libsdl.org/)  
      Ubuntuならこんな感じでインストールする
-     `$ sudo apt-get install libsdl1.2-dev libsdl-mixer1.2-dev`
+     ```
+     $ sudo apt-get install libsdl1.2-dev libsdl-mixer1.2-dev
+     ```
 
  Linuxでしか動作確認していません..
 
