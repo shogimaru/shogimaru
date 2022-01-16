@@ -20,8 +20,8 @@
 # YANEURAOU_MATE_ENGINE          : やねうら王 詰将棋solver (2020/12/29～)
 # USER_ENGINE                    : USER定義エンジン
 
-YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
-#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
+#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
+YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKPE9
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_KPPT
@@ -91,7 +91,8 @@ CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fperm
 WCPPFLAGS  =
 LDFLAGS  = $(EXTRA_LDFLAGS)
 LIBS     =
-INCLUDE  = # -I../include
+INCLUDE  = -I../../../src
+AR       = ar cqs
 
 # makeするときにCPPFLAGSを追加で指定したいときはこれを用いる。
 EXTRA_CPPFLAGS =
@@ -167,7 +168,7 @@ ifeq ($(OS),Windows_NT)
 	TARGET = $(TARGETDIR)/YaneuraOu-by-gcc.exe
 else
 	CPPFLAGS += -D_LINUX
-	TARGET = $(TARGETDIR)/YaneuraOu-by-gcc
+	TARGET = $(TARGETDIR)/YaneuraOu.a
 endif
 
 # リンク時最適化。
@@ -183,7 +184,7 @@ ifneq (,$(findstring clang++,$(COMPILER)))
 endif
 
 # wstringを使うためにこのシンボル定義が必要。
-CPPFLAGS  += -DUNICODE
+#CPPFLAGS  += -DUNICODE
 
 # stripの指示。(実行ファイルのサイズを小さく)
 LDFLAGS += -Wl,-s
@@ -530,7 +531,7 @@ all: clean $(TARGET)
 .PHONY : all normal evallearn tournament prof profgen profuse pgo clean
 
 $(TARGET): $(OBJECTS) $(LIBS)
-	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CPPFLAGS)
+	$(AR) $@ $^
 
 $(OBJDIR)/%.o: %.cpp
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
