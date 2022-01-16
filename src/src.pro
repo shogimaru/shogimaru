@@ -9,7 +9,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 wasm {
   CONFIG +=
-  LIBS = ../engines/YaneuraOu/source/YaneuraOu/YaneuraOu.wasm
+  LIBS = ../engines/YaneuraOu/source/YaneuraOu.wasm
   SOURCES += file_wasm.cpp
   DESTDIR  = ../html/
 } else {
