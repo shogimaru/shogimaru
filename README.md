@@ -8,13 +8,13 @@
 ==========
  - WebAssembly
    - [Emscripten](https://emscripten.org/)
-   - [Qt for WebAssembly (multithread)](https://www.qt.io/)
+   - [Qt for WebAssembly (multithread)](https://www.qt.io/)  
      Qt Company が提供しているWebAssembly向けバイナリはシングルスレッド版です（2022年1月現在）。マルチスレッド版はソースからビルドする必要があります。
 
  - デスクトップ版
    - コンパイラ （gccやclangなど）
    - [Qt for Desktop](https://www.qt.io/) 
-   - [SDL](https://www.libsdl.org/)
+   - [SDL](https://www.libsdl.org/)  
      Ubuntuならこんな感じでインストールする
      `$ sudo apt-get install libsdl1.2-dev libsdl-mixer1.2-dev`
 
@@ -27,7 +27,7 @@
  $ git clone --recursive https://github.com/shogimaru/shogimaru.git
  ```
 
-2. 将棋エンジン（やねうら王）をコンパイル
+2. 将棋エンジン（やねうら王）をコンパイル  
  Makefileは適宜修正してください。
  ```
  $ cd engines/YaneuraOu/source/
