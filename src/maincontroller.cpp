@@ -671,7 +671,7 @@ void MainController::showGameoverBox(const QString &msg) const
     QString str = msg;
     str += "\n\n";
     str += tr("Thank you");
-    MessageBox::information(tr("Game Over"), str);
+    MessageBox::information(tr("Game over"), str);
 }
 
 
