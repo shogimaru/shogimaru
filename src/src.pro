@@ -11,10 +11,18 @@ wasm {
   CONFIG +=
   LIBS = ../engines/YaneuraOu/source/YaneuraOu.wasm
   SOURCES += file_wasm.cpp
+  SOURCES += engine_wasm.cpp
+  SOURCES += command_wasm.cpp
+  HEADERS += enginethread.h
+  SOURCES += enginethread.cpp
   DESTDIR  = ../html/
 } else {
-  LIBS = ../engines/YaneuraOu/source/YaneuraOu.a -lSDL -lSDL_mixer
+  LIBS = -lSDL -lSDL_mixer
   SOURCES += file.cpp
+  SOURCES += engine_native.cpp
+  SOURCES += command_native.cpp
+  HEADERS += engineprocess.h
+  SOURCES += engineprocess.cpp
   DESTDIR  = ../
 }
 
@@ -24,7 +32,6 @@ SOURCES += \
         command.cpp \
         usibus.cpp \
         engine.cpp \
-        enginethread.cpp \
         piece.cpp \
         board.cpp \
         chessclock.cpp \
@@ -52,7 +59,6 @@ HEADERS += \
         command.h \
         usibus.h \
         engine.h \
-        enginethread.h \
         piece.h \
         board.h \
         chessclock.h \

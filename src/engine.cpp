@@ -7,24 +7,6 @@
 #include <cmath>
 
 
-Engine::Engine(QObject *parent) :
-    QObject(parent),
-    _timer(new QTimer(this)),
-    _engineThread(new EngineThread(this))
-{
-    connect(_timer, &QTimer::timeout, this, &Engine::getResponse);
-    connect(_engineThread, &QThread::finished, _engineThread, &QObject::deleteLater);
-    init();
-}
-
-
-Engine::~Engine()
-{
-    _engineThread->terminate();
-    _engineThread->wait();
-}
-
-
 Engine &Engine::Engine::instance()
 {
     static auto engine = new Engine;
@@ -34,10 +16,8 @@ Engine &Engine::Engine::instance()
 
 void Engine::init()
 {
-    _engineThread->start();
-    while (!_engineThread->isRunning()) {
-        QThread::msleep(10);
-    }
+    // Starts engine
+    start();
 
     static std::once_flag once;
     std::call_once(once, []() {

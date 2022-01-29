@@ -5,6 +5,7 @@
 #include <QTimer>
 
 class EngineThread;
+class EngineProcess;
 
 
 class Engine : public QObject
@@ -44,6 +45,7 @@ protected slots:
     void getResponse();
 
 private:
+    void start();
     bool go(const QByteArrayList &position, bool ponderFlag, int senteTime, int goteTime, int byoyomi);
     void setTurn();
 
@@ -65,5 +67,7 @@ private:
     maru::Turn _turn {maru::Sente};
     QByteArrayList _ponderingMoves;
     QByteArray _lastPondered;
+#ifdef __EMSCRIPTEN__
     EngineThread *_engineThread {nullptr};
+#endif
 };
