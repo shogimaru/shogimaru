@@ -361,6 +361,11 @@ QPair<QString, int> Sfen::move(const QByteArray &usi, int prevCoord, bool compac
     maru::Turn turn = _turn;
     auto piece = move(usi);
 
+#if 1
+    QString kif = ShogiRecord::kifString(turn, usi, piece, prevCoord, compact);
+    int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
+    return qMakePair(kif, crd);
+#else
     // 駒名称
     QString kif = ShogiRecord::kanjiName(piece);
     if (kif.isEmpty()) {
@@ -392,6 +397,7 @@ QPair<QString, int> Sfen::move(const QByteArray &usi, int prevCoord, bool compac
         kif.prepend(QString::fromUtf8("△"));
     }
     return qMakePair(kif, crd);
+#endif
 }
 
 

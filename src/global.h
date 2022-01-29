@@ -30,13 +30,13 @@ enum GameResult: int {
 
 // 結果詳細
 enum ResultDetail : int {
-    Suspend = 0x10,  // 中断
+    Abort = 0x10,    // 中断
     Win_Declare,     // 入玉勝ち宣言
     Loss_Resign,     // 投了
-    Foul_Timeout,    // 時間切れ
+    Foul_OutOfTime,  // 時間切れ
     Foul_TwoPawns,   // 二歩
-    Foul_CheckmateByDropPawn, // 打ち歩詰め
-    Foul_MissedCheck,         // 王手放置
+    Foul_DropPawnMate, // 打ち歩詰め
+    Foul_OverlookedCheck,  // 王手放置
     Foul_PerpetualCheck,  // 連続王手の千日手
     Draw_Repetition,  // 千日手
     Draw_Impasse,     // 持将棋（双方入玉）

@@ -13,4 +13,6 @@ public:
     //static QStringList usiToKif(QMap<int, QString> &startPosition, maru::Turn startTurn, const QStringList &moves, bool compact = true);
     static QString kanji(int pos);  // マス位置漢字表示
     static QString kanjiName(const QString &piece);  // 駒名称
+    static QString kifString(maru::Turn turn, const QByteArray &usi, int prevCoord, bool compact);
+    static QString kifString(maru::Turn turn, const QByteArray &usi, const QByteArray &piece, int prevCoord, bool compact);
 };

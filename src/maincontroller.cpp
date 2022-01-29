@@ -92,7 +92,7 @@ MainController::MainController(QWidget *parent) :
     _graph->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
     setWindowTitle("Shogimaru");
-    _ui->label->setText(QString::fromUtf8(u8"<b>将棋丸<\b>"));
+    _ui->label->setText("<b>" + tr("Shogimaru") + "<\b>");
 
     // Toolbar
     createToolBar();
@@ -481,13 +481,13 @@ public:
         insert(maru::Foul, QLatin1String("foul"));
         insert(maru::Draw, QLatin1String("draw"));
         // Details
-        insert(maru::Suspend, QLatin1String("suspend"));
+        insert(maru::Abort, QLatin1String("abort"));
         insert(maru::Win_Declare, QLatin1String("declare"));
         insert(maru::Loss_Resign, QLatin1String("resign"));
-        insert(maru::Foul_Timeout, QLatin1String("timeout"));
+        insert(maru::Foul_OutOfTime, QLatin1String("out_of_time"));
         insert(maru::Foul_TwoPawns, QLatin1String("two_pawns"));
-        insert(maru::Foul_CheckmateByDropPawn, QLatin1String("checkmate_by_drop_pawn"));
-        insert(maru::Foul_MissedCheck, QLatin1String("missed_check"));
+        insert(maru::Foul_DropPawnMate, QLatin1String("drop_pawn_mate"));
+        insert(maru::Foul_OverlookedCheck, QLatin1String("overlooked_check"));
         insert(maru::Foul_PerpetualCheck, QLatin1String("perpetual_check"));
         insert(maru::Draw_Repetition, QLatin1String("repetition"));
         insert(maru::Draw_Impasse, QLatin1String("impasse"));
@@ -500,22 +500,39 @@ public:
     ResultString() :
         QMap<int, QString>()
     {
+        // // Results
+        // insert(maru::Win,  QString::fromUtf8(u8"勝ち"));
+        // insert(maru::Loss, QString::fromUtf8(u8"負け"));
+        // insert(maru::Foul, QString::fromUtf8(u8"反則"));
+        // insert(maru::Draw, QString::fromUtf8(u8""));
+        // // Details
+        // insert(maru::Abort, QString::fromUtf8(u8"中断"));
+        // insert(maru::Win_Declare, QString::fromUtf8(u8"入玉宣言"));
+        // insert(maru::Loss_Resign, QString::fromUtf8(u8""));
+        // insert(maru::Foul_OutOfTime, QString::fromUtf8(u8"反則（時間切れ）"));
+        // insert(maru::Foul_TwoPawns, QString::fromUtf8(u8"反則（二歩）"));
+        // insert(maru::Foul_DropPawnMate, QString::fromUtf8(u8"反則（打ち歩詰め）"));
+        // insert(maru::Foul_OverlookedCheck, QString::fromUtf8(u8"反則（王手放置）"));
+        // insert(maru::Foul_PerpetualCheck, QString::fromUtf8(u8"反則（連続王手）"));
+        // insert(maru::Draw_Repetition, QString::fromUtf8(u8"千日手"));
+        // insert(maru::Draw_Impasse, QString::fromUtf8(u8"持将棋"));
+
         // Results
-        insert(maru::Win,  QString::fromUtf8(u8"勝ち"));
-        insert(maru::Loss, QString::fromUtf8(u8"負け"));
-        insert(maru::Foul, QString::fromUtf8(u8"反則"));
-        insert(maru::Draw, QString::fromUtf8(u8""));
+        insert(maru::Win,  QObject::tr("win"));  // 勝ち
+        insert(maru::Loss, QObject::tr("lose"));  // 負け
+        insert(maru::Foul, QObject::tr("foul"));  // 反則
+        insert(maru::Draw, QObject::tr("draw"));  // 引き分け
         // Details
-        insert(maru::Suspend, QString::fromUtf8(u8"中断"));
-        insert(maru::Win_Declare, QString::fromUtf8(u8"入玉宣言"));
-        insert(maru::Loss_Resign, QString::fromUtf8(u8""));
-        insert(maru::Foul_Timeout, QString::fromUtf8(u8"反則（時間切れ）"));
-        insert(maru::Foul_TwoPawns, QString::fromUtf8(u8"反則（二歩）"));
-        insert(maru::Foul_CheckmateByDropPawn, QString::fromUtf8(u8"反則（打ち歩詰め）"));
-        insert(maru::Foul_MissedCheck, QString::fromUtf8(u8"反則（王手放置）"));
-        insert(maru::Foul_PerpetualCheck, QString::fromUtf8(u8"反則（連続王手）"));
-        insert(maru::Draw_Repetition, QString::fromUtf8(u8"千日手"));
-        insert(maru::Draw_Impasse, QString::fromUtf8(u8"持将棋"));
+        insert(maru::Abort, QObject::tr("Abort"));  // 中断
+        insert(maru::Win_Declare, QObject::tr("Declare"));  // 入玉宣言
+        insert(maru::Loss_Resign, QObject::tr(""));  // 投了
+        insert(maru::Foul_OutOfTime, QObject::tr("Foul - out of time"));  // 反則（時間切れ）
+        insert(maru::Foul_TwoPawns, QObject::tr("Foul - two pawns"));  // 反則（二歩）
+        insert(maru::Foul_DropPawnMate, QObject::tr("Foul - drop pawn mate"));  // 反則（打ち歩詰め）
+        insert(maru::Foul_OverlookedCheck, QObject::tr("Foul - overlooked check"));  // 反則（王手放置）
+        insert(maru::Foul_PerpetualCheck, QObject::tr("Foul - perpetual check"));  // 反則（連続王手）
+        insert(maru::Draw_Repetition, QObject::tr("Repetition"));  // 千日手
+        insert(maru::Draw_Impasse, QObject::tr("Impasse"));  // 持将棋
     }
 };
 Q_GLOBAL_STATIC(ResultString, resultString)
@@ -640,12 +657,14 @@ void MainController::showResult(maru::Turn turn, maru::GameResult result, maru::
     }
 
     if (result == maru::Draw) {
+        // 引き分け
         msg = resultString()->value(detail);
     } else {
+        // 勝負あり
         QString winner = ((turn == maru::Sente && result == maru::Win)
-            || (turn == maru::Gote && (result == maru::Loss || result == maru::Foul))) ? QString::fromUtf8("先手") : QString::fromUtf8("後手");
+            || (turn == maru::Gote && (result == maru::Loss || result == maru::Foul))) ? tr("Sente") : tr("Gote");
 
-        msg = QString::fromUtf8(u8"%1 %2勝ち").arg(winner).arg(resultString()->value(detail));
+        msg = tr("%1 win. %2").arg(winner).arg(resultString()->value(detail));
     }
 
     auto *item = new QListWidgetItem(msg, _ui->recordWidget);
@@ -712,7 +731,7 @@ bool MainController::isFoulMove()
                 if (p->name() == Piece::Pawn && p->owner() == lastp.first->owner()) {
                     if (++count > 1) {
                         stopGame(currentTurn, maru::Foul, maru::Foul_TwoPawns);
-                        showGameoverBox(QString::fromUtf8(u8"二歩は禁じ手です。"));
+                        showGameoverBox(tr("Foul - Two Pawns."));  // 二歩は禁じ手です。
                         return true;
                     }
                 }
@@ -724,8 +743,8 @@ bool MainController::isFoulMove()
                 QByteArray sfen = _recorder->sfen(_recorder->count() - 1);
                 bool mated = Engine::instance().mated(sfen); // その局面が詰んでいるか
                 if (mated) {
-                    stopGame(currentTurn, maru::Foul, maru::Foul_CheckmateByDropPawn);
-                    showGameoverBox(QString::fromUtf8(u8"打ち歩詰めは禁じ手です。"));
+                    stopGame(currentTurn, maru::Foul, maru::Foul_DropPawnMate);
+                    showGameoverBox(tr("Foul - Drop Pawn Mate.")); // 打ち歩詰めは禁じ手です。
                     return true;
                 }
             }
@@ -734,8 +753,8 @@ bool MainController::isFoulMove()
         // 王手放置チェック
         auto opponent = (currentTurn == maru::Sente) ? maru::Gote : maru::Sente;
         if (!_board->searchMovablePeace(opponent, _board->kingCoord(currentTurn)).isEmpty()) {
-            stopGame(currentTurn, maru::Foul, maru::Foul_MissedCheck);
-            showGameoverBox(QString::fromUtf8(u8"王手放置は禁じ手です。"));
+            stopGame(currentTurn, maru::Foul, maru::Foul_OverlookedCheck);
+            showGameoverBox(tr("Foul - Overlooked Check.")); // 王手放置は禁じ手です。
             return true;
         }
 
@@ -744,12 +763,12 @@ bool MainController::isFoulMove()
             if (_recorder->isPerpetualCheck()) {  // 連続王手の千日手か
                 // 連続王手
                 stopGame(currentTurn, maru::Foul, maru::Foul_PerpetualCheck);
-                showGameoverBox(QString::fromUtf8(u8"連続王手の千日手は禁じ手です。"));
+                showGameoverBox(tr("Foul - Perpetual Check.")); // 連続王手の千日手は禁じ手です。
                 return true;
             } else {
                 // 千日手
                 stopGame(currentTurn, maru::Draw, maru::Draw_Repetition);
-                showGameoverBox(QString::fromUtf8(u8"千日手です。"));
+                showGameoverBox(tr("Repetition.")); // 千日手です。
                 return true;
             }
         }
@@ -793,7 +812,7 @@ void MainController::setTurn(maru::Turn turn)
                 if (mated) {
                     // 詰み
                     stopGame(turn, maru::Loss, maru::Loss_Resign);
-                    showGameoverBox(QString::fromUtf8(u8"詰みました。"));
+                    showGameoverBox(tr("Checkmate."));  // 詰みました。
                     return;
                 }
             }
@@ -1070,9 +1089,9 @@ void MainController::updateBoard()
 void MainController::resign()
 {
     if (_players[_clock->currentTurn()].type() == maru::Human) {
-        MessageBox::question(QString::fromUtf8(u8"投了"), QString::fromUtf8(u8"投了しますか"), this, SLOT(slotResign(QAbstractButton*)));
+        MessageBox::question(tr("Resign"), tr("Resign?"), this, SLOT(slotResign(QAbstractButton*)));  // 投了しますか
     } else {
-        MessageBox::question(QString::fromUtf8(u8"中断"), QString::fromUtf8(u8"中断しますか"), this, SLOT(slotResign(QAbstractButton*)));
+        MessageBox::question(tr("Abort"), tr("Abort?"), this, SLOT(slotResign(QAbstractButton*)));  // 中断しますか
     }
 }
 
@@ -1085,9 +1104,9 @@ void MainController::slotResign(QAbstractButton *button)
     auto *box = dynamic_cast<QMessageBox*>(sender());
     if (box && box->buttonRole(button) == QMessageBox::AcceptRole) {
         auto result = (_players[_clock->currentTurn()].type() == maru::Human) ? maru::Loss : maru::None;
-        auto detail = (_players[_clock->currentTurn()].type() == maru::Human) ? maru::Loss_Resign : maru::Suspend;
+        auto detail = (_players[_clock->currentTurn()].type() == maru::Human) ? maru::Loss_Resign : maru::Abort;
         stopGame(_clock->currentTurn(), result, detail);
-        showGameoverBox(QString::fromUtf8(u8"あなたは投了しました。"));
+        showGameoverBox(tr("You resigned."));  // あなたは投了しました。
     }
 }
 
@@ -1207,7 +1226,7 @@ void MainController::showRemainingTime(maru::Turn turn, int time, int byoyomi)
 {
     int t = (time > 0) ? time : byoyomi;
     QString str = QTime(0, 0, 0, 999).addMSecs(t).toString("h:mm:ss");
-    str += (time == 0 && byoyomi > 0) ? QString::fromUtf8(u8"  秒読み") : "";
+    str += (time == 0 && byoyomi > 0) ? tr(" byoyomi") : "";  // 秒読み
 
     if (turn == maru::Sente) {
         _ui->senteTimeLabel->setText(str);
@@ -1227,8 +1246,8 @@ void MainController::updateRemainingTime()
 void MainController::gameoverTimeout()
 {
     if (_mode == Rating) {
-        stopGame(_clock->currentTurn(), maru::Foul, maru::Foul_Timeout);
-        showGameoverBox(QString::fromUtf8(u8"時間切れです。"));
+        stopGame(_clock->currentTurn(), maru::Foul, maru::Foul_OutOfTime);
+        showGameoverBox(tr("Out of time."));  // 時間切れです。
     }
 }
 

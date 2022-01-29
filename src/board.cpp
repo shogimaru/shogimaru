@@ -547,7 +547,7 @@ void Board::move(Piece *from, Piece *to, bool promote, bool update)
 
     // 最終手
     _lastMove.first = from;
-    _lastMove.second = crdstr + QString::number(fromcrd);
+    _lastMove.second = crdstr + QString::number(fromcrd);  // 元のマス位置
 
     if (update) {
         updatePos();

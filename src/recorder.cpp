@@ -142,6 +142,26 @@ void Recorder::recordPonderingScore(int index, int multipv, const ScoreItem &ite
 
 QString Recorder::kifString(maru::Turn turn, const QPair<Piece*, QString> &move, int prevCoord) const
 {
+#if 1
+    QByteArray usi;
+    QByteArray piece = move.first->sfen();
+    int fromcrd = move.second.toInt();
+    int tocoord = move.first->data(maru::Coord).toInt();
+    if (fromcrd < 11 || fromcrd > 99) {
+        // 打つ
+        usi += piece.toUpper();
+        usi += '*';
+        usi += ShogiRecord::coordToUsi(tocoord);
+    } else {
+        usi += ShogiRecord::coordToUsi(fromcrd);
+        usi += ShogiRecord::coordToUsi(tocoord);
+        if (move.second.contains('+')) {
+            usi += '+';
+        }
+    }
+    qDebug() << "==" << usi << piece;
+    return ShogiRecord::kifString(turn, usi, piece, prevCoord, false);
+#else
     QString kif;
 
     auto *piece = move.first;
@@ -175,6 +195,7 @@ QString Recorder::kifString(maru::Turn turn, const QPair<Piece*, QString> &move,
         kif += QString::fromUtf8(u8"打");
     }
     return kif;
+#endif
 }
 
 

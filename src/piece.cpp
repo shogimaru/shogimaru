@@ -3,8 +3,9 @@
 #include <QRectF>
 #include <QVector>
 #include <QGraphicsSceneMouseEvent>
-#include <QDebug>
 #include <QGraphicsScene>
+#include <QCoreApplication>
+#include <QDebug>
 
 static volatile bool showRotated = false;
 
@@ -264,22 +265,22 @@ public:
     KanjiMap() :
         QMap<Piece::Name, QString>()
     {
-        insert(Piece::KingOu, QString::fromUtf8("王"));
-        insert(Piece::KingGyoku, QString::fromUtf8("玉"));
-        insert(Piece::Rook, QString::fromUtf8("飛"));
-        insert(Piece::Bishop, QString::fromUtf8("角"));
-        insert(Piece::Gold, QString::fromUtf8("金"));
-        insert(Piece::Silver, QString::fromUtf8("銀"));
-        insert(Piece::Knight, QString::fromUtf8("桂"));
-        insert(Piece::Lance, QString::fromUtf8("香"));
-        insert(Piece::Pawn, QString::fromUtf8("歩"));
-        insert(Piece::PromotedRook, QString::fromUtf8("龍"));
-        insert(Piece::PromotedBishop, QString::fromUtf8("馬"));
-        insert(Piece::PromotedSilver, QString::fromUtf8("成銀"));
-        insert(Piece::PromotedKnight, QString::fromUtf8("成桂"));
-        insert(Piece::PromotedLance, QString::fromUtf8("成香"));
-        insert(Piece::PromotedPawn, QString::fromUtf8("と"));
-    }
+        insert(Piece::KingOu, QCoreApplication::translate("KanjiMap", "K", "Ou"));  // 王
+        insert(Piece::KingGyoku, QCoreApplication::translate("KanjiMap", "K", "Gyoku"));  // 玉
+        insert(Piece::Rook, QCoreApplication::translate("KanjiMap", "R"));  // 飛
+        insert(Piece::Bishop, QCoreApplication::translate("KanjiMap", "B"));  // 角
+        insert(Piece::Gold, QCoreApplication::translate("KanjiMap", "G"));  // 金
+        insert(Piece::Silver, QCoreApplication::translate("KanjiMap", "S"));  // 銀
+        insert(Piece::Knight, QCoreApplication::translate("KanjiMap", "N"));  // 桂
+        insert(Piece::Lance, QCoreApplication::translate("KanjiMap", "L"));  // 香
+        insert(Piece::Pawn, QCoreApplication::translate("KanjiMap", "P"));  // 歩
+        insert(Piece::PromotedRook, QCoreApplication::translate("KanjiMap", "+R"));  // 龍
+        insert(Piece::PromotedBishop, QCoreApplication::translate("KanjiMap", "+B"));  // 馬
+        insert(Piece::PromotedSilver, QCoreApplication::translate("KanjiMap", "+S"));  // 成銀
+        insert(Piece::PromotedKnight, QCoreApplication::translate("KanjiMap", "+N"));  // 成桂
+        insert(Piece::PromotedLance, QCoreApplication::translate("KanjiMap", "+L"));  // 成香
+        insert(Piece::PromotedPawn, QCoreApplication::translate("KanjiMap", "+P"));  // と
+     }
 };
 Q_GLOBAL_STATIC(KanjiMap, kanjiMap)
 

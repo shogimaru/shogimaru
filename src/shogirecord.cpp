@@ -1,5 +1,7 @@
 #include "shogirecord.h"
 #include <QMap>
+#include <QCoreApplication>
+#include <QLocale>
 
 
 int ShogiRecord::usiToCoord(const QByteArray &str)
@@ -36,14 +38,14 @@ QByteArray ShogiRecord::coordToUsi(int coord)
 
 QString ShogiRecord::kanji(int coord)
 {
-    static QString ColKanji = QString::fromUtf8("０１２３４５６７８９");
-    static QString RowKanji = QString::fromUtf8("〇一二三四五六七八九");
+    static QString ColChars = QCoreApplication::translate("ShogiRecord", "0123456789", "ColChars");  // ０１２３４５６７８９
+    static QString RowChars = QCoreApplication::translate("ShogiRecord", "0123456789", "RowChars");  // 〇一二三四五六七八九
 
     QString res;
     int col = qMin(coord / 10, 9);
     int row = coord % 10;
-    res += ColKanji.mid(col, 1);
-    res += RowKanji.mid(row, 1);
+    res += ColChars.mid(col, 1);
+    res += RowChars.mid(row, 1);
     return res;
 }
 
@@ -53,20 +55,20 @@ public:
     KanjiNameMap() :
         QMap<QString, QString>()
     {
-        insert(QLatin1String("k"),  QString::fromUtf8(u8"玉"));
-        insert(QLatin1String("r"),  QString::fromUtf8(u8"飛"));
-        insert(QLatin1String("b"),  QString::fromUtf8(u8"角"));
-        insert(QLatin1String("g"),  QString::fromUtf8(u8"金"));
-        insert(QLatin1String("s"),  QString::fromUtf8(u8"銀"));
-        insert(QLatin1String("n"),  QString::fromUtf8(u8"桂"));
-        insert(QLatin1String("l"),  QString::fromUtf8(u8"香"));
-        insert(QLatin1String("p"),  QString::fromUtf8(u8"歩"));
-        insert(QLatin1String("+r"), QString::fromUtf8(u8"龍"));
-        insert(QLatin1String("+b"), QString::fromUtf8(u8"馬"));
-        insert(QLatin1String("+s"), QString::fromUtf8(u8"成銀"));
-        insert(QLatin1String("+n"), QString::fromUtf8(u8"成桂"));
-        insert(QLatin1String("+l"), QString::fromUtf8(u8"成香"));
-        insert(QLatin1String("+p"), QString::fromUtf8(u8"と"));
+        insert(QLatin1String("K"),  QCoreApplication::translate("KanjiNameMap", "K"));  // 王
+        insert(QLatin1String("R"),  QCoreApplication::translate("KanjiNameMap", "R"));  // 飛
+        insert(QLatin1String("B"),  QCoreApplication::translate("KanjiNameMap", "B"));  // 角
+        insert(QLatin1String("G"),  QCoreApplication::translate("KanjiNameMap", "G"));  // 金
+        insert(QLatin1String("S"),  QCoreApplication::translate("KanjiNameMap", "S"));  // 銀
+        insert(QLatin1String("N"),  QCoreApplication::translate("KanjiNameMap", "N"));  // 桂
+        insert(QLatin1String("L"),  QCoreApplication::translate("KanjiNameMap", "L"));  // 香
+        insert(QLatin1String("P"),  QCoreApplication::translate("KanjiNameMap", "P"));  // 歩
+        insert(QLatin1String("+R"), QCoreApplication::translate("KanjiNameMap", "+R"));  // 龍
+        insert(QLatin1String("+B"), QCoreApplication::translate("KanjiNameMap", "+B"));  // 馬
+        insert(QLatin1String("+S"), QCoreApplication::translate("KanjiNameMap", "+S"));  // 成銀
+        insert(QLatin1String("+N"), QCoreApplication::translate("KanjiNameMap", "+N"));  // 成桂
+        insert(QLatin1String("+L"), QCoreApplication::translate("KanjiNameMap", "+L"));  // 成香
+        insert(QLatin1String("+P"), QCoreApplication::translate("KanjiNameMap", "+P"));  // と
     }
 };
 Q_GLOBAL_STATIC(KanjiNameMap, kanjiNameMap)
@@ -74,5 +76,45 @@ Q_GLOBAL_STATIC(KanjiNameMap, kanjiNameMap)
 
 QString ShogiRecord::kanjiName(const QString &piece)
 {
-    return kanjiNameMap()->value(piece.toLower());
+    return kanjiNameMap()->value(piece.toUpper());
+}
+
+//
+// 棋譜文字列
+//
+QString ShogiRecord::kifString(maru::Turn turn, const QByteArray &usi, const QByteArray &piece, int prevCoord, bool compact)
+{
+    static const bool langJa = QLocale::system().name().toLower().startsWith("ja");
+
+    QString kifFormat = QObject::tr("%1%2%3%4%5");
+    // 先手／後手
+    QString bw = (turn == maru::Sente) ? QString::fromUtf8(u8"▲") : QString::fromUtf8(u8"△");
+
+    // マス
+    QString coord;
+    int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
+    if (crd == prevCoord && langJa) {
+        coord = (compact) ? QString::fromUtf8(u8"同") : QString::fromUtf8(u8"同  ");
+    } else {
+        coord = ShogiRecord::kanji(crd);
+    }
+
+    QString pc;  // 駒名称
+    QString prm;  // 成
+    if (usi.length() == 5 && usi[4] == QLatin1Char('+')) {
+        // 成り
+        pc = ShogiRecord::kanjiName(piece.mid(1, 1));  // 元の駒
+        prm = QObject::tr("+");
+    } else {
+        pc = kanjiName(piece);
+    }
+
+    // 打つ
+    QString drp;
+    if (std::isalpha(usi[0])) {
+        drp = QObject::tr("*");
+    }
+
+    QString kif = QObject::tr("%1%2%3%4%5", "char order").arg(bw, pc, drp, coord, prm);  // 英語の場合
+    return kif;
 }

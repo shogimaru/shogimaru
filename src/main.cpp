@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
     File::mountDevice();
 
     QTranslator translator;
-    qDebug() << std::locale().name().c_str();
     qDebug() << QLocale::system().name();
     QString ts = QString("message_") + QLocale::system().name();
     if (translator.load(ts, "assets/translations/")) {
