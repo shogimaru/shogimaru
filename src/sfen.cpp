@@ -361,43 +361,9 @@ QPair<QString, int> Sfen::move(const QByteArray &usi, int prevCoord, bool compac
     maru::Turn turn = _turn;
     auto piece = move(usi);
 
-#if 1
     QString kif = ShogiRecord::kifString(turn, usi, piece, prevCoord, compact);
     int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
     return qMakePair(kif, crd);
-#else
-    // 駒名称
-    QString kif = ShogiRecord::kanjiName(piece);
-    if (kif.isEmpty()) {
-        return qMakePair(QString(), 0);
-    }
-
-    if (usi.length() == 5 && usi[4] == QLatin1Char('+')) {
-        kif = ShogiRecord::kanjiName(piece.mid(1, 1));  // 元の駒
-        kif += QString::fromUtf8("成");
-        piece.prepend('+');  // 成駒
-    } else if (std::isalpha(usi[0])) {
-        kif += QString::fromUtf8("打");
-    }
-
-    int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
-    if (crd == prevCoord) {
-        if (compact) {
-            kif.prepend(QString::fromUtf8("同"));
-        } else {
-            kif.prepend(QString::fromUtf8("同　"));
-        }
-    } else {
-        kif.prepend(ShogiRecord::kanji(crd));
-    }
-
-    if (turn == maru::Sente) {
-        kif.prepend(QString::fromUtf8("▲"));
-    } else {
-        kif.prepend(QString::fromUtf8("△"));
-    }
-    return qMakePair(kif, crd);
-#endif
 }
 
 

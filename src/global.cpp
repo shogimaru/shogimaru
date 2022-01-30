@@ -1,5 +1,7 @@
 #include "global.h"
 #include <QMap>
+#include <QWidget>
+#include <QApplication>
 #include <random>
 
 namespace maru {
@@ -103,6 +105,21 @@ int random(int min, int max)
 {
     std::uniform_int_distribution<int> uniform(min, max);  // 乱数
     return uniform(randeng);
+}
+
+
+QWidget *mainWindow()
+{
+    static QWidget *widget = []() {
+        for (auto *w : QApplication::topLevelWidgets()) {
+            if (w->objectName() == "MainWindow") {
+                return w;
+            }
+        }
+        std::abort();
+        return (QWidget *)nullptr;
+    }();
+    return widget;
 }
 
 }

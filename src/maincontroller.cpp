@@ -500,23 +500,6 @@ public:
     ResultString() :
         QMap<int, QString>()
     {
-        // // Results
-        // insert(maru::Win,  QString::fromUtf8(u8"勝ち"));
-        // insert(maru::Loss, QString::fromUtf8(u8"負け"));
-        // insert(maru::Foul, QString::fromUtf8(u8"反則"));
-        // insert(maru::Draw, QString::fromUtf8(u8""));
-        // // Details
-        // insert(maru::Abort, QString::fromUtf8(u8"中断"));
-        // insert(maru::Win_Declare, QString::fromUtf8(u8"入玉宣言"));
-        // insert(maru::Loss_Resign, QString::fromUtf8(u8""));
-        // insert(maru::Foul_OutOfTime, QString::fromUtf8(u8"反則（時間切れ）"));
-        // insert(maru::Foul_TwoPawns, QString::fromUtf8(u8"反則（二歩）"));
-        // insert(maru::Foul_DropPawnMate, QString::fromUtf8(u8"反則（打ち歩詰め）"));
-        // insert(maru::Foul_OverlookedCheck, QString::fromUtf8(u8"反則（王手放置）"));
-        // insert(maru::Foul_PerpetualCheck, QString::fromUtf8(u8"反則（連続王手）"));
-        // insert(maru::Draw_Repetition, QString::fromUtf8(u8"千日手"));
-        // insert(maru::Draw_Impasse, QString::fromUtf8(u8"持将棋"));
-
         // Results
         insert(maru::Win,  QObject::tr("win"));  // 勝ち
         insert(maru::Loss, QObject::tr("lose"));  // 負け

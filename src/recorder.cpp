@@ -142,7 +142,6 @@ void Recorder::recordPonderingScore(int index, int multipv, const ScoreItem &ite
 
 QString Recorder::kifString(maru::Turn turn, const QPair<Piece*, QString> &move, int prevCoord) const
 {
-#if 1
     QByteArray usi;
     QByteArray piece = move.first->sfen();
     int fromcrd = move.second.toInt();
@@ -159,43 +158,7 @@ QString Recorder::kifString(maru::Turn turn, const QPair<Piece*, QString> &move,
             usi += '+';
         }
     }
-    qDebug() << "==" << usi << piece;
     return ShogiRecord::kifString(turn, usi, piece, prevCoord, false);
-#else
-    QString kif;
-
-    auto *piece = move.first;
-    int coord = piece->data(maru::Coord).toInt();
-    int fromcrd = move.second.toInt();
-    bool promoted = move.second.contains('+');
-    //int prevCoord = (_items.isEmpty()) ? 0 : _items.last().move.second;
-
-    // 棋譜
-    if (turn == maru::Sente) {
-        kif += QString::fromUtf8(u8"▲");
-    } else {
-        kif += QString::fromUtf8(u8"△");
-    }
-
-    if (coord == prevCoord && prevCoord > 0) {
-        kif += QString::fromUtf8(u8"同  ");
-    } else {
-        kif += ShogiRecord::kanji(coord);  // マス
-    }
-
-    // 駒名称
-    if (promoted) {
-        kif += Piece::kanjiName(piece->originalName());
-        kif += QString::fromUtf8(u8"成");
-    } else {
-        kif += piece->kanjiName();
-    }
-
-    if (fromcrd < 11 || fromcrd > 99) {
-        kif += QString::fromUtf8(u8"打");
-    }
-    return kif;
-#endif
 }
 
 

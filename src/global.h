@@ -5,6 +5,7 @@
 #include <list>
 #include <functional>
 
+class QWidget;
 
 namespace maru {
 
@@ -76,5 +77,6 @@ std::string trim(const std::string &input);
 bool contains(const std::list<std::string> &stringlist, const std::string &str);
 std::vector<std::string> split(const std::string &str, char sep, bool skipEmptyParts = false);
 int random(int min, int max);
+QWidget *mainWindow();
 
 }
