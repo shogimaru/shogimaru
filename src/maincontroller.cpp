@@ -1183,14 +1183,18 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
         messageTableWidget->setItem(row, col++, new QTableWidgetItem(head));
         // 手番&スコア
         QString str;
-        if (item.score > 0) {
-            str = tr("B+");
-        } else if (item.score < 0) {
-            str = tr("W+");
+        int score = std::abs(item.score);
+        if (score > 20) {  // 一旦20以下は互角とする
+            if (item.score > 0) {
+                str  = QString::fromUtf8(u8"▲+");
+                str += QString::number(score);
+            } else  {
+                str = QString::fromUtf8(u8"△+");
+                str += QString::number(score);
+            }
         } else {
-            str.clear();
+            str = tr("Even");
         }
-        str += QString::number(std::abs(item.score));
         messageTableWidget->setItem(row, col++, new QTableWidgetItem(str));
 
         // 候補手
