@@ -46,6 +46,8 @@ SOURCES += \
         promotiondialog.cpp \
         nicknamedialog.cpp \
         analysisdialog.cpp \
+        notationdialog.cpp \
+        westerntabstyle.cpp \
 #        startdialog.cpp \
         startdialog2.cpp \
         mypage.cpp \
@@ -73,6 +75,8 @@ HEADERS += \
         promotiondialog.h \
         nicknamedialog.h \
         analysisdialog.h \
+        notationdialog.h \
+        westerntabstyle.h \
 #        startdialog.h \
         startdialog2.h \
         mypage.h \
@@ -87,6 +91,7 @@ FORMS += \
         ../forms/mypage.ui \
         ../forms/nicknamedialog.ui \
         ../forms/analysisdialog.ui \
+        ../forms/notationdialog.ui \
         ../forms/startdialog.ui \
         ../forms/startdialog2.ui
 

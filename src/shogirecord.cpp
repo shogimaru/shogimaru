@@ -93,8 +93,13 @@ QString ShogiRecord::kifString(maru::Turn turn, const QByteArray &usi, const QBy
     // マス
     QString coord;
     int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
-    if (crd == prevCoord && langJa) {
-        coord = (compact) ? QString::fromUtf8(u8"同") : QString::fromUtf8(u8"同  ");
+    if (crd == prevCoord) {
+        if (langJa) {
+            coord = (compact) ? QString::fromUtf8(u8"同") : QString::fromUtf8(u8"同  ");
+        } else {
+            coord  = "x";
+            coord += ShogiRecord::kanji(crd);
+        }
     } else {
         coord = ShogiRecord::kanji(crd);
     }

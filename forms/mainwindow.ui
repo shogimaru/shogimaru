@@ -374,7 +374,6 @@
            </property>
            <property name="font">
             <font>
-             <family>IPAPGothic</family>
              <pointsize>12</pointsize>
             </font>
            </property>
@@ -565,6 +564,14 @@
    </property>
    <property name="toolTip">
     <string>Info</string>
+   </property>
+  </action>
+  <action name="notationAction">
+   <property name="text">
+    <string>Notation</string>
+   </property>
+   <property name="toolTip">
+    <string>Notation</string>
    </property>
   </action>
  </widget>

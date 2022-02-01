@@ -32,9 +32,9 @@
   <widget class="QGroupBox" name="timeGroupBox">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>10</x>
      <y>20</y>
-     <width>311</width>
+     <width>331</width>
      <height>121</height>
     </rect>
    </property>

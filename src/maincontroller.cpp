@@ -7,6 +7,7 @@
 #include "chessclock.h"
 #include "nicknamedialog.h"
 #include "analysisdialog.h"
+#include "notationdialog.h"
 #include "startdialog2.h"
 #include "mypage.h"
 #include "messagebox.h"
@@ -80,6 +81,7 @@ MainController::MainController(QWidget *parent) :
     _recorder(new Recorder),
     _nicknameDialog(new NicknameDialog(this)),
     _analysisDialog(new AnalysisDialog(this)),
+    _notationDialog(new NotationDialog(this)),
     _startDialog(new StartDialog2(this)),
     _myPage(new MyPage(this)),
     _infoBox(new QMessageBox(this)),
@@ -126,6 +128,7 @@ MainController::MainController(QWidget *parent) :
     connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalyzing);
+    connect(_ui->notationAction, &QAction::triggered, _notationDialog, &NotationDialog::open);
     //connect(_ui->retractButton, &QPushButton::clicked, this, &MainController::retract); // 待った
     connect(_ui->rotateAction, &QAction::triggered, this, &MainController::toggleRotate);
     connect(_ui->resignAction, &QAction::triggered, this, &MainController::resign);
@@ -206,6 +209,8 @@ void MainController::createToolBar()
     _ui->toolBar->addSeparator();
     _ui->toolBar->addAction(_ui->analysisAction);
     _ui->toolBar->addSeparator();
+    _ui->toolBar->addAction(_ui->notationAction);
+    _ui->toolBar->addSeparator();
     _ui->toolBar->addAction(_ui->rotateAction);
     _ui->toolBar->addSeparator();
 
@@ -252,6 +257,7 @@ void MainController::updateButtonStates()
         _ui->resignAction->setDisabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(_recorder->count() > 1);
+        _ui->notationAction->setEnabled(true);
         _ui->senteFrame->setStyleSheet("border: 1px solid silver");
         _ui->goteFrame->setStyleSheet("border: 1px solid silver");
         _ui->recordWidget->setAttribute(Qt::WA_TransparentForMouseEvents, false);
@@ -267,6 +273,7 @@ void MainController::updateButtonStates()
         _ui->resignAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(false);
+        _ui->notationAction->setEnabled(false);
         _ui->recordWidget->setAttribute(Qt::WA_TransparentForMouseEvents);
         _ui->messageTableWidget->setAttribute(Qt::WA_TransparentForMouseEvents);
         _ui->messageTableWidget->hide();
@@ -280,6 +287,7 @@ void MainController::updateButtonStates()
         _ui->resignAction->setDisabled(true);
         _ui->analysisAction->setText(tr("Stop"));
         _ui->analysisAction->setEnabled(true);
+        _ui->notationAction->setEnabled(false);
         _ui->senteFrame->setStyleSheet("border: 1px solid silver");
         _ui->goteFrame->setStyleSheet("border: 1px solid silver");
         _ui->recordWidget->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -295,6 +303,7 @@ void MainController::updateButtonStates()
         _ui->resignAction->setDisabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(false);
+        _ui->notationAction->setEnabled(true);
         _ui->senteFrame->setStyleSheet("border: 1px solid silver");
         _ui->goteFrame->setStyleSheet("border: 1px solid silver");
         _ui->recordWidget->setAttribute(Qt::WA_TransparentForMouseEvents, false);
