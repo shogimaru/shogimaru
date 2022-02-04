@@ -8,7 +8,6 @@
 namespace {
 
 constexpr int MULTIPV_MAX = 5;
-const QByteArray firstPosition = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1";
 
 char usiChar(Piece::Name name)
 {
@@ -30,88 +29,55 @@ Recorder::Recorder()
     clear();
 }
 
-QString Recorder::record(const QPair<Piece*, QString> &move, bool check)
+// 棋譜記録
+// piece:駒  usi:移動  check:王手か  info:読み筋/指し手候補
+QString Recorder::record(const QByteArray &piece, const QByteArray &usi, bool check, const PonderInfo &info)
 {
-    auto *piece = move.first;
-
-    if (!piece) {
-        return QString();
-    }
-
-    int coord = piece->data(maru::Coord).toInt();
-    int fromcrd = move.second.toInt();
-    bool promoted = move.second.contains('+');
-    int prevCoord = (_pvList.count() > 1) ? ShogiRecord::usiToCoord(_pvList.last().first.mid(2, 2)) : 0; // 直前の指し手マス
-
-    // USI
-    QByteArray usi;
-    if (fromcrd < 11 || fromcrd > 99) {
-        // 打つ
-        usi += QByteArray(1, usiChar(piece->name())).toUpper(); // 大文字
-        usi += '*';
-    } else {
-        // 駒移動
-        usi += '0' + fromcrd / 10;
-        usi += 0x60 + (fromcrd % 10);
-    }
-
-    usi += QByteArray::number(coord / 10);
-    usi += 0x60 + (coord % 10);
-
-    if (promoted) {
-        usi += '+';
-    }
-
     // リストへ追加
+    int prevCoord = (_pvList.count() > 1) ? ShogiRecord::usiToCoord(_pvList.last().first.mid(2, 2)) : 0; // 直前の指し手マス
     int idx = _pvList.count() - 1;
     auto currentTurn = turn(idx);
-    _pvList << qMakePair(usi, QVector<ScoreItem>({ScoreItem()}));
-    _moveRoutes << 0;  // 指し手
-    addFoulItem(check, sfen(idx + 1));
-    return kifString(currentTurn, move, prevCoord);
-}
-
-
-QString Recorder::record(maru::Turn turn, const QPair<Piece*, QString> &move, bool check, const QByteArray &sfen, const PonderInfo &info)
-{
-    auto *piece = move.first;
-
-    if (!piece) {
-        return QString();
-    }
-
-    int coord = piece->data(maru::Coord).toInt();
-    int fromcrd = move.second.toInt();
-    bool promoted = move.second.contains('+');
-    int prevCoord = (_pvList.count() > 1) ? ShogiRecord::usiToCoord(_pvList.last().first.mid(2, 2)) : 0; // 直前の指し手マス
-
-    // USI
-    QByteArray usi;
-    if (fromcrd < 11 || fromcrd > 99) {
-        // 打つ
-        usi += QByteArray(1, usiChar(piece->name())).toUpper(); // 大文字
-        usi += '*';
-    } else {
-        // 駒移動
-        usi += '0' + fromcrd / 10;
-        usi += 0x60 + (fromcrd % 10);
-    }
-
-    usi += QByteArray::number(coord / 10);
-    usi += 0x60 + (coord % 10);
-
-    if (promoted) {
-        usi += '+';
-    }
 
     ScoreItem score(info.scoreCp, info.mate, info.mateCount, info.depth, info.nodes, info.pv);
     _pvList << qMakePair(usi, QVector<ScoreItem>({score}));
     _moveRoutes << 0;  // 指し手
+    addFoulItem(check, sfen(idx + 1));
+    return ShogiRecord::kifString(currentTurn, usi, piece, prevCoord, false);
+}
 
-    // リストへ追加
-    addFoulItem(check, sfen);
 
-    return kifString(turn, move, prevCoord);
+QString Recorder::record(const QPair<Piece*, QString> &move, bool check, const PonderInfo &info)
+{
+    auto *piece = move.first;
+
+    if (!piece) {
+        return QString();
+    }
+
+    int coord = piece->data(maru::Coord).toInt();
+    int fromcrd = move.second.toInt();
+    bool promoted = move.second.contains('+');
+
+    // USI
+    QByteArray usi;
+    if (fromcrd < 11 || fromcrd > 99) {
+        // 打つ
+        usi += QByteArray(1, usiChar(piece->name())).toUpper(); // 大文字
+        usi += '*';
+    } else {
+        // 駒移動
+        usi += '0' + fromcrd / 10;
+        usi += 0x60 + (fromcrd % 10);
+    }
+
+    usi += QByteArray::number(coord / 10);
+    usi += 0x60 + (coord % 10);
+
+    if (promoted) {
+        usi += '+';
+    }
+
+    return record(piece->sfen(), usi, check, info);
 }
 
 
@@ -161,7 +127,8 @@ QString Recorder::kifString(maru::Turn turn, const QPair<Piece*, QString> &move,
     return ShogiRecord::kifString(turn, usi, piece, prevCoord, false);
 }
 
-
+// 反則チェックアイテム追加
+// check:王手か, sfen:盤面
 void Recorder::addFoulItem(bool check, const QByteArray &sfen)
 {
     // 手数以降の文字を削除
@@ -270,7 +237,7 @@ void Recorder::clear()
 {
     _foulItems.clear();
     _pvList.clear();
-    _pvList << qMakePair(firstPosition, QVector<ScoreItem>({ScoreItem()}));
+    _pvList << qMakePair(Sfen::defaultPostion(), QVector<ScoreItem>({ScoreItem()}));
     _moveRoutes.clear();
 }
 

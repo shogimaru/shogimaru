@@ -8,6 +8,7 @@
 #include <QMap>
 
 class Piece;
+class Sfen;
 
 // 棋譜項目
 class FoulCheck {
@@ -56,8 +57,8 @@ public:
     Recorder();
 
     bool setFirstPosition(const QByteArray &sfen);
-    QString record(const QPair<Piece*, QString> &move, bool check);
-    QString record(maru::Turn turn, const QPair<Piece*, QString> &move, bool check, const QByteArray &sfenstr, const PonderInfo &info = PonderInfo());
+    QString record(const QByteArray &piece, const QByteArray &usi, bool check, const PonderInfo &info = PonderInfo());
+    QString record(const QPair<Piece*, QString> &move, bool check, const PonderInfo &info = PonderInfo());
     void recordPonderingScore(int index, int multipv, const ScoreItem &item);
     QVector<ScoreItem> scores(int index) const { return _pvList.value(index).second; }
     bool isRepetition() const;  // 最後の手が千日手か

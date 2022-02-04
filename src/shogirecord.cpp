@@ -55,28 +55,28 @@ public:
     KanjiNameMap() :
         QMap<QString, QString>()
     {
-        insert(QLatin1String("K"),  QCoreApplication::translate("KanjiNameMap", "K"));  // 王
-        insert(QLatin1String("R"),  QCoreApplication::translate("KanjiNameMap", "R"));  // 飛
-        insert(QLatin1String("B"),  QCoreApplication::translate("KanjiNameMap", "B"));  // 角
-        insert(QLatin1String("G"),  QCoreApplication::translate("KanjiNameMap", "G"));  // 金
-        insert(QLatin1String("S"),  QCoreApplication::translate("KanjiNameMap", "S"));  // 銀
-        insert(QLatin1String("N"),  QCoreApplication::translate("KanjiNameMap", "N"));  // 桂
-        insert(QLatin1String("L"),  QCoreApplication::translate("KanjiNameMap", "L"));  // 香
-        insert(QLatin1String("P"),  QCoreApplication::translate("KanjiNameMap", "P"));  // 歩
-        insert(QLatin1String("+R"), QCoreApplication::translate("KanjiNameMap", "+R"));  // 龍
-        insert(QLatin1String("+B"), QCoreApplication::translate("KanjiNameMap", "+B"));  // 馬
-        insert(QLatin1String("+S"), QCoreApplication::translate("KanjiNameMap", "+S"));  // 成銀
-        insert(QLatin1String("+N"), QCoreApplication::translate("KanjiNameMap", "+N"));  // 成桂
-        insert(QLatin1String("+L"), QCoreApplication::translate("KanjiNameMap", "+L"));  // 成香
-        insert(QLatin1String("+P"), QCoreApplication::translate("KanjiNameMap", "+P"));  // と
+        insert(QLatin1String("K"),  QObject::tr("K"));  // 王
+        insert(QLatin1String("R"),  QObject::tr("R"));  // 飛
+        insert(QLatin1String("B"),  QObject::tr("B"));  // 角
+        insert(QLatin1String("G"),  QObject::tr("G"));  // 金
+        insert(QLatin1String("S"),  QObject::tr("S"));  // 銀
+        insert(QLatin1String("N"),  QObject::tr("N"));  // 桂
+        insert(QLatin1String("L"),  QObject::tr("L"));  // 香
+        insert(QLatin1String("P"),  QObject::tr("P"));  // 歩
+        insert(QLatin1String("+R"), QObject::tr("+R"));  // 龍
+        insert(QLatin1String("+B"), QObject::tr("+B"));  // 馬
+        insert(QLatin1String("+S"), QObject::tr("+S"));  // 成銀
+        insert(QLatin1String("+N"), QObject::tr("+N"));  // 成桂
+        insert(QLatin1String("+L"), QObject::tr("+L"));  // 成香
+        insert(QLatin1String("+P"), QObject::tr("+P"));  // と
     }
 };
-Q_GLOBAL_STATIC(KanjiNameMap, kanjiNameMap)
 
 
 QString ShogiRecord::kanjiName(const QString &piece)
 {
-    return kanjiNameMap()->value(piece.toUpper());
+    static KanjiNameMap kanjiNameMap;
+    return kanjiNameMap.value(piece.toUpper());
 }
 
 //
@@ -98,7 +98,7 @@ QString ShogiRecord::kifString(maru::Turn turn, const QByteArray &usi, const QBy
             coord = (compact) ? QString::fromUtf8(u8"同") : QString::fromUtf8(u8"同  ");
         } else {
             coord  = "x";
-            coord += ShogiRecord::kanji(crd);
+            coord += QString::number(crd);
         }
     } else {
         coord = ShogiRecord::kanji(crd);

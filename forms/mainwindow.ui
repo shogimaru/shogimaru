@@ -566,12 +566,12 @@
     <string>Info</string>
    </property>
   </action>
-  <action name="notationAction">
+  <action name="recordAction">
    <property name="text">
-    <string>Notation</string>
+    <string>Record</string>
    </property>
    <property name="toolTip">
-    <string>Notation</string>
+    <string>Record</string>
    </property>
   </action>
  </widget>

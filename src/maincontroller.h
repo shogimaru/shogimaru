@@ -7,6 +7,7 @@
 #include <QPair>
 #include <QVector>
 #include <QElapsedTimer>
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -56,6 +57,7 @@ public:
     void showGameoverBox(const QString &msg) const;
     bool isFoulMove();
     void showAnalyzingMoves(const QVector<ScoreItem> &scores, const QByteArray &sfen);
+    void clear();
 
 public slots:
     void newRatingGame();
@@ -77,12 +79,15 @@ public slots:
     void startAnalyzing();  // 棋譜解析
     void slotAnalysisAction();  // 解析ボタンクリック
     void openInfoBox();
+    void loadSfen();
+    void slotAnalysisTimeout();
 
 protected:
     void recordResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail);
     void setGraphScores();
     void displayTurn(maru::Turn turn);
     void slotPonderedItemSelected(int row, int column);
+    void nextAnalysis();
     void timerEvent(QTimerEvent *event) override;
 
 signals:
@@ -116,6 +121,7 @@ private:
     int _analysisTimerId {0};
     QElapsedTimer _analysisTimer;
     QElapsedTimer _elapsedTimer;
+    QTimer _ponderTimer;
     PonderInfo _lastPonder;
     qint64 _lastPvShownTime {0};
 };

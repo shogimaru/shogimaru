@@ -6,7 +6,7 @@
 class Player {
 public:
     Player() {}
-    Player(maru::PlayerType type, const QString &name, int rating) :
+    Player(maru::PlayerType type, const QString &name, int rating = 0) :
         _type(type),
         _name(name),
         _rating(rating)

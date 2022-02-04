@@ -2,7 +2,7 @@
 #include "global.h"
 #include <QObject>
 #include <QElapsedTimer>
-#include <QBasicTimer>
+//#include <QBasicTimer>
 
 
 class ChessClock : public QObject {

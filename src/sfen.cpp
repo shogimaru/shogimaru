@@ -8,6 +8,7 @@ static const QByteArray DefaultSfen("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1
 static const QByteArrayList sentePieces = {"K", "R", "B", "G", "S", "N", "L", "P", "+R", "+B", "+S", "+N", "+L", "+P"};
 static const QByteArrayList gotePieces = {"k", "r", "b", "g", "s", "n", "l", "p", "+r", "+b", "+s", "+n", "+l", "+p"};
 
+#if 0
 class KanjiNameMap : public QMap<QString, QString> {
 public:
     KanjiNameMap() :
@@ -29,18 +30,25 @@ public:
         insert(QLatin1String("+p"), QString::fromUtf8("と"));
     }
 };
-Q_GLOBAL_STATIC(KanjiNameMap, kanjiNameMap)
-
-
-Sfen::Sfen()
-{
-    parse(DefaultSfen);
-}
+//Q_GLOBAL_STATIC(KanjiNameMap, kanjiNameMap)
+#endif
 
 
 Sfen::Sfen(const QByteArray &sfen)
 {
     parse(sfen);
+}
+
+
+void Sfen::clear()
+{
+    _position.clear();
+    _inHand.clear();
+    _turn = maru::Sente;
+    _moves.clear();
+    _counter = 1;
+    _players.first.clear();
+    _players.second.clear();
 }
 
 
@@ -50,8 +58,7 @@ bool Sfen::parse(const QByteArray &s)
         return false;
     }
 
-    _position.clear();
-    _inHand.clear();
+    clear();
 
     QByteArrayList items = s.split(' ');
     QByteArray sfen = items.first();
@@ -174,11 +181,15 @@ bool Sfen::parse(const QByteArray &s)
     return true;
 
 error:
-    _position.clear();
-    _inHand.clear();
-    _counter = 1;
+    clear();
     qCritical() << "SFEN parse error";
     return false;
+}
+
+
+bool Sfen::isEmpty() const
+{
+    return _position.isEmpty() && _inHand.isEmpty();
 }
 
 
@@ -190,8 +201,9 @@ QByteArray Sfen::name(int coord) const
 
 QString Sfen::kanjiName(int coord) const
 {
+    //static KanjiNameMap kanjiNameMap;
     QString s = name(coord);
-    return (s.isEmpty()) ? s : kanjiNameMap()->value(s);
+    return (s.isEmpty()) ? s : ShogiRecord::kanjiName(s);
 }
 
 // SFEN（指し手なし）
@@ -199,6 +211,10 @@ QByteArray Sfen::toSfen() const
 {
     QByteArray sfen;
     sfen.reserve(80);
+
+    if (isEmpty()) {
+        return sfen;
+    }
 
     // 駒の配置
     for (int i = 1; i < 10; i++) {
@@ -257,6 +273,22 @@ QByteArray Sfen::toSfen() const
     sfen += " ";
     sfen += QByteArray::number(_counter);
     return sfen;
+}
+
+
+QByteArray Sfen::toUsi() const  // 指し手あり
+{
+    QByteArray usi = defaultPostion();
+
+    if (!_moves.isEmpty()) {
+        usi += " moves ";
+        for (auto &mv : _moves) {
+            usi += mv.second;
+            usi += " ";
+        }
+        usi.chop(1);
+    }
+    return usi;
 }
 
 
@@ -347,6 +379,7 @@ QByteArray Sfen::move(const QByteArray &usi)
         _inHand += (_turn == maru::Sente) ? dst.toUpper() : dst.toLower();
     }
 
+    _moves << qMakePair(piece, usi);
     _counter++;
     _position[crd] = piece;
     _turn = (_turn == maru::Sente) ? maru::Gote : maru::Sente;
@@ -376,16 +409,34 @@ Sfen Sfen::move(const QByteArrayList &usiList)
 }
 
 
-QByteArray Sfen::csaToSfen(const QByteArray &csa)
+void Sfen::setPlayers(const QString &sente, const QString &gote)
 {
-    static const QMap<QByteArray, QByteArray> convert = {
+    _players.first = sente;
+    _players.second = gote;
+}
+
+
+QByteArray Sfen::defaultPostion()
+{
+    return DefaultSfen;
+}
+
+
+Sfen Sfen::fromCsa(const QString &csa, bool *ok)
+{
+    static const QMap<QString, QString> convert = {
         {"FU", "p"}, {"KY","l"}, {"KE", "n"}, {"GI","s"},
         {"KI", "g"}, {"KA","b"}, {"HI", "r"}, {"OU", "k"}
     };
-    static const QByteArrayList promoted = {"TO","NY", "NK", "NG", "UM", "RY"};
+    static const QStringList promoted = {"TO","NY", "NK", "NG", "UM", "RY"};
 
-    Sfen sfen;
-    QByteArray movestr;
+    Sfen sfen(DefaultSfen); // TODO 駒落ちに未対応
+    QString senteName;
+    QString goteName;
+
+    if (ok) {
+        *ok = false;
+    }
 
     for (const auto &str : csa.split('\n')) {
         auto line = str.trimmed();
@@ -397,12 +448,12 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
             // 指し手
             auto l12 = line.mid(1, 2);
             QByteArray move = ShogiRecord::coordToUsi(l12.toInt());
-            QByteArray koma = line.mid(5, 2);
+            QString koma = line.mid(5, 2);
 
             if (move.isEmpty() && l12 == "00") {
                 // 打つ
                 auto p = convert.value(koma).toUpper();
-                move += p;
+                move += p.toLatin1();
                 move += '*';
             }
 
@@ -422,8 +473,6 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
             }
 
             if (move.length() == 4 || move.length() == 5) {
-                movestr += move;
-                movestr += ' ';
                 sfen.move(move);
             }
             continue;
@@ -434,6 +483,13 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
         }
         if (line.startsWith('N')) {
             // player
+            if (line.startsWith("N+")) {
+                senteName = line.mid(2);
+            } else if (line.startsWith("N-")) {
+                goteName = line.mid(2);
+            } else {
+                //
+            }
             continue;
         }
         if (line.startsWith('$')) {
@@ -454,23 +510,16 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
         }
 
         qWarning() << "Unknown CSA commend:" << line;
+        return sfen;
     }
 
-    QByteArray sfenstr = DefaultSfen;
-    sfenstr += " moves ";
-    sfenstr += movestr.trimmed();
-    return sfenstr;
-}
+    // 対局者
+    sfen.setPlayers(senteName, goteName);
 
-
-Sfen Sfen::fromCsa(const QByteArray &csa, bool *ok)
-{
-    Sfen sf;
-    bool res = sf.parse(csaToSfen(csa));
     if (ok) {
-        *ok = res;
+        *ok = true;
     }
-    return sf;
+    return sfen;
 }
 
 

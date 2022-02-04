@@ -683,93 +683,9 @@ bool Board::isCheck() const
     return false;
 }
 
-#if 0
-QByteArray Board::toStaticSfen(int moveNumber) const
-{
-    return toStaticSfen(_currentTurn, moveNumber);
-}
-
-// 現局面をSFEN表現（指し手無し）  moveNumber: 開始局面は1、1手指した直後は2
-QByteArray Board::toStaticSfen(maru::Turn turn, int moveNumber) const
-{
-    QByteArray sfen;
-    sfen.reserve(128);
-
-    // 駒の配置
-    for (int i = 1; i < 10; i++) {
-        int s = 0;
-        for (int j = 9; j > 0; j--) {
-            int crd =  i + j * 10;
-            auto p = piece(crd)->sfen();
-            if (p.isEmpty()) {
-                s++;
-            } else {
-                if (s > 0) {
-                    sfen += QByteArray::number(s);
-                    s = 0;
-                }
-                sfen += p;
-            }
-        }
-
-        if (s > 0) {
-            sfen += QByteArray::number(s);
-        }
-        sfen += "/";
-    }
-    sfen[sfen.length() - 1] = ' ';
-
-    // 手番
-    sfen += (turn == maru::Sente) ? "b " : "w ";
-
-    // 持ち駒カウント
-    auto counts = [](const QList<Piece*> pieces) {
-        QByteArray str;
-        str.reserve(pieces.count() + 1);
-        for (const auto *p : pieces) {
-            str += p->sfen();
-        }
-
-        QByteArray names = "rbgsnlp";
-        if (str.isUpper()) {
-            names = names.toUpper();
-        }
-
-        QByteArray ret;
-        ret.reserve(pieces.count() + 1);
-        for (auto c : names) {
-            int cnt = str.count(c);
-            if (cnt == 0) {
-                continue;
-            }
-
-            if (cnt > 1) {
-                ret += QByteArray::number(cnt);
-            }
-            ret += str[str.indexOf(c, 0)];
-        }
-        return ret;
-    };
-
-    // 持ち駒
-    QByteArray str = counts(piecesInHand(maru::Sente));
-    str += counts(piecesInHand(maru::Gote));
-    if (str.isEmpty()) {
-        sfen += "-";  // 無し
-    } else {
-        sfen += str;
-    }
-
-    // 手数
-    sfen += ' ';
-    sfen += QByteArray::number(moveNumber);
-    return sfen;
-}
-#endif
 
 void Board::setSfen(const QByteArray &sfen, bool movable, const QByteArray &lastMove)
 {
-    qDebug() << "setSfen" << sfen;
     parse(sfen);
     setTurn(_currentTurn, movable);
 

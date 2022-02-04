@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>NotationDialog</class>
- <widget class="QDialog" name="NotationDialog">
+ <class>RecordDialog</class>
+ <widget class="QDialog" name="RecordDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Notation</string>
+   <string>Record</string>
   </property>
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
@@ -29,7 +29,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tabWeb">
     <attribute name="title">
@@ -39,23 +39,36 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>20</y>
-       <width>301</width>
-       <height>192</height>
+       <y>40</y>
+       <width>341</width>
+       <height>181</height>
       </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelWeb">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>10</y>
+       <width>361</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Get from web sites.</string>
      </property>
     </widget>
    </widget>
    <widget class="QWidget" name="tabText">
     <attribute name="title">
-     <string>Text Paste</string>
+     <string>Text</string>
     </attribute>
     <widget class="QPlainTextEdit" name="textEdit">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>431</width>
+       <width>351</width>
        <height>151</height>
       </rect>
      </property>
@@ -63,9 +76,9 @@
     <widget class="QPushButton" name="loadButton">
      <property name="geometry">
       <rect>
-       <x>360</x>
+       <x>259</x>
        <y>200</y>
-       <width>80</width>
+       <width>101</width>
        <height>31</height>
       </rect>
      </property>
@@ -83,7 +96,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Paste shogi notation and click Load button</string>
+      <string>Load a game record in CSA or SFEN format.</string>
      </property>
     </widget>
    </widget>
@@ -91,6 +104,32 @@
     <attribute name="title">
      <string>Upload</string>
     </attribute>
+    <widget class="QPushButton" name="pushButton">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>90</y>
+       <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Upload</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>371</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Upload a game record of CSA or SFEN format.</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tabDownload">
     <attribute name="title">
@@ -99,14 +138,27 @@
     <widget class="QPushButton" name="downloadButton">
      <property name="geometry">
       <rect>
-       <x>180</x>
-       <y>120</y>
-       <width>91</width>
+       <x>120</x>
+       <y>90</y>
+       <width>101</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
       <string>Download</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>361</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Download the current game record.</string>
      </property>
     </widget>
    </widget>
