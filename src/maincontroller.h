@@ -20,7 +20,7 @@ class Recorder;
 class Engine;
 class NicknameDialog;
 class AnalysisDialog;
-class NotationDialog;
+class RecordDialog;
 class StartDialog2;
 class MyPage;
 class EvaluationGraph;
@@ -109,7 +109,7 @@ private:
     QMap<maru::Turn, Player> _players;
     NicknameDialog *_nicknameDialog {nullptr};
     AnalysisDialog *_analysisDialog {nullptr};
-    NotationDialog *_notationDialog {nullptr};
+    RecordDialog *_recordDialog {nullptr};
     StartDialog2 *_startDialog {nullptr};
     MyPage *_myPage {nullptr};
     QMessageBox *_infoBox {nullptr};

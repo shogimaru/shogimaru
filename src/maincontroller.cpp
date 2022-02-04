@@ -8,7 +8,7 @@
 #include "messagebox.h"
 #include "mypage.h"
 #include "nicknamedialog.h"
-#include "notationdialog.h"
+#include "recorddialog.h"
 #include "piece.h"
 #include "recorder.h"
 #include "sfen.h"
@@ -81,7 +81,7 @@ MainController::MainController(QWidget *parent) :
     _recorder(new Recorder),
     _nicknameDialog(new NicknameDialog(this)),
     _analysisDialog(new AnalysisDialog(this)),
-    _notationDialog(new NotationDialog(this)),
+    _recordDialog(new RecordDialog(this)),
     _startDialog(new StartDialog2(this)),
     _myPage(new MyPage(this)),
     _infoBox(new QMessageBox(this)),
@@ -128,8 +128,8 @@ MainController::MainController(QWidget *parent) :
     connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalyzing);
-    connect(_ui->recordAction, &QAction::triggered, _notationDialog, &NotationDialog::open);
-    connect(_notationDialog, &QDialog::accepted, this, &MainController::loadSfen);
+    connect(_ui->recordAction, &QAction::triggered, _recordDialog, &RecordDialog::open);
+    connect(_recordDialog, &QDialog::accepted, this, &MainController::loadSfen);
     //connect(_ui->retractButton, &QPushButton::clicked, this, &MainController::retract); // 待った
     connect(_ui->rotateAction, &QAction::triggered, this, &MainController::toggleRotate);
     connect(_ui->resignAction, &QAction::triggered, this, &MainController::resign);
@@ -1409,7 +1409,7 @@ void MainController::clear()
 void MainController::loadSfen()
 {
     clear();
-    Sfen sfen = _notationDialog->result();
+    Sfen sfen = _recordDialog->result();
 
     for (auto &mv : sfen.allMoves()) {
         QString kif = _recorder->record(mv.first, mv.second, false);

@@ -5,15 +5,15 @@
 
 
 namespace Ui {
-class NotationDialog;
+class RecordDialog;
 }
 
 
-class NotationDialog : public QDialog {
+class RecordDialog : public QDialog {
     Q_OBJECT
 public:
-    explicit NotationDialog(QWidget *parent = nullptr);
-    ~NotationDialog() {}
+    explicit RecordDialog(QWidget *parent = nullptr);
+    ~RecordDialog() {}
 
     void open();
     void accept() {}
@@ -23,6 +23,6 @@ public:
 private:
     bool validate(const QString &notation);
 
-    Ui::NotationDialog *_ui {nullptr};
+    Ui::RecordDialog *_ui {nullptr};
     Sfen _sfen;
 };
