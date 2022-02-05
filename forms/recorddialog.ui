@@ -72,6 +72,9 @@
        <height>151</height>
       </rect>
      </property>
+     <property name="placeholderText">
+      <string>Paste a game record</string>
+     </property>
     </widget>
     <widget class="QPushButton" name="loadTextButton">
      <property name="geometry">
@@ -104,19 +107,6 @@
     <attribute name="title">
      <string>Load</string>
     </attribute>
-    <widget class="QPushButton" name="loadFileButton">
-     <property name="geometry">
-      <rect>
-       <x>180</x>
-       <y>100</y>
-       <width>101</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Load</string>
-     </property>
-    </widget>
     <widget class="QLabel" name="labelLoad">
      <property name="geometry">
       <rect>
@@ -133,27 +123,14 @@
     <widget class="QPushButton" name="fileOpenButton">
      <property name="geometry">
       <rect>
-       <x>40</x>
-       <y>100</y>
+       <x>120</x>
+       <y>90</y>
        <width>101</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Open...</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="labelRecordFilePath">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>70</y>
-       <width>301</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string/>
+      <string>Load...</string>
      </property>
     </widget>
    </widget>

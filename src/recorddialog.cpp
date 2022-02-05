@@ -16,14 +16,13 @@ RecordDialog::RecordDialog(QWidget *parent) :
     _ui->setupUi(this);
     _ui->tabWidget->tabBar()->setStyle(&westernTabStyle);
 
-    connect(_ui->loadTextButton, &QPushButton::clicked, this, &RecordDialog::loadNotation);
-    connect(_ui->fileOpenButton, &QPushButton::clicked, this, &RecordDialog::openRecordFile);
-    connect(_ui->loadFileButton, &QPushButton::clicked, this, &RecordDialog::loadRecordFile);
+    connect(_ui->loadTextButton, &QPushButton::clicked, this, &RecordDialog::loadRecord);
+    connect(_ui->fileOpenButton, &QPushButton::clicked, this, &RecordDialog::openFileDialog);
     connect(_ui->closeButton, &QPushButton::clicked, this, &QDialog::reject);  // 閉じるボタン
 }
 
 
-void RecordDialog::loadNotation()
+void RecordDialog::loadRecord()
 {
     if (!validate(_ui->textEdit->toPlainText().trimmed())) {
         MessageBox::information(tr("Notation Error"), tr("Load Error"));
@@ -33,15 +32,37 @@ void RecordDialog::loadNotation()
 }
 
 
-void RecordDialog::openRecordFile()
+void RecordDialog::openFileDialog()
 {
-    auto filePath = QFileDialog::getOpenFileName(this, tr("Open Record File"), QDir::homePath(), tr("Record File (*.csa *.sfen *.txt)"));
-    _ui->labelRecordFilePath->setText(QFileInfo(filePath).fileName());
-    _loadFilePath = filePath;
+    auto fileContentReady = [this](const QString &, const QByteArray &fileContent) {
+        auto isReadable = [](const QString &str) {
+            for (auto c : str) {
+                if (c.category() < 3 || c.category() > 27) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        if (!fileContent.isEmpty()) {
+            // SJISでトライ
+            QString str = QTextCodec::codecForName("Shift-JIS")->toUnicode(fileContent);
+            if (!isReadable(str)) {  // 文字化けならUTF-8で読み込む
+                str = QString::fromUtf8(fileContent);
+            }
+
+            if (!this->validate(str)) {
+                MessageBox::information(tr("Notation Error"), tr("Load Error"));
+            } else {
+                this->accept();
+            }
+        }
+    };
+    QFileDialog::getOpenFileContent("*", fileContentReady);
 }
 
 
-void RecordDialog::loadRecordFile()
+void RecordDialog::loadRecordFile(const QString &filePath)
 {
     auto isReadable = [](const QString &str) {
         for (auto c : str) {
@@ -52,13 +73,13 @@ void RecordDialog::loadRecordFile()
         return true;
     };
 
-    if (_loadFilePath.isEmpty()) {
+    if (filePath.isEmpty()) {
         return;
     }
 
-    QFile file(_loadFilePath);
+    QFile file(filePath);
     if (file.open(QIODevice::ReadOnly)) {
-        auto buf = file.readAll();
+        auto buf = file.readAll().trimmed();
         file.close();
 
         QString str = QTextCodec::codecForName("Shift-JIS")->toUnicode(buf);
@@ -69,18 +90,16 @@ void RecordDialog::loadRecordFile()
         if (!validate(str)) {
             MessageBox::information(tr("Notation Error"), tr("Load Error"));
         } else {
-            QDialog::accept();
+            this->accept();
         }
     }
-
-    _ui->labelRecordFilePath->clear();
-    _loadFilePath.clear();
 }
 
 
 bool RecordDialog::validate(const QString &notation)
 {
     bool ok;
+
     _sfen = Sfen::fromCsa(notation, &ok);  // CSA
     if (ok) {
         return ok;

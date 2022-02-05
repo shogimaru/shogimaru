@@ -3,7 +3,6 @@
 #include "sfen.h"
 #include <QDialog>
 
-
 namespace Ui {
 class RecordDialog;
 }
@@ -13,21 +12,19 @@ class RecordDialog : public QDialog {
     Q_OBJECT
 public:
     explicit RecordDialog(QWidget *parent = nullptr);
-    ~RecordDialog() {}
+    ~RecordDialog() { }
 
     void open();
-    void accept() {}
     Sfen result() const { return _sfen; }
-    void loadNotation();
+    void loadRecord();
 
 public slots:
-    void openRecordFile();
-    void loadRecordFile();
+    void openFileDialog();
+    void loadRecordFile(const QString &file);
 
 private:
     bool validate(const QString &notation);
 
     Ui::RecordDialog *_ui {nullptr};
-    QString _loadFilePath;
     Sfen _sfen;
 };

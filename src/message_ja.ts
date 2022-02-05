@@ -784,45 +784,49 @@
         <translation type="unfinished">テキスト</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="86"/>
-        <location filename="../forms/recorddialog.ui" line="105"/>
-        <location filename="../forms/recorddialog.ui" line="117"/>
+        <location filename="../forms/recorddialog.ui" line="76"/>
+        <source>Paste a game record</source>
+        <translation type="unfinished">棋譜を貼り付けます</translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="89"/>
+        <location filename="../forms/recorddialog.ui" line="108"/>
         <source>Load</source>
         <translation type="unfinished">読込</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="99"/>
+        <location filename="../forms/recorddialog.ui" line="102"/>
         <source>Load a game record in CSA or SFEN format.</source>
-        <translation type="unfinished">棋譜を読み込みます。(CSA/SFEN)</translation>
+        <translation type="unfinished">棋譜を読み込みます (CSA/SFEN)</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="130"/>
+        <location filename="../forms/recorddialog.ui" line="120"/>
         <source>Load a game record file of CSA or SFEN format.</source>
-        <translation type="unfinished">棋譜を読み込みます。(CSA/SFEN)</translation>
+        <translation type="unfinished">棋譜ファイルを読み込みます (CSA/SFEN)</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="143"/>
-        <source>Open...</source>
-        <translation type="unfinished">開く...</translation>
+        <location filename="../forms/recorddialog.ui" line="133"/>
+        <source>Load...</source>
+        <translation type="unfinished">読込...</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="162"/>
-        <location filename="../forms/recorddialog.ui" line="174"/>
+        <location filename="../forms/recorddialog.ui" line="139"/>
+        <location filename="../forms/recorddialog.ui" line="151"/>
         <source>Save</source>
         <translation type="unfinished">保存</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="187"/>
+        <location filename="../forms/recorddialog.ui" line="164"/>
         <source>Save the current game record.</source>
-        <translation type="unfinished">現在の棋譜を保存します。</translation>
+        <translation type="unfinished">現在の棋譜を保存します</translation>
     </message>
     <message>
         <source>Upload a game record of CSA or SFEN format.</source>
-        <translation type="obsolete">棋譜ファイルをアップロードします。(CSA/SFEN)</translation>
+        <translation type="obsolete">棋譜ファイルをアップロードします (CSA/SFEN)</translation>
     </message>
     <message>
         <source>Download the current game record.</source>
-        <translation type="obsolete">現在の棋譜をダウンロードします。</translation>
+        <translation type="obsolete">現在の棋譜をダウンロードします </translation>
     </message>
     <message>
         <source>Upload</source>
@@ -837,31 +841,27 @@
         <translation type="obsolete">ダウンロード</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="202"/>
+        <location filename="../forms/recorddialog.ui" line="179"/>
         <source>Close</source>
         <translation type="unfinished">閉じる</translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="29"/>
-        <location filename="recorddialog.cpp" line="70"/>
+        <location filename="recorddialog.cpp" line="28"/>
+        <location filename="recorddialog.cpp" line="55"/>
+        <location filename="recorddialog.cpp" line="91"/>
         <source>Notation Error</source>
         <translation type="unfinished">棋譜読込エラー</translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="29"/>
-        <location filename="recorddialog.cpp" line="70"/>
+        <location filename="recorddialog.cpp" line="28"/>
+        <location filename="recorddialog.cpp" line="55"/>
+        <location filename="recorddialog.cpp" line="91"/>
         <source>Load Error</source>
         <translation type="unfinished">読込エラー</translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="38"/>
         <source>Open Record File</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="recorddialog.cpp" line="38"/>
-        <source>Record File (*.csa *.sfen *.txt)</source>
-        <translation type="unfinished"></translation>
+        <translation type="obsolete">棋譜ファイルを開く</translation>
     </message>
 </context>
 <context>
