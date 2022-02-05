@@ -17,6 +17,7 @@ wasm {
   SOURCES += enginethread.cpp
   DESTDIR  = ../html/
 } else {
+  QT      += core5compat
   LIBS = -lSDL -lSDL_mixer
   SOURCES += file.cpp
   SOURCES += engine_native.cpp
@@ -46,7 +47,7 @@ SOURCES += \
         promotiondialog.cpp \
         nicknamedialog.cpp \
         analysisdialog.cpp \
-        notationdialog.cpp \
+        recorddialog.cpp \
         westerntabstyle.cpp \
 #        startdialog.cpp \
         startdialog2.cpp \
@@ -75,7 +76,7 @@ HEADERS += \
         promotiondialog.h \
         nicknamedialog.h \
         analysisdialog.h \
-        notationdialog.h \
+        recorddialog.h \
         westerntabstyle.h \
 #        startdialog.h \
         startdialog2.h \
@@ -91,7 +92,7 @@ FORMS += \
         ../forms/mypage.ui \
         ../forms/nicknamedialog.ui \
         ../forms/analysisdialog.ui \
-        ../forms/notationdialog.ui \
+        ../forms/recorddialog.ui \
         ../forms/startdialog.ui \
         ../forms/startdialog2.ui
 

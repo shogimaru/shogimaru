@@ -252,7 +252,7 @@
     </message>
     <message>
         <location filename="maincontroller.cpp" line="469"/>
-        <location filename="maincontroller.cpp" line="1400"/>
+        <location filename="maincontroller.cpp" line="1399"/>
         <source>  0 Start</source>
         <translation type="unfinished"></translation>
     </message>
@@ -314,7 +314,7 @@
     </message>
     <message>
         <location filename="maincontroller.cpp" line="971"/>
-        <location filename="maincontroller.cpp" line="1332"/>
+        <location filename="maincontroller.cpp" line="1331"/>
         <source>Information</source>
         <translation type="unfinished">情報</translation>
     </message>
@@ -391,32 +391,32 @@
         <translation type="unfinished">１つ以上の条件にチェックを入れてください</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1332"/>
+        <location filename="maincontroller.cpp" line="1331"/>
         <source>Analysis aborted</source>
         <translation type="unfinished">解析を停止しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1362"/>
+        <location filename="maincontroller.cpp" line="1361"/>
         <source>Elapsed</source>
         <translation type="unfinished">経過時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1366"/>
+        <location filename="maincontroller.cpp" line="1365"/>
         <source>Time</source>
         <translation type="unfinished">時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1370"/>
+        <location filename="maincontroller.cpp" line="1369"/>
         <source>Depth</source>
         <translation type="unfinished">深度</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1374"/>
+        <location filename="maincontroller.cpp" line="1373"/>
         <source>Nodes</source>
         <translation type="unfinished">ノード</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1378"/>
+        <location filename="maincontroller.cpp" line="1377"/>
         <source>NPS</source>
         <translation type="unfinished"></translation>
     </message>
@@ -785,6 +785,8 @@
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="86"/>
+        <location filename="../forms/recorddialog.ui" line="105"/>
+        <location filename="../forms/recorddialog.ui" line="117"/>
         <source>Load</source>
         <translation type="unfinished">読込</translation>
     </message>
@@ -795,43 +797,70 @@
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="130"/>
+        <source>Load a game record file of CSA or SFEN format.</source>
+        <translation type="unfinished">棋譜を読み込みます。(CSA/SFEN)</translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="143"/>
+        <source>Open...</source>
+        <translation type="unfinished">開く...</translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="162"/>
+        <location filename="../forms/recorddialog.ui" line="174"/>
+        <source>Save</source>
+        <translation type="unfinished">保存</translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="187"/>
+        <source>Save the current game record.</source>
+        <translation type="unfinished">現在の棋譜を保存します。</translation>
+    </message>
+    <message>
         <source>Upload a game record of CSA or SFEN format.</source>
-        <translation type="unfinished">棋譜ファイルをアップロードします。(CSA/SFEN)</translation>
+        <translation type="obsolete">棋譜ファイルをアップロードします。(CSA/SFEN)</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="161"/>
         <source>Download the current game record.</source>
-        <translation type="unfinished">現在の棋譜をダウンロードします。</translation>
+        <translation type="obsolete">現在の棋譜をダウンロードします。</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="105"/>
-        <location filename="../forms/recorddialog.ui" line="117"/>
         <source>Upload</source>
-        <translation type="unfinished">アップロード</translation>
+        <translation type="obsolete">アップロード</translation>
     </message>
     <message>
         <source>Text Paste</source>
         <translation type="obsolete">棋譜貼付</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="136"/>
-        <location filename="../forms/recorddialog.ui" line="148"/>
         <source>Download</source>
-        <translation type="unfinished">ダウンロード</translation>
+        <translation type="obsolete">ダウンロード</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="176"/>
+        <location filename="../forms/recorddialog.ui" line="202"/>
         <source>Close</source>
         <translation type="unfinished">閉じる</translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="24"/>
+        <location filename="recorddialog.cpp" line="29"/>
+        <location filename="recorddialog.cpp" line="70"/>
         <source>Notation Error</source>
+        <translation type="unfinished">棋譜読込エラー</translation>
+    </message>
+    <message>
+        <location filename="recorddialog.cpp" line="29"/>
+        <location filename="recorddialog.cpp" line="70"/>
+        <source>Load Error</source>
+        <translation type="unfinished">読込エラー</translation>
+    </message>
+    <message>
+        <location filename="recorddialog.cpp" line="38"/>
+        <source>Open Record File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="24"/>
-        <source>Load Error</source>
+        <location filename="recorddialog.cpp" line="38"/>
+        <source>Record File (*.csa *.sfen *.txt)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -8,6 +8,7 @@ QSize WesternTabStyle::sizeFromContents(ContentsType type, const QStyleOption *o
     QSize s = QProxyStyle::sizeFromContents(type, option, size, widget);
     if (type == QStyle::CT_TabBarTab) {
         s.transpose();
+        s.setWidth(110);
         s += QSize(0, 20);
     }
     return s;

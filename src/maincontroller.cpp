@@ -934,7 +934,7 @@ void MainController::pondered(const PonderInfo &info)
 
         if (pi.mate) {
             // 詰みありになるとエンジンは読み筋を返さなくなる場合あり
-            _ponderTimer.start(3000);  // restart
+            _ponderTimer.start(5000);  // restart
         }
 
         User &user = User::load();
@@ -1307,7 +1307,6 @@ void MainController::startAnalyzing()
     _analysisTimerId = startTimer(1000);
     _analysisTimer.start();
     _elapsedTimer.start();
-    //_ponderTimer.start(3000);
     updateButtonStates();
     showRemainingTime(maru::Sente, 0, 0);  // 先手残り時間
     showRemainingTime(maru::Gote, 0, 0);  // 後手残り時間

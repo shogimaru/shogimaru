@@ -20,9 +20,14 @@ public:
     Sfen result() const { return _sfen; }
     void loadNotation();
 
+public slots:
+    void openRecordFile();
+    void loadRecordFile();
+
 private:
     bool validate(const QString &notation);
 
     Ui::RecordDialog *_ui {nullptr};
+    QString _loadFilePath;
     Sfen _sfen;
 };
