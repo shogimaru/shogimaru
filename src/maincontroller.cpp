@@ -193,14 +193,14 @@ MainController::~MainController()
 void MainController::setSentePlayer(const Player &player)
 {
     _players[maru::Sente] = player;
-    _ui->senteLabel->setText(QString::fromUtf8(u8"▲ ") + player.name());
+    _ui->senteLabel->setText(QString::fromUtf8(u8"▲") + player.name());
 }
 
 
 void MainController::setGotePlayer(const Player &player)
 {
     _players[maru::Gote] = player;
-    _ui->goteLabel->setText(QString::fromUtf8(u8"△ ") + player.name());
+    _ui->goteLabel->setText(QString::fromUtf8(u8"△") + player.name());
 }
 
 
@@ -970,7 +970,7 @@ void MainController::nextAnalysis()
         _mode = Watch;
         MessageBox::information(tr("Information"), tr("Analysis completed"));
         qDebug() << "Analysis completed";
-        setGraphScores();
+        setGraphScores();  // グラフ表示
         updateButtonStates();
     };
 
@@ -1402,6 +1402,8 @@ void MainController::clear()
 
     _rotated = false;  // 反転有無
     _ui->messageTableWidget->clear();
+    _graph->clear();  // グラフクリア
+
     updateBoard();
 }
 

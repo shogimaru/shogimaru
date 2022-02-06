@@ -19,11 +19,10 @@ public:
     void loadRecord();
 
 public slots:
-    void openFileDialog();
-    void loadRecordFile(const QString &file);
+    void openFile();
 
 private:
-    bool validate(const QString &notation);
+    bool validate(const QString &record);
 
     Ui::RecordDialog *_ui {nullptr};
     Sfen _sfen;

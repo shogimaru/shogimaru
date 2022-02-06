@@ -17,7 +17,7 @@ RecordDialog::RecordDialog(QWidget *parent) :
     _ui->tabWidget->tabBar()->setStyle(&westernTabStyle);
 
     connect(_ui->loadTextButton, &QPushButton::clicked, this, &RecordDialog::loadRecord);
-    connect(_ui->fileOpenButton, &QPushButton::clicked, this, &RecordDialog::openFileDialog);
+    connect(_ui->fileOpenButton, &QPushButton::clicked, this, &RecordDialog::openFile);
     connect(_ui->closeButton, &QPushButton::clicked, this, &QDialog::reject);  // 閉じるボタン
 }
 
@@ -32,9 +32,10 @@ void RecordDialog::loadRecord()
 }
 
 
-void RecordDialog::openFileDialog()
+void RecordDialog::openFile()
 {
     auto fileContentReady = [this](const QString &, const QByteArray &fileContent) {
+        // 文字化け有無
         auto isReadable = [](const QString &str) {
             for (auto c : str) {
                 if (c.category() < 3 || c.category() > 27) {
@@ -58,54 +59,21 @@ void RecordDialog::openFileDialog()
             }
         }
     };
+    // ファイルダイアログ
     QFileDialog::getOpenFileContent("*", fileContentReady);
 }
 
 
-void RecordDialog::loadRecordFile(const QString &filePath)
-{
-    auto isReadable = [](const QString &str) {
-        for (auto c : str) {
-            if (c.category() < 3 || c.category() > 27) {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    if (filePath.isEmpty()) {
-        return;
-    }
-
-    QFile file(filePath);
-    if (file.open(QIODevice::ReadOnly)) {
-        auto buf = file.readAll().trimmed();
-        file.close();
-
-        QString str = QTextCodec::codecForName("Shift-JIS")->toUnicode(buf);
-        if (!isReadable(str)) {
-            str = QString::fromUtf8(buf);
-        }
-
-        if (!validate(str)) {
-            MessageBox::information(tr("Notation Error"), tr("Load Error"));
-        } else {
-            this->accept();
-        }
-    }
-}
-
-
-bool RecordDialog::validate(const QString &notation)
+bool RecordDialog::validate(const QString &record)
 {
     bool ok;
 
-    _sfen = Sfen::fromCsa(notation, &ok);  // CSA
+    _sfen = Sfen::fromCsa(record, &ok);  // CSA
     if (ok) {
         return ok;
     }
 
-    _sfen = Sfen::fromSfen(notation.toLatin1(), &ok);  // SFEN
+    _sfen = Sfen::fromSfen(record.toLatin1(), &ok);  // SFEN
     return ok;
 }
 
