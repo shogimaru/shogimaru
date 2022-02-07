@@ -18,6 +18,7 @@ RecordDialog::RecordDialog(QWidget *parent) :
 
     connect(_ui->loadTextButton, &QPushButton::clicked, this, &RecordDialog::loadRecord);
     connect(_ui->fileOpenButton, &QPushButton::clicked, this, &RecordDialog::openFile);
+    connect(_ui->saveButton, &QPushButton::clicked, this, &RecordDialog::selectSaveFile);
     connect(_ui->closeButton, &QPushButton::clicked, this, &QDialog::reject);  // 閉じるボタン
 }
 
@@ -61,6 +62,18 @@ void RecordDialog::openFile()
     };
     // ファイルダイアログ
     QFileDialog::getOpenFileContent("*", fileContentReady);
+}
+
+
+void RecordDialog::selectSaveFile()
+{
+#if __EMSCRIPTEN__
+    QString fileName = "untitled.csa";
+#else
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "untitled.csa");
+#endif
+    close();
+    emit saveFileSelected(fileName);
 }
 
 

@@ -8,8 +8,8 @@
 #include "messagebox.h"
 #include "mypage.h"
 #include "nicknamedialog.h"
-#include "recorddialog.h"
 #include "piece.h"
+#include "recorddialog.h"
 #include "recorder.h"
 #include "sfen.h"
 #include "shogirecord.h"
@@ -130,6 +130,7 @@ MainController::MainController(QWidget *parent) :
     connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalyzing);
     connect(_ui->recordAction, &QAction::triggered, _recordDialog, &RecordDialog::open);
     connect(_recordDialog, &QDialog::accepted, this, &MainController::loadSfen);
+    connect(_recordDialog, &RecordDialog::saveFileSelected, this, &MainController::saveFile);
     //connect(_ui->retractButton, &QPushButton::clicked, this, &MainController::retract); // 待った
     connect(_ui->rotateAction, &QAction::triggered, this, &MainController::toggleRotate);
     connect(_ui->resignAction, &QAction::triggered, this, &MainController::resign);
@@ -1362,7 +1363,7 @@ void MainController::showAnalysisInfo()
     str += ' ';
     str += timeFormat(_analysisTimer.elapsed());
     str += "    ";
-    str += tr("Time");
+    str += tr("Analysis Time");
     str += ' ';
     str += timeFormat(_elapsedTimer.elapsed());
     str += "    ";
@@ -1406,6 +1407,7 @@ void MainController::clear()
 
     updateBoard();
 }
+
 
 void MainController::loadSfen()
 {

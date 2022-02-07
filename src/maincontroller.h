@@ -80,6 +80,7 @@ public slots:
     void slotAnalysisAction();  // 解析ボタンクリック
     void openInfoBox();
     void loadSfen();
+    void saveFile(const QString &filePath);
     void slotAnalysisTimeout();
 
 protected:

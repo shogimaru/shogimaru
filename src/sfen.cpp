@@ -1,37 +1,12 @@
 #include "sfen.h"
 #include "shogirecord.h"
+#include <QDebug>
 #include <QMap>
 #include <QRegularExpression>
-#include <QDebug>
 
 static const QByteArray DefaultSfen("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1");
 static const QByteArrayList sentePieces = {"K", "R", "B", "G", "S", "N", "L", "P", "+R", "+B", "+S", "+N", "+L", "+P"};
 static const QByteArrayList gotePieces = {"k", "r", "b", "g", "s", "n", "l", "p", "+r", "+b", "+s", "+n", "+l", "+p"};
-
-#if 0
-class KanjiNameMap : public QMap<QString, QString> {
-public:
-    KanjiNameMap() :
-        QMap<QString, QString>()
-    {
-        insert(QLatin1String("k"),  QString::fromUtf8("玉"));
-        insert(QLatin1String("r"),  QString::fromUtf8("飛"));
-        insert(QLatin1String("b"),  QString::fromUtf8("角"));
-        insert(QLatin1String("g"),  QString::fromUtf8("金"));
-        insert(QLatin1String("s"),  QString::fromUtf8("銀"));
-        insert(QLatin1String("n"),  QString::fromUtf8("桂"));
-        insert(QLatin1String("l"),  QString::fromUtf8("香"));
-        insert(QLatin1String("p"),  QString::fromUtf8("歩"));
-        insert(QLatin1String("+r"), QString::fromUtf8("龍"));
-        insert(QLatin1String("+b"), QString::fromUtf8("馬"));
-        insert(QLatin1String("+s"), QString::fromUtf8("成銀"));
-        insert(QLatin1String("+n"), QString::fromUtf8("成桂"));
-        insert(QLatin1String("+l"), QString::fromUtf8("成香"));
-        insert(QLatin1String("+p"), QString::fromUtf8("と"));
-    }
-};
-//Q_GLOBAL_STATIC(KanjiNameMap, kanjiNameMap)
-#endif
 
 
 Sfen::Sfen(const QByteArray &sfen)
@@ -425,12 +400,11 @@ QByteArray Sfen::defaultPostion()
 Sfen Sfen::fromCsa(const QString &csa, bool *ok)
 {
     static const QMap<QString, QString> convert = {
-        {"FU", "p"}, {"KY","l"}, {"KE", "n"}, {"GI","s"},
-        {"KI", "g"}, {"KA","b"}, {"HI", "r"}, {"OU", "k"}
-    };
-    static const QStringList promoted = {"TO","NY", "NK", "NG", "UM", "RY"};
+        {"FU", "p"}, {"KY", "l"}, {"KE", "n"}, {"GI", "s"},
+        {"KI", "g"}, {"KA", "b"}, {"HI", "r"}, {"OU", "k"}};
+    static const QStringList promoted = {"TO", "NY", "NK", "NG", "UM", "RY"};
 
-    Sfen sfen(DefaultSfen); // TODO 駒落ちに未対応
+    Sfen sfen(DefaultSfen);  // TODO 駒落ちに未対応
     QString senteName;
     QString goteName;
 
@@ -467,13 +441,17 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
             if (promoted.contains(koma)) {
                 // 成りチェック
                 auto p = sfen._position.value(l12.toInt());
-                if (!p.startsWith('+')) { // 成り駒でないなら
+                if (!p.startsWith('+')) {  // 成り駒でないなら
                     move += '+';
                 }
             }
 
             if (move.length() == 4 || move.length() == 5) {
                 sfen.move(move);
+            } else {
+                // Error
+                qCritical() << "Error notation:" << move;
+                return sfen;
             }
             continue;
         }
@@ -520,6 +498,56 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
         *ok = true;
     }
     return sfen;
+}
+
+
+QString Sfen::toCsa() const
+{
+    static const QMap<QString, QString> convert = {
+        {"p", "FU"}, {"l", "KY"}, {"n", "KE"}, {"s", "GI"},
+        {"g", "KI"}, {"b", "KA"}, {"r", "HI"}, {"k", "OU"},
+        {"+p", "TO"}, {"+l", "NY"}, {"+n", "NK"}, {"+s", "NG"},
+        {"+b", "UM"}, {"+r", "RY"}};
+
+    QString csa;
+
+    csa.reserve(1024);
+    csa += "V2.2\n";
+    csa += "N+";
+    csa += _players.first;
+    csa += '\n';
+    csa += "N-";
+    csa += _players.second;
+    csa += '\n';
+    // 開始局面
+    csa += "P1-KY-KE-GI-KI-OU-KI-GI-KE-KY\n";
+    csa += "P2 * -HI *  *  *  *  * -KA * \n";
+    csa += "P3-FU-FU-FU-FU-FU-FU-FU-FU-FU\n";
+    csa += "P4 *  *  *  *  *  *  *  *  * \n";
+    csa += "P5 *  *  *  *  *  *  *  *  * \n";
+    csa += "P6 *  *  *  *  *  *  *  *  * \n";
+    csa += "P7+FU+FU+FU+FU+FU+FU+FU+FU+FU\n";
+    csa += "P8 * +KA *  *  *  *  * +HI * \n";
+    csa += "P9+KY+KE+GI+KI+OU+KI+GI+KE+KY\n";
+    csa += "+\n";  // 手番表記
+    bool senteTurn = true;
+    for (auto &mv : _moves) {
+        csa += (senteTurn) ? "+" : "-"; // 指し手手番
+        senteTurn = !senteTurn;
+        if (mv.second.mid(0, 1).isUpper()) {
+            csa += "00";
+        } else {
+            csa += QString::number(ShogiRecord::usiToCoord(mv.second.mid(0, 2)));  // 移動前
+        }
+        csa += QString::number(ShogiRecord::usiToCoord(mv.second.mid(2, 2)));  // 移動後
+
+        // 駒名
+        csa += convert.value(mv.first.toLower());  // 移動後の駒
+        csa += "\n";
+    }
+    // 終局
+    csa += "%TORYO\n";
+    return csa;
 }
 
 

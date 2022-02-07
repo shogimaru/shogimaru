@@ -20,6 +20,10 @@ public:
 
 public slots:
     void openFile();
+    void selectSaveFile();
+
+signals:
+    void saveFileSelected(const QString &filePath);
 
 private:
     bool validate(const QString &record);

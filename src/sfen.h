@@ -24,6 +24,7 @@ public:
     QList<QPair<QByteArray, QByteArray>> allMoves() const { return _moves; }
     QByteArray toSfen() const;
     QByteArray toUsi() const;
+    QString toCsa() const;
     QStringList generateKif(const QByteArrayList &moves, bool compact = true) const;
     QPair<QString, QString> players() const { return _players; }
     void setPlayers(const QString &sente, const QString &gote);
@@ -39,7 +40,7 @@ private:
     QMap<int, QByteArray> _position;  // <マス目, SFEN>
     QByteArray _inHand;
     maru::Turn _turn {maru::Sente};
-    QList<QPair<QByteArray, QByteArray>> _moves;  // <Piece, USI>
+    QList<QPair<QByteArray, QByteArray>> _moves;  // <移動後のPiece, USI>
     int _counter {1};
     QPair<QString, QString> _players;  // <先手,後手>
 

@@ -10,6 +10,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 wasm {
   CONFIG +=
   LIBS = ../engines/YaneuraOu/source/YaneuraOu.wasm
+  SOURCES += maincontroller_wasm.cpp
   SOURCES += file_wasm.cpp
   SOURCES += engine_wasm.cpp
   SOURCES += command_wasm.cpp
@@ -19,6 +20,7 @@ wasm {
 } else {
   QT      += core5compat
   LIBS = -lSDL -lSDL_mixer
+  SOURCES += maincontroller_native.cpp
   SOURCES += file.cpp
   SOURCES += engine_native.cpp
   SOURCES += command_native.cpp

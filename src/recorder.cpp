@@ -192,7 +192,8 @@ QByteArrayList Recorder::moves(int index) const
 {
     QByteArrayList list;
 
-    for (int i = 1; i <= index; i++) {
+    int num = std::min(index, (int)_pvList.count() - 1);
+    for (int i = 1; i <= num; i++) {
         list << _pvList.value(i).first;
     }
     return list;
@@ -202,7 +203,8 @@ QByteArrayList Recorder::moves(int index) const
 QByteArray Recorder::sfen(int index) const
 {
     Sfen sfen(_pvList[0].first);
-    for (int i = 1; i <= index; i++) {
+    int num = std::min(index, (int)_pvList.count() - 1);
+    for (int i = 1; i <= num; i++) {
         sfen.move(_pvList.value(i).first);
     }
     return sfen.toSfen();
