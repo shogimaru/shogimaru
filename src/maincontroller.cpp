@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <cmath>
 
+constexpr auto SHOGIMARU_VERSION_STR = "1.1";
 const QSize BaseMainWindowSize(960, 820);
 const QList<int> RatingList = {maru::R1000, maru::R1200, maru::R1400, maru::R1600, maru::R1800, maru::R2000, maru::R2200, maru::R2400, maru::R2600, maru::R2800, maru::R3000};
 
@@ -235,7 +236,7 @@ void MainController::createInfoBox()
     _infoBox->setStyleSheet("QLabel{min-width: 360px;}");
 
     QString text = QString("<h3>") + tr("Shogimaru") + "</h3><br><table><tbody>";
-    text += QString("<tr><td>") + tr("Version") + "</td><td>1.0</td>";
+    text += QString("<tr><td>") + tr("Version") + "</td><td>" + SHOGIMARU_VERSION_STR + "</td>";
     text += QString("<tr><td>") + tr("YaneuraOu") + "</td><td>" + "7.00" + "</td>";
     text += QString("<tr><td>Qt</td><td>") + QT_VERSION_STR + "</td>";
     text += QString("<tr><td>") + tr("Platform") + "</td><td>" + QSysInfo::prettyProductName() + "</td>";

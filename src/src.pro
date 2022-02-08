@@ -1,6 +1,6 @@
 TARGET   = shogimaru
 TEMPLATE = app
-QT      += core gui widgets
+QT      += core gui widgets network
 CONFIG  += c++17
 CODECFORTR = UTF-8
 MOC_DIR  = .obj/

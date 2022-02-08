@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>300</height>
+    <width>560</width>
+    <height>340</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +18,8 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>481</width>
-     <height>241</height>
+     <width>541</width>
+     <height>281</height>
     </rect>
    </property>
    <property name="tabPosition">
@@ -29,7 +29,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tabWeb">
     <attribute name="title">
@@ -39,9 +39,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>40</y>
-       <width>351</width>
-       <height>181</height>
+       <y>30</y>
+       <width>411</width>
+       <height>241</height>
       </rect>
      </property>
     </widget>
@@ -49,13 +49,21 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>10</y>
-       <width>361</width>
+       <y>0</y>
+       <width>401</width>
        <height>31</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
      <property name="text">
-      <string>Get from web sites.</string>
+      <string/>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </widget>
@@ -68,8 +76,8 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>351</width>
-       <height>151</height>
+       <width>411</width>
+       <height>191</height>
       </rect>
      </property>
      <property name="placeholderText">
@@ -79,8 +87,8 @@
     <widget class="QPushButton" name="loadTextButton">
      <property name="geometry">
       <rect>
-       <x>259</x>
-       <y>200</y>
+       <x>320</x>
+       <y>240</y>
        <width>101</width>
        <height>31</height>
       </rect>
@@ -169,9 +177,9 @@
   <widget class="QPushButton" name="closeButton">
    <property name="geometry">
     <rect>
-     <x>410</x>
-     <y>260</y>
-     <width>80</width>
+     <x>449</x>
+     <y>300</y>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>

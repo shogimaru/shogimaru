@@ -1,12 +1,11 @@
 #pragma once
-
-#include <QString>
 #include <QDateTime>
+#include <QString>
 
 
 class User {
 public:
-    ~User() {}
+    ~User() { }
 
     QString nickname() const { return _nickname; }
     void setNickname(const QString &name) { _nickname = name; }
@@ -30,7 +29,7 @@ public:
     void setAnalysisTimeSeconds(int seconds) { _analysisTimeSeconds = seconds; }
     qint64 analysisNodes() const { return _analysisNodes; }
     void setAnalysisNodes(qint64 nodes) { _analysisNodes = nodes; }
-    int analysisDepth() const { return _analysisDepth;}
+    int analysisDepth() const { return _analysisDepth; }
     void setAnalysisDepth(int depth) { _analysisDepth = depth; }
     int version() const { return _version; }
     void setVersion(int version) { _version = version; }
@@ -40,7 +39,7 @@ public:
     static User &load();
 
 private:
-    User() {}
+    User() { }
 
     QString _nickname;
     int _rating {0};
@@ -52,7 +51,7 @@ private:
     int _byoyomi {0};
     int _basicTime {0};  // 持ち時間(分)
     int _analysisTimeSeconds {-10};  // 解析時間(秒/手)
-    qint64 _analysisNodes {-100000000};    // 解析ノード
-    int _analysisDepth {-23};    // 解析深度
+    qint64 _analysisNodes {-1000000000};  // 解析ノード
+    int _analysisDepth {-23};  // 解析深度
     int _version {1};
 };
