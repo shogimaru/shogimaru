@@ -43,7 +43,7 @@ void AnalysisDialog::open()
     // ノード
     _ui->nodesCheckBox->setChecked(user.analysisNodes() > 0);  // マイナスは無効化
     auto nodes = std::abs(user.analysisNodes());
-    _ui->nodesSpinBox->setValue(nodes / 1000);  // 1k
+    _ui->nodesSpinBox->setValue(nodes / 1000000LL);  // 1m
 
     // 深度
     _ui->depthCheckBox->setChecked(user.analysisDepth() > 0);
@@ -64,7 +64,7 @@ void AnalysisDialog::accept()
     user.setAnalysisTimeSeconds(seconds);
 
     // ノード
-    qint64 nodes = _ui->nodesSpinBox->value() * 1000LL;  // 1k
+    qint64 nodes = _ui->nodesSpinBox->value() * 1000000LL;  // 1m
     nodes *= (_ui->nodesCheckBox->isChecked()) ? 1 : -1;
     user.setAnalysisNodes(nodes);
 

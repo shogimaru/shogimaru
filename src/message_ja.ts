@@ -24,6 +24,11 @@
         <translation type="unfinished">制限（いずれか条件を満たすまで）</translation>
     </message>
     <message>
+        <location filename="../forms/analysisdialog.ui" line="109"/>
+        <source>Nodes (m)</source>
+        <translation type="unfinished">ノード（百万単位）</translation>
+    </message>
+    <message>
         <source>Time</source>
         <translation type="obsolete">持ち時間</translation>
     </message>
@@ -38,9 +43,8 @@
         <translation type="unfinished">時間（1手ごと）</translation>
     </message>
     <message>
-        <location filename="../forms/analysisdialog.ui" line="109"/>
         <source>Nodes (k)</source>
-        <translation type="unfinished">ノード（千単位）</translation>
+        <translation type="obsolete">ノード（千単位）</translation>
     </message>
     <message>
         <location filename="../forms/analysisdialog.ui" line="122"/>
@@ -252,156 +256,158 @@
     </message>
     <message>
         <location filename="maincontroller.cpp" line="471"/>
-        <location filename="maincontroller.cpp" line="1410"/>
+        <location filename="maincontroller.cpp" line="1421"/>
         <source>  0 Start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="666"/>
+        <location filename="maincontroller.cpp" line="661"/>
+        <location filename="maincontroller.cpp" line="668"/>
         <source>Sente</source>
         <translation type="unfinished">先手</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="667"/>
+        <location filename="maincontroller.cpp" line="661"/>
+        <location filename="maincontroller.cpp" line="669"/>
         <source>Gote</source>
         <translation type="unfinished">後手</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="669"/>
+        <location filename="maincontroller.cpp" line="671"/>
         <source>%1 win. %2</source>
         <oldsource>%1 win %2</oldsource>
         <translation type="unfinished">%1 %2勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="695"/>
+        <location filename="maincontroller.cpp" line="697"/>
         <source>Thank you</source>
         <translation type="unfinished">ありがとうございました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="696"/>
+        <location filename="maincontroller.cpp" line="698"/>
         <source>Game over</source>
         <translation type="unfinished">対局終了</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="737"/>
+        <location filename="maincontroller.cpp" line="739"/>
         <source>Illegal - Two Pawns.</source>
         <translation type="unfinished">二歩は禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="750"/>
+        <location filename="maincontroller.cpp" line="752"/>
         <source>Illegal - Drop Pawn Mate.</source>
         <translation type="unfinished">打ち歩詰めは禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="760"/>
+        <location filename="maincontroller.cpp" line="762"/>
         <source>Illegal - Overlooked Check.</source>
         <translation type="unfinished">王手放置は禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="769"/>
+        <location filename="maincontroller.cpp" line="771"/>
         <source>Illegal - Perpetual Check.</source>
         <translation type="unfinished">連続王手の千日手は禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="774"/>
+        <location filename="maincontroller.cpp" line="776"/>
         <source>Repetition.</source>
         <translation type="unfinished">千日手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="817"/>
+        <location filename="maincontroller.cpp" line="819"/>
         <source>Checkmate.</source>
         <translation type="unfinished">詰みました。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="982"/>
-        <location filename="maincontroller.cpp" line="1342"/>
+        <location filename="maincontroller.cpp" line="984"/>
+        <location filename="maincontroller.cpp" line="1353"/>
         <source>Information</source>
         <translation type="unfinished">情報</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="982"/>
+        <location filename="maincontroller.cpp" line="984"/>
         <source>Analysis completed</source>
         <translation type="unfinished">解析が終了しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1121"/>
+        <location filename="maincontroller.cpp" line="1132"/>
         <source>Resign</source>
         <translation type="unfinished">投了</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1121"/>
+        <location filename="maincontroller.cpp" line="1132"/>
         <source>Resign?</source>
         <translation type="unfinished">投了しますか</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1123"/>
+        <location filename="maincontroller.cpp" line="1134"/>
         <source>Abort</source>
         <translation type="unfinished">中断</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1123"/>
+        <location filename="maincontroller.cpp" line="1134"/>
         <source>Abort?</source>
         <translation type="unfinished">中断しますか</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1138"/>
+        <location filename="maincontroller.cpp" line="1149"/>
         <source>You resigned.</source>
         <translation type="unfinished">あなたは投了しました。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1161"/>
+        <location filename="maincontroller.cpp" line="1172"/>
         <source>The computer declared victory by entering the king, according to CSA rules.</source>
         <translation type="unfinished">コンピュータが入玉勝ちを宣言しました。勝ち宣言はCSAルールに基づいています。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1168"/>
+        <location filename="maincontroller.cpp" line="1179"/>
         <source>You win!</source>
         <translation type="unfinished">参りました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1225"/>
+        <location filename="maincontroller.cpp" line="1236"/>
         <source>Even</source>
         <translation type="unfinished">互角</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1252"/>
+        <location filename="maincontroller.cpp" line="1263"/>
         <source>Pnd</source>
         <oldsource>Ponder</oldsource>
         <translation type="unfinished">読み筋</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1262"/>
+        <location filename="maincontroller.cpp" line="1273"/>
         <source> byoyomi</source>
         <oldsource>  Byoyomi</oldsource>
         <translation type="unfinished">  秒読み</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1283"/>
+        <location filename="maincontroller.cpp" line="1294"/>
         <source>Out of time.</source>
         <translation type="unfinished">時間切れです。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1301"/>
+        <location filename="maincontroller.cpp" line="1312"/>
         <source>Warning</source>
         <translation type="unfinished">警告</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1301"/>
+        <location filename="maincontroller.cpp" line="1312"/>
         <source>Enter at least one condition.</source>
         <translation type="unfinished">１つ以上の条件にチェックを入れてください</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1342"/>
+        <location filename="maincontroller.cpp" line="1353"/>
         <source>Analysis aborted</source>
         <translation type="unfinished">解析を停止しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1372"/>
+        <location filename="maincontroller.cpp" line="1383"/>
         <source>Elapsed</source>
         <translation type="unfinished">経過時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1376"/>
+        <location filename="maincontroller.cpp" line="1387"/>
         <source>Analysis Time</source>
         <translation type="unfinished">解析時間</translation>
     </message>
@@ -410,17 +416,17 @@
         <translation type="obsolete">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1380"/>
+        <location filename="maincontroller.cpp" line="1391"/>
         <source>Depth</source>
         <translation type="unfinished">深度</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1384"/>
+        <location filename="maincontroller.cpp" line="1395"/>
         <source>Nodes</source>
         <translation type="unfinished">ノード</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1388"/>
+        <location filename="maincontroller.cpp" line="1399"/>
         <source>NPS</source>
         <translation type="unfinished"></translation>
     </message>
@@ -433,7 +439,7 @@
         <translation type="obsolete">後手勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1245"/>
+        <location filename="maincontroller.cpp" line="1256"/>
         <source>Best</source>
         <translation type="unfinished">最善</translation>
     </message>

@@ -106,7 +106,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Nodes (k)</string>
+     <string>Nodes (m)</string>
     </property>
    </widget>
    <widget class="QCheckBox" name="depthCheckBox">

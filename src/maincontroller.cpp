@@ -855,7 +855,6 @@ void MainController::slotPonderedItemSelected(int row, int column)
 
     sfen += " moves ";
     sfen += scoreItem.pv.mid(0, column - 1).join(" ");
-    qDebug() << sfen;
     _board->setSfen(sfen, false);
     updateButtonStates();
     updateBoard();
