@@ -11,11 +11,11 @@ class Piece;
 class Sfen;
 
 // 棋譜項目
-class FoulCheck {
+class IllegalCheck {
 public:
-    FoulCheck() = default;
-    FoulCheck(const FoulCheck &) = default;
-    FoulCheck(bool c, const QByteArray &s) :
+    IllegalCheck() = default;
+    IllegalCheck(const IllegalCheck &) = default;
+    IllegalCheck(bool c, const QByteArray &s) :
         check(c),
         sfen(s)
     {}
@@ -59,10 +59,12 @@ public:
     bool setFirstPosition(const QByteArray &sfen);
     QString record(const QByteArray &piece, const QByteArray &usi, bool check, const PonderInfo &info = PonderInfo());
     QString record(const QPair<Piece*, QString> &move, bool check, const PonderInfo &info = PonderInfo());
+    void setGameResult(maru::GameResult result, maru::ResultDetail detail);
     void recordPonderingScore(int index, int multipv, const ScoreItem &item);
     QVector<ScoreItem> scores(int index) const { return _pvList.value(index).second; }
     bool isRepetition() const;  // 最後の手が千日手か
     bool isPerpetualCheck() const;  // 連続王手の千日手か
+    bool isIllegalMove(int index) const;  // 禁じ手か
     QByteArray move(int index) const;  // 指し手
     QByteArrayList moves(int index) const;
     QByteArray sfen(int index) const;
@@ -78,9 +80,10 @@ public:
     QByteArray lastMove() const;  // USI形式
 
 private:
-    void addFoulItem(bool check, const QByteArray &sfen);
+    void addIllegalItem(bool check, const QByteArray &sfen);
 
-    QList<FoulCheck> _foulItems;
+    QList<IllegalCheck> _illegalItems;
+    QPair<maru::GameResult, maru::ResultDetail> _result;
 
     // 棋譜検討用
     QList<QPair<QByteArray, QVector<ScoreItem>>> _pvList;  // <USI, PV[]>のリスト

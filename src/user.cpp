@@ -11,7 +11,7 @@ const QLatin1String Rating("rating");
 const QLatin1String Wins("wins");
 const QLatin1String Losses("losses");
 const QLatin1String Draws("draws");
-const QLatin1String Fouls("fouls");
+const QLatin1String Illegal("illegal");
 const QLatin1String Scale("scale");
 const QLatin1String Byoyomi("byoyomi");
 const QLatin1String BasicTime("basicTime");
@@ -28,7 +28,7 @@ bool User::save()
     json[Wins] = wins();
     json[Losses] = losses();
     json[Draws] = draws();
-    json[Fouls] = fouls();
+    json[Illegal] = illegal();
     json[Scale] = scale();
     json[Byoyomi] = byoyomi();
     json[BasicTime] = basicTime();
@@ -92,8 +92,8 @@ User &User::load()
         user._draws = json[Draws].toInt();
     }
 
-    if (json.contains(Fouls)) {
-        user._fouls = json[Fouls].toInt();
+    if (json.contains(Illegal)) {
+        user._illegal = json[Illegal].toInt();
     }
 
     if (json.contains(Scale)) {

@@ -27,7 +27,7 @@ void MyPage::open()
     auto res = QString("%1 wins, %2 losses").arg(user.wins()).arg(user.losses());
     _ui->labelResults->setText(res);
     _ui->labelDraws->setText(QString::number(user.draws()));
-    _ui->labelFouls->setText(QString::number(user.fouls()));
+    _ui->labelFouls->setText(QString::number(user.illegal()));
 
     QDialog::open();
 }

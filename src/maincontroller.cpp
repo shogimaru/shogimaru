@@ -486,19 +486,21 @@ public:
         // Results
         insert(maru::Win, QLatin1String("win"));
         insert(maru::Loss, QLatin1String("loss"));
-        insert(maru::Foul, QLatin1String("foul"));
         insert(maru::Draw, QLatin1String("draw"));
-        // Details
+        insert(maru::Illegal, QLatin1String("illegal"));
         insert(maru::Abort, QLatin1String("abort"));
+        // Details
         insert(maru::Win_Declare, QLatin1String("declare"));
         insert(maru::Loss_Resign, QLatin1String("resign"));
-        insert(maru::Foul_OutOfTime, QLatin1String("out_of_time"));
-        insert(maru::Foul_TwoPawns, QLatin1String("two_pawns"));
-        insert(maru::Foul_DropPawnMate, QLatin1String("drop_pawn_mate"));
-        insert(maru::Foul_OverlookedCheck, QLatin1String("overlooked_check"));
-        insert(maru::Foul_PerpetualCheck, QLatin1String("perpetual_check"));
         insert(maru::Draw_Repetition, QLatin1String("repetition"));
         insert(maru::Draw_Impasse, QLatin1String("impasse"));
+        insert(maru::Illegal_OutOfTime, QLatin1String("out_of_time"));
+        insert(maru::Illegal_TwoPawns, QLatin1String("two_pawns"));
+        insert(maru::Illegal_DropPawnMate, QLatin1String("drop_pawn_mate"));
+        insert(maru::Illegal_OverlookedCheck, QLatin1String("overlooked_check"));
+        insert(maru::Illegal_PerpetualCheck, QLatin1String("perpetual_check"));
+        insert(maru::Illegal_Other, QLatin1String("other"));
+        insert(maru::Abort_GameAborted, QLatin1String("game_aborted"));
     }
 };
 Q_GLOBAL_STATIC(ResultCode, resultCode)
@@ -511,19 +513,21 @@ public:
         // Results
         insert(maru::Win, QObject::tr("win"));  // 勝ち
         insert(maru::Loss, QObject::tr("lose"));  // 負け
-        insert(maru::Foul, QObject::tr("foul"));  // 反則
         insert(maru::Draw, QObject::tr("draw"));  // 引き分け
+        insert(maru::Illegal, QObject::tr("illegal"));  // 反則
+        insert(maru::Abort, QObject::tr("abort"));  // 中断
         // Details
-        insert(maru::Abort, QObject::tr("Abort"));  // 中断
         insert(maru::Win_Declare, QObject::tr("Declare"));  // 入玉宣言
-        insert(maru::Loss_Resign, QObject::tr(""));  // 投了
-        insert(maru::Foul_OutOfTime, QObject::tr("Foul - out of time"));  // 反則（時間切れ）
-        insert(maru::Foul_TwoPawns, QObject::tr("Foul - two pawns"));  // 反則（二歩）
-        insert(maru::Foul_DropPawnMate, QObject::tr("Foul - drop pawn mate"));  // 反則（打ち歩詰め）
-        insert(maru::Foul_OverlookedCheck, QObject::tr("Foul - overlooked check"));  // 反則（王手放置）
-        insert(maru::Foul_PerpetualCheck, QObject::tr("Foul - perpetual check"));  // 反則（連続王手）
+        insert(maru::Loss_Resign, QObject::tr("Resign"));  // 投了
         insert(maru::Draw_Repetition, QObject::tr("Repetition"));  // 千日手
         insert(maru::Draw_Impasse, QObject::tr("Impasse"));  // 持将棋
+        insert(maru::Illegal_OutOfTime, QObject::tr("Illegal - out of time"));  // 反則（時間切れ）
+        insert(maru::Illegal_TwoPawns, QObject::tr("Illegal - two pawns"));  // 反則（二歩）
+        insert(maru::Illegal_DropPawnMate, QObject::tr("Illegal - drop pawn mate"));  // 反則（打ち歩詰め）
+        insert(maru::Illegal_OverlookedCheck, QObject::tr("Illegal - overlooked check"));  // 反則（王手放置）
+        insert(maru::Illegal_PerpetualCheck, QObject::tr("Illegal - perpetual check"));  // 反則（連続王手）
+        insert(maru::Illegal_Other, QObject::tr("Illegal - other"));  // 反則（その他）
+        insert(maru::Abort_GameAborted, QObject::tr("Abort - game aborted"));  // 中断
     }
 };
 Q_GLOBAL_STATIC(ResultString, resultString)
@@ -573,6 +577,7 @@ static int calcRating(int current, int opposite, bool win, int gameCount)
 // 結果記録
 void MainController::recordResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail)
 {
+    _recorder->setGameResult(result, detail);
     showResult(turn, result, detail);
 
     if (_mode == Rating) {
@@ -591,7 +596,7 @@ void MainController::recordResult(maru::Turn turn, maru::GameResult result, maru
 
         if (result != maru::Draw) {
             // 勝敗
-            kifu.winner = ((turn == maru::Sente && result == maru::Win) || (turn == maru::Gote && (result == maru::Loss || result == maru::Foul))) ? "s" : "g";
+            kifu.winner = ((turn == maru::Sente && result == maru::Win) || (turn == maru::Gote && (result == maru::Loss || result == maru::Illegal))) ? "s" : "g";
             bool win = (kifu.user == kifu.winner);
             // レーティング
             kifu.rating = calcRating(user.rating(), _players[opp].rating(), win, gameCount);
@@ -604,8 +609,8 @@ void MainController::recordResult(maru::Turn turn, maru::GameResult result, maru
                 user.setLosses(user.losses() + 1);
             }
 
-            if (result == maru::Foul) {
-                user.setFouls(user.fouls() + 1);
+            if (result == maru::Illegal) {
+                user.setIllegal(user.illegal() + 1);
             }
             user.save();
 
@@ -644,21 +649,27 @@ void MainController::showResult(maru::Turn turn, maru::GameResult result, maru::
 {
     QString msg;
 
-    if (result == maru::None) {
-        return;
-    }
-
-    if (result == maru::Draw) {
+    if (result == maru::Abort) {
+        // 中断
+        msg = resultString()->value(detail);
+    } else if (result == maru::Draw) {
         // 引き分け
         msg = resultString()->value(detail);
     } else {
-        // 勝負あり
-        QString winner = ((turn == maru::Sente && result == maru::Win)
-                             || (turn == maru::Gote && (result == maru::Loss || result == maru::Foul)))
-            ? tr("Sente")
-            : tr("Gote");
+        if (detail == maru::Loss_Resign) {
+            // 投了
+            msg = (turn == maru::Sente) ? tr("Sente") : tr("Gote");
+            msg += " ";
+            msg += resultString()->value(detail).toLower();
+        } else {
+            // 勝負あり
+            QString winner = ((turn == maru::Sente && result == maru::Win)
+                                 || (turn == maru::Gote && (result == maru::Loss || result == maru::Illegal)))
+                ? tr("Sente")
+                : tr("Gote");
 
-        msg = tr("%1 win. %2").arg(winner).arg(resultString()->value(detail));
+            msg = tr("%1 win. %2").arg(winner).arg(resultString()->value(detail));
+        }
     }
 
     auto *item = new QListWidgetItem(msg, _ui->recordWidget);
@@ -697,7 +708,7 @@ void MainController::move()
     record(_board->lastMovedPiece(), _board->isCheck());  // 指し手記録
 
     // 禁じ手確認
-    if (isFoulMove()) {
+    if (isIllegalMove()) {
         return;
     }
 
@@ -707,7 +718,7 @@ void MainController::move()
 
 
 // 禁じ手確認 true:禁じ手or千日手  false:それ以外（対局継続）
-bool MainController::isFoulMove()
+bool MainController::isIllegalMove()
 {
     auto currentTurn = _clock->currentTurn();
     auto lastp = _board->lastMovedPiece();  // 駒, 元のマス
@@ -724,8 +735,8 @@ bool MainController::isFoulMove()
                 const auto *p = _board->piece(c);
                 if (p->name() == Piece::Pawn && p->owner() == lastp.first->owner()) {
                     if (++count > 1) {
-                        stopGame(currentTurn, maru::Foul, maru::Foul_TwoPawns);
-                        showGameoverBox(tr("Foul - Two Pawns."));  // 二歩は禁じ手です。
+                        stopGame(currentTurn, maru::Illegal, maru::Illegal_TwoPawns);
+                        showGameoverBox(tr("Illegal - Two Pawns."));  // 二歩は禁じ手です。
                         return true;
                     }
                 }
@@ -737,8 +748,8 @@ bool MainController::isFoulMove()
                 QByteArray sfen = _recorder->sfen(_recorder->count() - 1);
                 bool mated = Engine::instance().mated(sfen);  // その局面が詰んでいるか
                 if (mated) {
-                    stopGame(currentTurn, maru::Foul, maru::Foul_DropPawnMate);
-                    showGameoverBox(tr("Foul - Drop Pawn Mate."));  // 打ち歩詰めは禁じ手です。
+                    stopGame(currentTurn, maru::Illegal, maru::Illegal_DropPawnMate);
+                    showGameoverBox(tr("Illegal - Drop Pawn Mate."));  // 打ち歩詰めは禁じ手です。
                     return true;
                 }
             }
@@ -747,8 +758,8 @@ bool MainController::isFoulMove()
         // 王手放置チェック
         auto opponent = (currentTurn == maru::Sente) ? maru::Gote : maru::Sente;
         if (!_board->searchMovablePeace(opponent, _board->kingCoord(currentTurn)).isEmpty()) {
-            stopGame(currentTurn, maru::Foul, maru::Foul_OverlookedCheck);
-            showGameoverBox(tr("Foul - Overlooked Check."));  // 王手放置は禁じ手です。
+            stopGame(currentTurn, maru::Illegal, maru::Illegal_OverlookedCheck);
+            showGameoverBox(tr("Illegal - Overlooked Check."));  // 王手放置は禁じ手です。
             return true;
         }
 
@@ -756,8 +767,8 @@ bool MainController::isFoulMove()
         if (_recorder->isRepetition()) {
             if (_recorder->isPerpetualCheck()) {  // 連続王手の千日手か
                 // 連続王手
-                stopGame(currentTurn, maru::Foul, maru::Foul_PerpetualCheck);
-                showGameoverBox(tr("Foul - Perpetual Check."));  // 連続王手の千日手は禁じ手です。
+                stopGame(currentTurn, maru::Illegal, maru::Illegal_PerpetualCheck);
+                showGameoverBox(tr("Illegal - Perpetual Check."));  // 連続王手の千日手は禁じ手です。
                 return true;
             } else {
                 // 千日手
@@ -985,6 +996,14 @@ void MainController::nextAnalysis()
         while (true) {
             auto staticsfen = _recorder->sfen(++_analysisMoves);  // 次の局面へ
 
+            // 禁じ手か
+            bool illegal = _recorder->isIllegalMove(_analysisMoves);
+            if (illegal) {
+                // 解析終了
+                stopAnalysis(_analysisMoves);
+                return;
+            }
+
             // 詰みでないかどうか
             bool mated = Engine::instance().mated(staticsfen);
             if (!mated) {
@@ -1002,6 +1021,7 @@ void MainController::nextAnalysis()
             }
         }
 
+        // 解析開始
         auto sfen = _recorder->sfenMoves(_analysisMoves);
         Engine::instance().analysis(sfen);
         setCurrentRecordRow(_analysisMoves);
@@ -1123,8 +1143,8 @@ void MainController::slotResign(QAbstractButton *button)
 
     auto *box = dynamic_cast<QMessageBox *>(sender());
     if (box && box->buttonRole(button) == QMessageBox::AcceptRole) {
-        auto result = (_players[_clock->currentTurn()].type() == maru::Human) ? maru::Loss : maru::None;
-        auto detail = (_players[_clock->currentTurn()].type() == maru::Human) ? maru::Loss_Resign : maru::Abort;
+        auto result = (_players[_clock->currentTurn()].type() == maru::Human) ? maru::Loss : maru::Abort;
+        auto detail = (_players[_clock->currentTurn()].type() == maru::Human) ? maru::Loss_Resign : maru::Abort_GameAborted;
         stopGame(_clock->currentTurn(), result, detail);
         showGameoverBox(tr("You resigned."));  // あなたは投了しました。
     }
@@ -1270,7 +1290,7 @@ void MainController::updateRemainingTime()
 void MainController::gameoverTimeout()
 {
     if (_mode == Rating) {
-        stopGame(_clock->currentTurn(), maru::Foul, maru::Foul_OutOfTime);
+        stopGame(_clock->currentTurn(), maru::Illegal, maru::Illegal_OutOfTime);
         showGameoverBox(tr("Out of time."));  // 時間切れです。
     }
 }
@@ -1428,4 +1448,6 @@ void MainController::loadSfen()
     auto p = sfen.players();
     setSentePlayer(Player(maru::Human, p.first));
     setGotePlayer(Player(maru::Human, p.second));
+    auto res = sfen.gameResult();
+    showResult(sfen.turn(), res.first, res.second);
 }

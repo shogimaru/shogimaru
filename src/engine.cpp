@@ -77,7 +77,6 @@ bool Engine::startAnalysis()
 
     Command::instance().clearResponse();
     Command::instance().request("setoption name MultiPV value 5");
-    //Command::instance().request("setoption name BookFile value user_book1.db");  // 定跡ファイル:100テラショック定跡
     Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
     Command::instance().request("setoption name BookMoves value 0");     // 定跡を用いる手数
     Command::instance().request("setoption name BookEvalDiff value 0");  // 最善手のみを採用するなら0に。ソフトが指す定跡に幅を持たせたいなら、10〜50ぐらいの大きめの値に。

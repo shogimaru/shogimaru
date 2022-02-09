@@ -55,7 +55,7 @@ public:
     void setSentePlayer(const Player &player);
     void setGotePlayer(const Player &player);
     void showGameoverBox(const QString &msg) const;
-    bool isFoulMove();
+    bool isIllegalMove();
     void showAnalyzingMoves(const QVector<ScoreItem> &scores, const QByteArray &sfen);
     void clear();
 

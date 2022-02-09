@@ -24,6 +24,7 @@ void Sfen::clear()
     _counter = 1;
     _players.first.clear();
     _players.second.clear();
+    _gameResult = 0;
 }
 
 
@@ -407,6 +408,7 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
     Sfen sfen(DefaultSfen);  // TODO 駒落ちに未対応
     QString senteName;
     QString goteName;
+    maru::Turn turn = maru::Sente;
 
     if (ok) {
         *ok = false;
@@ -419,6 +421,15 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
         }
 
         if (line.startsWith('+') || line.startsWith('-')) {
+            if (line == "+") {
+                turn = maru::Sente;  // 先手番
+                continue;
+            }
+            if (line == "-") {
+                turn = maru::Gote;  // 後手番
+                continue;
+            }
+
             // 指し手
             auto l12 = line.mid(1, 2);
             QByteArray move = ShogiRecord::coordToUsi(l12.toInt());
@@ -448,6 +459,7 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
 
             if (move.length() == 4 || move.length() == 5) {
                 sfen.move(move);
+                turn = (line.startsWith('+')) ? maru::Gote : maru::Sente;  // 次の手番
             } else {
                 // Error
                 qCritical() << "Error notation:" << move;
@@ -480,7 +492,69 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
         }
         if (line.startsWith('%')) {
             // 特殊な指し手／終局状況
+            // %TORYO 投了
+            // %CHUDAN 中断
+            // %SENNICHITE 千日手
+            // %TIME_UP 手番側が時間切れで負け
+            // %ILLEGAL_MOVE 手番側の反則負け
+            // %+ILLEGAL_ACTION 先手(下手)の反則行為により、後手(上手)の勝ち
+            // %-ILLEGAL_ACTION 後手(上手)の反則行為により、先手(下手)の勝ち
+            // %JISHOGI 持将棋
+            // %KACHI (入玉で)勝ちの宣言
+            // %HIKIWAKE (入玉で)引き分けの宣言
+            // %MATTA 待った
+            // %TSUMI 詰み
+            // %FUZUMI 不詰
+            // %ERROR エラー
+            maru::GameResult result;
+            maru::ResultDetail detail;
+
+            if (line == "%TORYO" || line == "%TSUMI") {
+                result = maru::Loss;
+                detail = maru::Loss_Resign;
+            } else if (line == "%CHUDAN") {
+                result = maru::Abort;
+                detail = maru::Abort_GameAborted;
+            } else if (line == "%SENNICHITE") {
+                result = maru::Draw;
+                detail = maru::Draw_Repetition;
+            } else if (line == "%TIME_UP") {
+                result = maru::Illegal;
+                detail = maru::Illegal_OutOfTime;
+            } else if (line == "%ILLEGAL_MOVE") {
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%+ILLEGAL_ACTION") {
+                turn = maru::Sente;
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%-ILLEGAL_ACTION") {
+                turn = maru::Gote;
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%JISHOGI" || line == "%HIKIWAKE") {
+                result = maru::Draw;
+                detail = maru::Draw_Impasse;
+            } else if (line == "%KACHI") {
+                result = maru::Win;
+                detail = maru::Win_Declare;
+            } else if (line == "%MATTA") {
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%ERROR" || line == "%FUZUMI") {
+                result = maru::Abort;
+                detail = maru::Abort_GameAborted;
+            } else {
+                result = maru::Abort;
+                detail = maru::Abort_GameAborted;
+            }
+
+            sfen.setGameResult(turn, result, detail);
             break;
+        }
+        if (line.startsWith('T')) {
+            // 消費時間
+            continue;
         }
         if (line.startsWith('\'')) {
             // comment line
@@ -532,7 +606,7 @@ QString Sfen::toCsa() const
     csa += "+\n";  // 手番表記
     bool senteTurn = true;
     for (auto &mv : _moves) {
-        csa += (senteTurn) ? "+" : "-"; // 指し手手番
+        csa += (senteTurn) ? "+" : "-";  // 指し手手番
         senteTurn = !senteTurn;
         if (mv.second.mid(0, 1).isUpper()) {
             csa += "00";
@@ -546,7 +620,8 @@ QString Sfen::toCsa() const
         csa += "\n";
     }
     // 終局
-    csa += "%TORYO\n";
+    csa += gemeResultCsa();
+    csa += "\n";
     return csa;
 }
 
@@ -559,4 +634,58 @@ Sfen Sfen::fromSfen(const QByteArray &sfen, bool *ok)
         *ok = res;
     }
     return sf;
+}
+
+
+QPair<maru::GameResult, maru::ResultDetail> Sfen::gameResult() const
+{
+    int res = _gameResult & maru::ResultMask;
+    int detail = _gameResult & maru::DetailMask;
+    return qMakePair((maru::GameResult)res, (maru::ResultDetail)detail);
+}
+
+
+void Sfen::setGameResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail)
+{
+    _gameResult = turn | result | detail;
+}
+
+
+QString Sfen::gemeResultCsa() const
+{
+    /*
+    %TORYO 投了
+    %CHUDAN 中断
+    %SENNICHITE 千日手
+    %TIME_UP 手番側が時間切れで負け
+    %ILLEGAL_MOVE 手番側の反則負け、反則の内容はコメントで記録する
+    %+ILLEGAL_ACTION 先手(下手)の反則行為により、後手(上手)の勝ち
+    %-ILLEGAL_ACTION 後手(上手)の反則行為により、先手(下手)の勝ち
+    %JISHOGI 持将棋
+    %KACHI (入玉で)勝ちの宣言
+    */
+    int turn = _gameResult & maru::TurnMask;
+    int detail = _gameResult & maru::DetailMask;
+
+    switch (detail) {
+    case maru::Win_Declare:
+        return QLatin1String("%KACHI");
+    case maru::Loss_Resign:
+        return QLatin1String("%TORYO");
+    case maru::Draw_Repetition:
+        return QLatin1String("%SENNICHITE");
+    case maru::Draw_Impasse:
+        return QLatin1String("%JISHOGI");
+    case maru::Illegal_OutOfTime:
+        return QLatin1String("%TIME_UP");
+    case maru::Illegal_TwoPawns:  // 二歩
+    case maru::Illegal_DropPawnMate:  // 打ち歩詰め
+    case maru::Illegal_OverlookedCheck:  // 王手放置
+    case maru::Illegal_PerpetualCheck:  // 連続王手の千日手
+        return (turn == maru::Sente) ? QLatin1String("+ILLEGAL_ACTION") : QLatin1String("%-ILLEGAL_ACTION");
+    case maru::Abort_GameAborted:
+        return QLatin1String("%CHUDAN");
+    default:
+        return QLatin1String("%CHUDAN");
+    }
 }

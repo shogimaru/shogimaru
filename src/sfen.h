@@ -1,14 +1,14 @@
 #pragma once
 #include "global.h"
-#include <QStringList>
 #include <QMap>
+#include <QStringList>
 
 /*!
   Shogi Forsyth-Edwards Notation class
  */
 class Sfen {
 public:
-    Sfen() {}
+    Sfen() { }
     Sfen(const QByteArray &sfen);
     Sfen(const Sfen &) = default;
     Sfen(Sfen &&) = default;
@@ -25,9 +25,13 @@ public:
     QByteArray toSfen() const;
     QByteArray toUsi() const;
     QString toCsa() const;
+    maru::Turn turn() const { return _turn; }
     QStringList generateKif(const QByteArrayList &moves, bool compact = true) const;
     QPair<QString, QString> players() const { return _players; }
     void setPlayers(const QString &sente, const QString &gote);
+    QPair<maru::GameResult, maru::ResultDetail> gameResult() const;
+    void setGameResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail);
+    QString gemeResultCsa() const;
     void clear();
 
     static QByteArray defaultPostion();
@@ -43,6 +47,7 @@ private:
     QList<QPair<QByteArray, QByteArray>> _moves;  // <移動後のPiece, USI>
     int _counter {1};
     QPair<QString, QString> _players;  // <先手,後手>
+    int _gameResult {0};
 
     friend class Board;
 };

@@ -17,8 +17,8 @@ public:
     void setLosses(int losses) { _losses = losses; }
     int draws() const { return _draws; }
     void setDraws(int draws) { _draws = draws; }
-    int fouls() const { return _fouls; }
-    void setFouls(int fouls) { _fouls = fouls; }
+    int illegal() const { return _illegal; }
+    void setIllegal(int illegal) { _illegal = illegal; }
     int scale() const { return _scale; }
     void setScale(int scale) { _scale = scale; }
     int byoyomi() const { return _byoyomi; }
@@ -46,7 +46,7 @@ private:
     int _wins {0};
     int _losses {0};
     int _draws {0};
-    int _fouls {0};
+    int _illegal {0};
     int _scale {80};  // 将棋盤拡縮値
     int _byoyomi {0};
     int _basicTime {0};  // 持ち時間(分)

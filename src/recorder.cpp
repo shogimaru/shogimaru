@@ -1,8 +1,8 @@
 #include "recorder.h"
-#include "shogirecord.h"
 #include "piece.h"
-#include "sfen.h"
 #include "ponderinfo.h"
+#include "sfen.h"
+#include "shogirecord.h"
 #include <QDebug>
 
 namespace {
@@ -21,7 +21,7 @@ char usiChar(Piece::Name name)
     }
 }
 
-} // namespace
+}  // namespace
 
 
 Recorder::Recorder()
@@ -34,19 +34,19 @@ Recorder::Recorder()
 QString Recorder::record(const QByteArray &piece, const QByteArray &usi, bool check, const PonderInfo &info)
 {
     // リストへ追加
-    int prevCoord = (_pvList.count() > 1) ? ShogiRecord::usiToCoord(_pvList.last().first.mid(2, 2)) : 0; // 直前の指し手マス
+    int prevCoord = (_pvList.count() > 1) ? ShogiRecord::usiToCoord(_pvList.last().first.mid(2, 2)) : 0;  // 直前の指し手マス
     int idx = _pvList.count() - 1;
     auto currentTurn = turn(idx);
 
     ScoreItem score(info.scoreCp, info.mate, info.mateCount, info.depth, info.nodes, info.pv);
     _pvList << qMakePair(usi, QVector<ScoreItem>({score}));
     _moveRoutes << 0;  // 指し手
-    addFoulItem(check, sfen(idx + 1));
+    addIllegalItem(check, sfen(idx + 1));
     return ShogiRecord::kifString(currentTurn, usi, piece, prevCoord, false);
 }
 
 
-QString Recorder::record(const QPair<Piece*, QString> &move, bool check, const PonderInfo &info)
+QString Recorder::record(const QPair<Piece *, QString> &move, bool check, const PonderInfo &info)
 {
     auto *piece = move.first;
 
@@ -62,7 +62,7 @@ QString Recorder::record(const QPair<Piece*, QString> &move, bool check, const P
     QByteArray usi;
     if (fromcrd < 11 || fromcrd > 99) {
         // 打つ
-        usi += QByteArray(1, usiChar(piece->name())).toUpper(); // 大文字
+        usi += QByteArray(1, usiChar(piece->name())).toUpper();  // 大文字
         usi += '*';
     } else {
         // 駒移動
@@ -89,7 +89,8 @@ QString Recorder::record(const QPair<Piece*, QString> &move, bool check, const P
 void Recorder::recordPonderingScore(int index, int multipv, const ScoreItem &item)
 {
     if (multipv > MULTIPV_MAX || index < 0) {
-        qCritical() << "Invalid value!" << "multipv:" << multipv << "index:" << index;
+        qCritical() << "Invalid value!"
+                    << "multipv:" << multipv << "index:" << index;
         return;
     }
 
@@ -106,7 +107,7 @@ void Recorder::recordPonderingScore(int index, int multipv, const ScoreItem &ite
 }
 
 
-QString Recorder::kifString(maru::Turn turn, const QPair<Piece*, QString> &move, int prevCoord) const
+QString Recorder::kifString(maru::Turn turn, const QPair<Piece *, QString> &move, int prevCoord) const
 {
     QByteArray usi;
     QByteArray piece = move.first->sfen();
@@ -129,25 +130,25 @@ QString Recorder::kifString(maru::Turn turn, const QPair<Piece*, QString> &move,
 
 // 反則チェックアイテム追加
 // check:王手か, sfen:盤面
-void Recorder::addFoulItem(bool check, const QByteArray &sfen)
+void Recorder::addIllegalItem(bool check, const QByteArray &sfen)
 {
     // 手数以降の文字を削除
     QByteArray sf = sfen.split(' ').mid(0, 3).join(" ");
-    _foulItems << FoulCheck(check, sf);
+    _illegalItems << IllegalCheck(check, sf);
 }
 
 // 千日手か
 bool Recorder::isRepetition() const
 {
-    if (_foulItems.count() < 13) {
+    if (_illegalItems.count() < 13) {
         return false;
     }
 
     int count = 0;
-    const QString &sfen = _foulItems.last().sfen;
+    const QString &sfen = _illegalItems.last().sfen;
 
-    for (int i = _foulItems.count() - 1; i >= 0; i -= 2) {
-        if (_foulItems[i].sfen == sfen) {
+    for (int i = _illegalItems.count() - 1; i >= 0; i -= 2) {
+        if (_illegalItems[i].sfen == sfen) {
             if (++count == 4) {
                 return true;
             }
@@ -160,25 +161,35 @@ bool Recorder::isRepetition() const
 // 連続王手千日手（禁じ手）か
 bool Recorder::isPerpetualCheck() const
 {
-    if (_foulItems.count() < 13 || !_foulItems.last().check) {
+    if (_illegalItems.count() < 13 || !_illegalItems.last().check) {
         return false;
     }
 
     int count = 0;
-    const QString &sfen = _foulItems.last().sfen;
+    const QString &sfen = _illegalItems.last().sfen;
 
-    for (int i = _foulItems.count() - 1; i >= 0; i -= 2) {
-        if (_foulItems[i].sfen == sfen) {
+    for (int i = _illegalItems.count() - 1; i >= 0; i -= 2) {
+        if (_illegalItems[i].sfen == sfen) {
             if (++count == 4) {
                 return true;
             }
         }
 
-        if (!_foulItems[i].check) {
+        if (!_illegalItems[i].check) {
             break;
         }
     }
     return false;
+}
+
+// 禁じ手（時間切れは含めない）
+bool Recorder::isIllegalMove(int index) const
+{
+    const auto IllegalMoves = QList {
+        maru::Illegal_TwoPawns, maru::Illegal_DropPawnMate,
+        maru::Illegal_OverlookedCheck, maru::Illegal_PerpetualCheck, maru::Illegal_Other};
+
+    return index == _pvList.count() - 1 && IllegalMoves.contains(_result.second);
 }
 
 // 指し手 index:インデックス(0オリジン)
@@ -225,19 +236,19 @@ QByteArray Recorder::sfenMoves(int index) const
 maru::Turn Recorder::turn(int index) const
 {
     // index:0 = Sente
-    return (index % 2) ? maru::Gote: maru::Sente;
+    return (index % 2) ? maru::Gote : maru::Sente;
 }
 
 
 void Recorder::removeLast()
 {
-    _foulItems.removeLast();
+    _illegalItems.removeLast();
 }
 
 
 void Recorder::clear()
 {
-    _foulItems.clear();
+    _illegalItems.clear();
     _pvList.clear();
     _pvList << qMakePair(Sfen::defaultPostion(), QVector<ScoreItem>({ScoreItem()}));
     _moveRoutes.clear();
@@ -271,4 +282,11 @@ QByteArrayList Recorder::allMoves() const
 QByteArray Recorder::lastMove() const
 {
     return (_pvList.count() > 1) ? _pvList.last().first : QByteArray();
+}
+
+
+void Recorder::setGameResult(maru::GameResult result, maru::ResultDetail detail)
+{
+    _result.first = result;
+    _result.second = detail;
 }
