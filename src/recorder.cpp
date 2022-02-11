@@ -233,6 +233,14 @@ QByteArray Recorder::sfenMoves(int index) const
 }
 
 
+Sfen Recorder::toSfen() const
+{
+    Sfen sfen(sfenMoves(99999));
+    sfen.setGameResult(_result.first, _result.second);
+    return sfen;
+}
+
+
 maru::Turn Recorder::turn(int index) const
 {
     // index:0 = Sente

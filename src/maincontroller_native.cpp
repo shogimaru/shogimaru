@@ -11,11 +11,11 @@ void MainController::saveFile(const QString &filePath)
         return;
     }
 
-    Sfen sfen(_recorder->sfenMoves(99999));
+    Sfen sfen = _recorder->toSfen();
     sfen.setPlayers(_players[maru::Sente].name(), _players[maru::Gote].name());
-
-    QFile file(filePath);
     auto data = sfen.toCsa().toLocal8Bit();
+    QFile file(filePath);
+
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         int len = file.write(data);
         file.close();

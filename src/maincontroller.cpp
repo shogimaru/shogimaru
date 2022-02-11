@@ -1444,9 +1444,11 @@ void MainController::loadSfen()
         _ui->recordWidget->scrollToItem(item);
     }
 
+    auto res = sfen.gameResult();
+    _recorder->setGameResult(res.first, res.second);
+    showResult(sfen.turn(), res.first, res.second);
+
     auto p = sfen.players();
     setSentePlayer(Player(maru::Human, p.first));
     setGotePlayer(Player(maru::Human, p.second));
-    auto res = sfen.gameResult();
-    showResult(sfen.turn(), res.first, res.second);
 }

@@ -629,7 +629,17 @@ QString Sfen::toCsa() const
 Sfen Sfen::fromSfen(const QByteArray &sfen, bool *ok)
 {
     Sfen sf;
-    bool res = sf.parse(sfen);
+
+    auto sfstr = sfen.split(' ');
+    if (sfstr.value(0).toLower() == "position") {
+        sfstr.takeFirst();
+    }
+
+    if (sfstr.value(0).toLower() == "startpos") {
+        sfstr[0] = Sfen::defaultPostion();
+    }
+
+    bool res = sf.parse(sfstr.join(' '));
     if (ok) {
         *ok = res;
     }
@@ -642,6 +652,12 @@ QPair<maru::GameResult, maru::ResultDetail> Sfen::gameResult() const
     int res = _gameResult & maru::ResultMask;
     int detail = _gameResult & maru::DetailMask;
     return qMakePair((maru::GameResult)res, (maru::ResultDetail)detail);
+}
+
+
+void Sfen::setGameResult(maru::GameResult result, maru::ResultDetail detail)
+{
+    _gameResult = _turn | result | detail;
 }
 
 

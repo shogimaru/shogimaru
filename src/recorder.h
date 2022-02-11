@@ -69,6 +69,7 @@ public:
     QByteArrayList moves(int index) const;
     QByteArray sfen(int index) const;
     QByteArray sfenMoves(int index) const;
+    Sfen toSfen() const;
     maru::Turn turn(int index) const;
     void removeLast();
     int count() const { return _pvList.count(); }  // 局面数 (初期値:1, 初手指すと2)

@@ -30,6 +30,7 @@ public:
     QPair<QString, QString> players() const { return _players; }
     void setPlayers(const QString &sente, const QString &gote);
     QPair<maru::GameResult, maru::ResultDetail> gameResult() const;
+    void setGameResult(maru::GameResult result, maru::ResultDetail detail);
     void setGameResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail);
     QString gemeResultCsa() const;
     void clear();
