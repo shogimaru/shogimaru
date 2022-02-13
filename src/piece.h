@@ -30,6 +30,7 @@ public:
         PromotedKnight = ('+' << 8) | Knight, // 成桂
         PromotedLance  = ('+' << 8) | Lance,  // 成香
         PromotedPawn   = ('+' << 8) | Pawn,   // と金
+        NameMask = 0xFFF,  // マスク
     };
 
     // 駒の向き

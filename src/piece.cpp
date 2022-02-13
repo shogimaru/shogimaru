@@ -1,11 +1,11 @@
 #include "piece.h"
 #include "badge.h"
-#include <QRectF>
-#include <QVector>
-#include <QGraphicsSceneMouseEvent>
-#include <QGraphicsScene>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
+#include <QRectF>
+#include <QVector>
 
 static volatile bool showRotated = false;
 
@@ -44,40 +44,70 @@ public:
         insert(Piece::PromotedKnight | Piece::Downward, "downward_promotedknight.png");
         insert(Piece::PromotedLance | Piece::Downward, "downward_promotedlance.png");
         insert(Piece::PromotedPawn | Piece::Downward, "downward_promotedpawn.png");
-
-        insert(Piece::KingOu | Piece::Upward_R, "upward_r_kingou.png");
-        insert(Piece::KingGyoku | Piece::Upward_R, "upward_r_kinggyoku.png");
-        insert(Piece::Rook | Piece::Upward_R, "upward_r_rook.png");
-        insert(Piece::Bishop | Piece::Upward_R, "upward_r_bishop.png");
-        insert(Piece::Gold | Piece::Upward_R, "upward_r_gold.png");
-        insert(Piece::Silver | Piece::Upward_R, "upward_r_silver.png");
-        insert(Piece::Knight | Piece::Upward_R, "upward_r_knight.png");
-        insert(Piece::Lance | Piece::Upward_R, "upward_r_lance.png");
-        insert(Piece::Pawn | Piece::Upward_R, "upward_r_pawn.png");
-        insert(Piece::PromotedRook | Piece::Upward_R, "upward_r_promotedrook.png");
-        insert(Piece::PromotedBishop | Piece::Upward_R, "upward_r_promotedbishop.png");
-        insert(Piece::PromotedSilver | Piece::Upward_R, "upward_r_promotedsilver.png");
-        insert(Piece::PromotedKnight | Piece::Upward_R, "upward_r_promotedknight.png");
-        insert(Piece::PromotedLance | Piece::Upward_R, "upward_r_promotedlance.png");
-        insert(Piece::PromotedPawn | Piece::Upward_R, "upward_r_promotedpawn.png");
-        insert(Piece::KingOu | Piece::Downward_R, "downward_r_kingou.png");
-        insert(Piece::KingGyoku | Piece::Downward_R, "downward_r_kinggyoku.png");
-        insert(Piece::Rook | Piece::Downward_R, "downward_r_rook.png");
-        insert(Piece::Bishop | Piece::Downward_R, "downward_r_bishop.png");
-        insert(Piece::Gold | Piece::Downward_R, "downward_r_gold.png");
-        insert(Piece::Silver | Piece::Downward_R, "downward_r_silver.png");
-        insert(Piece::Knight | Piece::Downward_R, "downward_r_knight.png");
-        insert(Piece::Lance | Piece::Downward_R, "downward_r_lance.png");
-        insert(Piece::Pawn | Piece::Downward_R, "downward_r_pawn.png");
-        insert(Piece::PromotedRook | Piece::Downward_R, "downward_r_promotedrook.png");
-        insert(Piece::PromotedBishop | Piece::Downward_R, "downward_r_promotedbishop.png");
-        insert(Piece::PromotedSilver | Piece::Downward_R, "downward_r_promotedsilver.png");
-        insert(Piece::PromotedKnight | Piece::Downward_R, "downward_r_promotedknight.png");
-        insert(Piece::PromotedLance | Piece::Downward_R, "downward_r_promotedlance.png");
-        insert(Piece::PromotedPawn | Piece::Downward_R, "downward_r_promotedpawn.png");
+        // 回転
+        insert(Piece::KingOu | Piece::Upward_R, "downward_kingou.png");
+        insert(Piece::KingGyoku | Piece::Upward_R, "downward_kinggyoku.png");
+        insert(Piece::Rook | Piece::Upward_R, "downward_rook.png");
+        insert(Piece::Bishop | Piece::Upward_R, "downward_bishop.png");
+        insert(Piece::Gold | Piece::Upward_R, "downward_gold.png");
+        insert(Piece::Silver | Piece::Upward_R, "downward_silver.png");
+        insert(Piece::Knight | Piece::Upward_R, "downward_knight.png");
+        insert(Piece::Lance | Piece::Upward_R, "downward_lance.png");
+        insert(Piece::Pawn | Piece::Upward_R, "downward_pawn.png");
+        insert(Piece::PromotedRook | Piece::Upward_R, "downward_promotedrook.png");
+        insert(Piece::PromotedBishop | Piece::Upward_R, "downward_promotedbishop.png");
+        insert(Piece::PromotedSilver | Piece::Upward_R, "downward_promotedsilver.png");
+        insert(Piece::PromotedKnight | Piece::Upward_R, "downward_promotedknight.png");
+        insert(Piece::PromotedLance | Piece::Upward_R, "downward_promotedlance.png");
+        insert(Piece::PromotedPawn | Piece::Upward_R, "downward_promotedpawn.png");
+        insert(Piece::KingOu | Piece::Downward_R, "upward_kingou.png");
+        insert(Piece::KingGyoku | Piece::Downward_R, "upward_kinggyoku.png");
+        insert(Piece::Rook | Piece::Downward_R, "upward_rook.png");
+        insert(Piece::Bishop | Piece::Downward_R, "upward_bishop.png");
+        insert(Piece::Gold | Piece::Downward_R, "upward_gold.png");
+        insert(Piece::Silver | Piece::Downward_R, "upward_silver.png");
+        insert(Piece::Knight | Piece::Downward_R, "upward_knight.png");
+        insert(Piece::Lance | Piece::Downward_R, "upward_lance.png");
+        insert(Piece::Pawn | Piece::Downward_R, "upward_pawn.png");
+        insert(Piece::PromotedRook | Piece::Downward_R, "upward_promotedrook.png");
+        insert(Piece::PromotedBishop | Piece::Downward_R, "upward_promotedbishop.png");
+        insert(Piece::PromotedSilver | Piece::Downward_R, "upward_promotedsilver.png");
+        insert(Piece::PromotedKnight | Piece::Downward_R, "upward_promotedknight.png");
+        insert(Piece::PromotedLance | Piece::Downward_R, "upward_promotedlance.png");
+        insert(Piece::PromotedPawn | Piece::Downward_R, "upward_promotedpawn.png");
     }
 };
-Q_GLOBAL_STATIC(ImageFileMap, imageFileMap)
+
+
+static QPixmap piecePixmap(int piece)
+{
+    static QMap<int, QPixmap> pixmapMap;
+    static ImageFileMap imageFileMap;
+
+    if (!(piece & Piece::NameMask)) {
+        return QPixmap();
+    }
+
+    QPixmap pix = pixmapMap.value(piece);
+    if (pix.isNull()) {
+        auto img = imageFileMap.value(piece);
+        if (!img.isEmpty()) {
+            const QString dir = QLatin1String("assets/images/");
+            pix = QPixmap(dir + img);
+            if (piece & Piece::Rotated) {
+                // 180度回転
+                QTransform transform;
+                transform.translate(pix.width(), pix.height());
+                transform.rotate(180);
+                pix = pix.transformed(transform);
+            }
+            pixmapMap.insert(piece, pix);
+        } else {
+            qDebug() << piece;
+        }
+    }
+    return pix;
+}
 
 
 Piece::Piece(QGraphicsItem *parent) :
@@ -100,7 +130,7 @@ Piece::Piece(QGraphicsItem *parent) :
 Piece::Piece(Name name, maru::Turn owner, QGraphicsItem *parent) :
     QObject(),
     QGraphicsPixmapItem(parent),
-    _name(name),
+    _name((owner == maru::Gote && name == KingGyoku) ? KingOu : name),  // 後手は王にする
     _owner(owner),
     _orient((_owner == maru::Sente) ? Upward : Downward),
     _badge(new Badge(0, (_orient == Upward) ? 0 : 180, this))
@@ -143,10 +173,9 @@ QByteArray Piece::sfen() const
 // 再描画
 void Piece::reload()
 {
-    auto img = imageFileMap()->value(_name | _orient | (showRotated ? Rotated : 0));
-    if (!img.isEmpty()) {
-        const QString dir = QLatin1String("assets/images/");
-        setPixmap(QPixmap(dir + img));
+    auto pix = piecePixmap(_name | _orient | (showRotated ? Rotated : 0));
+    if (!pix.isNull()) {
+        setPixmap(pix);
         setFlags(QGraphicsItem::ItemIsSelectable);
     }
 
@@ -183,12 +212,12 @@ Piece::Name Piece::promotedName() const
 Piece::Name Piece::promotedName(Name name)
 {
     switch (name) {
-    case Rook:      // 飛
-    case Bishop:    // 角
-    case Silver:    // 銀
-    case Knight:    // 桂
-    case Lance:     // 香
-    case Pawn:      // 歩
+    case Rook:  // 飛
+    case Bishop:  // 角
+    case Silver:  // 銀
+    case Knight:  // 桂
+    case Lance:  // 香
+    case Pawn:  // 歩
         return (Name)(('+' << 8) | name);
     default:
         return name;
@@ -198,17 +227,6 @@ Piece::Name Piece::promotedName(Name name)
 
 Piece::Name Piece::originalName() const
 {
-    // switch (_name) {
-    // case PromotedRook:      // 龍
-    // case PromotedBishop:    // 馬
-    // case PromotedSilver:    // 成銀
-    // case PromotedKnight:    // 成桂
-    // case PromotedLance:     // 成香
-    // case PromotedPawn:      // と金
-    //     return (Name)((int)_name >> 2);
-    // default:
-    //     return _name;
-    // }
     return (Name)(_name & 0xff);
 }
 
@@ -280,7 +298,7 @@ public:
         insert(Piece::PromotedKnight, QCoreApplication::translate("KanjiMap", "+N"));  // 成桂
         insert(Piece::PromotedLance, QCoreApplication::translate("KanjiMap", "+L"));  // 成香
         insert(Piece::PromotedPawn, QCoreApplication::translate("KanjiMap", "+P"));  // と
-     }
+    }
 };
 Q_GLOBAL_STATIC(KanjiMap, kanjiMap)
 
