@@ -13,6 +13,7 @@ void Sound::playBleep()
         player->setSource(QUrl::fromLocalFile("assets/sounds/bleep.wav"));
         return player;
     }();
+    player->stop();
     player->play();
 }
 
@@ -27,5 +28,6 @@ void Sound::playSnap()
         player->setSource(QUrl::fromLocalFile("assets/sounds/snap.wav"));
         return player;
     }();
+    player->stop();
     player->play();
 }
