@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>321</width>
-    <height>391</height>
+    <width>351</width>
+    <height>381</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>120</x>
+     <x>160</x>
      <y>340</y>
      <width>181</width>
      <height>29</height>
@@ -31,7 +31,7 @@
     <rect>
      <x>20</x>
      <y>50</y>
-     <width>281</width>
+     <width>321</width>
      <height>101</height>
     </rect>
    </property>
@@ -76,7 +76,7 @@
     <rect>
      <x>20</x>
      <y>169</y>
-     <width>281</width>
+     <width>321</width>
      <height>161</height>
     </rect>
    </property>
@@ -125,7 +125,7 @@
    <widget class="QTimeEdit" name="timeEdit">
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>200</x>
       <y>40</y>
       <width>101</width>
       <height>29</height>
@@ -138,7 +138,7 @@
    <widget class="QSpinBox" name="nodesSpinBox">
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>200</x>
       <y>80</y>
       <width>101</width>
       <height>29</height>
@@ -151,7 +151,7 @@
    <widget class="QSpinBox" name="depthSpinBox">
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>200</x>
       <y>120</y>
       <width>101</width>
       <height>29</height>
