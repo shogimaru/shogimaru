@@ -22,11 +22,11 @@ int main(int argc, char *argv[])
 
     // Set font
 #ifdef Q_OS_WIN64
-    QFont font("Meiryo", 12);
+    QFont font("Yu Gothic UI", 12);
 #else
     int id = QFontDatabase::addApplicationFont("assets/fonts/ipagp.ttf");
     QString family = QFontDatabase::applicationFontFamilies(id).at(0);
-    QFont font(family);
+    QFont font(family, 12);
 #endif
     QApplication::setFont(font);
 
