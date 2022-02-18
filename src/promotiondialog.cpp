@@ -25,7 +25,7 @@ void PromotionDialog::question(Piece *src, Piece *dst, QObject *receiver, const 
 {
     delete dialog;
     dialog = new PromotionDialog(src, dst
-#ifndef __EMSCRIPTEN__
+#ifndef Q_OS_WASM
     , maru::mainWindow()
 #endif
     );

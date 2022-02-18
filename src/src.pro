@@ -14,12 +14,12 @@ wasm {
   SOURCES += file_wasm.cpp
   SOURCES += engine_wasm.cpp
   SOURCES += command_wasm.cpp
+  SOURCES += sound_sdl.cpp
   HEADERS += enginethread.h
   SOURCES += enginethread.cpp
   DESTDIR  = ../html/
 } else {
   QT      += core5compat
-  LIBS = -lSDL -lSDL_mixer
   SOURCES += maincontroller_native.cpp
   SOURCES += file.cpp
   SOURCES += engine_native.cpp
@@ -27,6 +27,15 @@ wasm {
   HEADERS += engineprocess.h
   SOURCES += engineprocess.cpp
   DESTDIR  = ../
+
+  msvc {
+    QT += multimedia
+    QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus
+    SOURCES += sound_win.cpp
+  } else {
+    LIBS = -lSDL -lSDL_mixer
+    SOURCES += sound_sdl.cpp
+  }
 }
 
 SOURCES += \
@@ -55,7 +64,6 @@ SOURCES += \
         startdialog2.cpp \
         mypage.cpp \
         messagebox.cpp \
-        sound.cpp \
         evaluationgraph.cpp \
         maincontroller.cpp
 

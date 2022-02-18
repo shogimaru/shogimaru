@@ -98,7 +98,7 @@ void RecordDialog::openFile()
 
 void RecordDialog::selectSaveFile()
 {
-#if __EMSCRIPTEN__
+#ifdef Q_OS_WASM
     QString fileName = "untitled.csa";
 #else
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "untitled.csa");

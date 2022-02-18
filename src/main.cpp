@@ -21,12 +21,15 @@ int main(int argc, char *argv[])
     }
 
     // Set font
+#if defined(Q_OS_WASM)
     int id = QFontDatabase::addApplicationFont("assets/fonts/ipagp.ttf");
     QString family = QFontDatabase::applicationFontFamilies(id).at(0);
-    //std::cout << qPrintable(family) << std::endl;
-    //QFont ipafont("IPAGothic");
-    //QFont ipafont("IPAPGothic");
     QFont ipafont(family);
+#elif defined(Q_OS_WIN64)
+    QFont ipafont("Meiryo");
+#else
+    QFont ipafont("PGothic");
+#endif
     QApplication::setFont(ipafont);
 
     MainController control;

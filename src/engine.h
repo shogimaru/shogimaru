@@ -67,7 +67,7 @@ private:
     maru::Turn _turn {maru::Sente};
     QByteArrayList _ponderingMoves;
     QByteArray _lastPondered;
-#ifdef __EMSCRIPTEN__
+#ifdef Q_OS_WASM
     EngineThread *_engineThread {nullptr};
 #endif
 };

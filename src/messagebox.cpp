@@ -12,7 +12,7 @@ void MessageBox::information(const QString &title, const QString &text, QObject 
 
     delete ibox;
     ibox = new QMessageBox(QMessageBox::Information, title, text, QMessageBox::Ok
-#ifndef __EMSCRIPTEN__
+#ifndef Q_OS_WASM
     , maru::mainWindow()
 #endif
     );
@@ -35,7 +35,7 @@ void MessageBox::question(const QString &title, const QString &text, QObject *re
 
     delete qbox;
     qbox = new QMessageBox(QMessageBox::Question, title, text, QMessageBox::Ok | QMessageBox::Cancel
-#ifndef __EMSCRIPTEN__
+#ifndef Q_OS_WASM
     , maru::mainWindow()
 #endif
     );
