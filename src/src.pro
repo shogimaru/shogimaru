@@ -19,23 +19,19 @@ wasm {
   SOURCES += enginethread.cpp
   DESTDIR  = ../html/
 } else {
-  QT      += core5compat
+  QT      += core5compat multimedia
   SOURCES += maincontroller_native.cpp
   SOURCES += file.cpp
   SOURCES += engine_native.cpp
   SOURCES += command_native.cpp
+  SOURCES += sound_native.cpp
   HEADERS += engineprocess.h
   SOURCES += engineprocess.cpp
   DESTDIR  = ../
+}
 
-  msvc {
-    QT += multimedia
-    QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus
-    SOURCES += sound_win.cpp
-  } else {
-    LIBS = -lSDL -lSDL_mixer
-    SOURCES += sound_sdl.cpp
-  }
+msvc {
+  QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus
 }
 
 SOURCES += \

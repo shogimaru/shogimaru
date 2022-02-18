@@ -21,16 +21,14 @@ int main(int argc, char *argv[])
     }
 
     // Set font
-#if defined(Q_OS_WASM)
+#ifdef Q_OS_WIN64
+    QFont font("Meiryo", 12);
+#else
     int id = QFontDatabase::addApplicationFont("assets/fonts/ipagp.ttf");
     QString family = QFontDatabase::applicationFontFamilies(id).at(0);
-    QFont ipafont(family);
-#elif defined(Q_OS_WIN64)
-    QFont ipafont("Meiryo");
-#else
-    QFont ipafont("PGothic");
+    QFont font(family);
 #endif
-    QApplication::setFont(ipafont);
+    QApplication::setFont(font);
 
     MainController control;
     control.show();
