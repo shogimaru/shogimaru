@@ -1,28 +1,31 @@
 #include "sound.h"
-#include <QSoundEffect>
+#include <QMediaPlayer>
+#include <QAudioOutput>
 
 
 void Sound::playBleep()
 {
-    QSoundEffect effect;
-
-    //if (!effect.isLoaded()) {
-        effect.setSource(QUrl::fromLocalFile("assets/sounds/bleep.wav"));
-        effect.setLoopCount(1);
-        effect.setVolume(1.0);
-    //}
-    effect.play();
+    static QMediaPlayer *player = []() {
+        auto player = new QMediaPlayer;
+        auto audioOutput = new QAudioOutput;
+        audioOutput->setVolume(80);
+        player->setAudioOutput(audioOutput);
+        player->setSource(QUrl::fromLocalFile("assets/sounds/bleep.wav"));
+        return player;
+    }();
+    player->play();
 }
 
 
 void Sound::playSnap()
 {
-    QSoundEffect effect;
-
-    //if (!effect.isLoaded()) {
-        effect.setSource(QUrl::fromLocalFile("assets/sounds/snap.wav"));
-        effect.setLoopCount(1);
-        effect.setVolume(1.0);
-    //};
-    effect.play();
+    static QMediaPlayer *player = []() {
+        auto player = new QMediaPlayer;
+        auto audioOutput = new QAudioOutput;
+        audioOutput->setVolume(80);
+        player->setAudioOutput(audioOutput);
+        player->setSource(QUrl::fromLocalFile("assets/sounds/snap.wav"));
+        return player;
+    }();
+    player->play();
 }
