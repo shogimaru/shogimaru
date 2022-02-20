@@ -1,13 +1,19 @@
 #include "engineprocess.h"
+#include <QFileInfo>
 #include <QDebug>
 
 constexpr auto ENGINE_PATH = "./engines/YaneuraOu/YaneuraOu-by-gcc";
+//constexpr auto ENGINE_PATH = "engines/YaneuraOu/YaneuraOu_NNUE.exe";
 
 
 EngineProcess::EngineProcess() :
     QProcess()
 {
-    setProgram(ENGINE_PATH);
+    if (QFileInfo(ENGINE_PATH).exists()) {
+        setProgram(ENGINE_PATH);
+    } else {
+        qCritical() << "Not found such shogi engine:" << ENGINE_PATH;
+    }
 }
 
 

@@ -22,7 +22,8 @@ int main(int argc, char *argv[])
 
     // Set font
 #ifdef Q_OS_WIN64
-    QFont font("Yu Gothic UI", 12);
+    QFont font("Yu Gothic UI");
+    font.setPointSizeF(11.5);
 #else
     int id = QFontDatabase::addApplicationFont("assets/fonts/ipagp.ttf");
     QString family = QFontDatabase::applicationFontFamilies(id).at(0);
