@@ -25,7 +25,6 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       INIT_BAT: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
       QT_PATH:  C:\Qt\6.2.2\msvc2019_64
-      QT_ADDON: qt.qt6.623.addons.qtmultimedia.win64_msvc2019_64
 
 # scripts that are called at very beginning, before repo cloning
 init:
@@ -47,7 +46,6 @@ build_script:
   - cmd: call "%INIT_BAT%" %VCVARARG%
   - cmd: set PATH=%QT_PATH%\bin;C:\tools\vcpkg\installed\x86-windows\tools;%PATH%
   - cmd: echo %PATH%
-  - cmd: C:\Qt\maintenancetool.exe install %QT_ADDON%
   - cmd: qmake -r CONFIG+=release
   - cmd: nmake install
   - cmd: windeployqt shogimaru.exe

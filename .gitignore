@@ -2,7 +2,9 @@
 *.bak
 .qmake.stash
 .vscode
+**/*.o
 **/.obj
+**/*.moc
 moc_*.cpp
 src/ui_*.h
 src/shogimaru.js_plugin_import.cpp

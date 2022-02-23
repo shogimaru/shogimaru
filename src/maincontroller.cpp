@@ -11,6 +11,7 @@
 #include "piece.h"
 #include "recorddialog.h"
 #include "recorder.h"
+#include "settingsdialog.h"
 #include "sfen.h"
 #include "shogirecord.h"
 #include "sound.h"
@@ -80,10 +81,11 @@ MainController::MainController(QWidget *parent) :
     _boardScaleBox(new QComboBox(this)),
     _clock(new ChessClock(this)),
     _recorder(new Recorder),
+    _startDialog(new StartDialog2(this)),
     _nicknameDialog(new NicknameDialog(this)),
+    _settingsDialog(new SettingsDialog(this)),
     _analysisDialog(new AnalysisDialog(this)),
     _recordDialog(new RecordDialog(this)),
-    _startDialog(new StartDialog2(this)),
     _myPage(new MyPage(this)),
     _infoBox(new QMessageBox(this)),
     _graph(new EvaluationGraph)
@@ -183,8 +185,6 @@ MainController::MainController(QWidget *parent) :
 
 MainController::~MainController()
 {
-    delete _nicknameDialog;
-    delete _startDialog;
     delete _recorder;
     delete _clock;
     delete _board;
@@ -211,6 +211,8 @@ void MainController::createToolBar()
     _ui->toolBar->addAction(_ui->newAction);
     _ui->toolBar->addSeparator();
     _ui->toolBar->addAction(_ui->resignAction);
+    _ui->toolBar->addSeparator();
+    _ui->toolBar->addAction(_ui->settingsAction);
     _ui->toolBar->addSeparator();
     _ui->toolBar->addAction(_ui->analysisAction);
     _ui->toolBar->addSeparator();
@@ -260,6 +262,7 @@ void MainController::updateButtonStates()
     case Watch:  // 棋譜再生
         _ui->newAction->setEnabled(true);
         _ui->resignAction->setDisabled(true);
+        _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(_recorder->count() > 1);
         _ui->recordAction->setEnabled(true);
@@ -276,6 +279,7 @@ void MainController::updateButtonStates()
     case Rating:  // 対局
         _ui->newAction->setDisabled(true);
         _ui->resignAction->setEnabled(true);
+        _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(false);
         _ui->recordAction->setEnabled(false);
@@ -290,6 +294,7 @@ void MainController::updateButtonStates()
     case Analyzing:  // 検討
         _ui->newAction->setEnabled(false);
         _ui->resignAction->setDisabled(true);
+        _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(tr("Stop"));
         _ui->analysisAction->setEnabled(true);
         _ui->recordAction->setEnabled(false);
@@ -306,6 +311,7 @@ void MainController::updateButtonStates()
     case Edit:  // 編集
         _ui->newAction->setEnabled(true);
         _ui->resignAction->setDisabled(true);
+        _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(false);
         _ui->recordAction->setEnabled(true);
