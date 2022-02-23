@@ -127,6 +127,7 @@ MainController::MainController(QWidget *parent) :
     _ui->infoLine->hide();
 
     connect(_ui->newAction, &QAction::triggered, _startDialog, &QDialog::open);
+    connect(_ui->settingsAction, &QAction::triggered, this, &MainController::slotSettingsAction);
     connect(_ui->analysisAction, &QAction::triggered, this, &MainController::slotAnalysisAction);
     connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
@@ -1337,6 +1338,12 @@ void MainController::startAnalyzing()
     updateButtonStates();
     showRemainingTime(maru::Sente, 0, 0);  // 先手残り時間
     showRemainingTime(maru::Gote, 0, 0);  // 後手残り時間
+}
+
+
+void MainController::slotSettingsAction()
+{
+    _settingsDialog->open();
 }
 
 

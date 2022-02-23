@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
-    <height>340</height>
+    <width>600</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +18,8 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>541</width>
-     <height>281</height>
+     <width>581</width>
+     <height>351</height>
     </rect>
    </property>
    <property name="tabPosition">
@@ -42,17 +42,22 @@
     </attribute>
    </widget>
   </widget>
-  <widget class="QPushButton" name="closeButton">
+  <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>449</x>
-     <y>300</y>
-     <width>101</width>
-     <height>31</height>
+     <x>410</x>
+     <y>360</y>
+     <width>181</width>
+     <height>41</height>
     </rect>
    </property>
-   <property name="text">
-    <string>Close</string>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
   </widget>
  </widget>

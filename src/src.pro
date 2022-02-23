@@ -55,8 +55,8 @@ SOURCES += \
         nicknamedialog.cpp \
         analysisdialog.cpp \
         recorddialog.cpp \
+        settingsdialog.cpp \
         westerntabstyle.cpp \
-#        startdialog.cpp \
         startdialog2.cpp \
         mypage.cpp \
         messagebox.cpp \
@@ -83,8 +83,8 @@ HEADERS += \
         nicknamedialog.h \
         analysisdialog.h \
         recorddialog.h \
+        settingsdialog.h \
         westerntabstyle.h \
-#        startdialog.h \
         startdialog2.h \
         mypage.h \
         messagebox.h \
@@ -99,7 +99,8 @@ FORMS += \
         ../forms/nicknamedialog.ui \
         ../forms/analysisdialog.ui \
         ../forms/recorddialog.ui \
-        ../forms/startdialog.ui \
+        ../forms/settingsdialog.ui \
+#        ../forms/startdialog.ui \
         ../forms/startdialog2.ui
 
 TRANSLATIONS += \
