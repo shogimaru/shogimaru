@@ -14,6 +14,12 @@ public:
     ~SettingsDialog() { }
 
     void open();
+    void accept();
+    void getEngineFilePath();
+
+protected:
+    void loadAvailableEngineList();
+    void save();
 
 private:
     Ui::SettingsDialog *_ui {nullptr};

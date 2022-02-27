@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>581</width>
-     <height>351</height>
+     <height>341</height>
     </rect>
    </property>
    <property name="tabPosition">
@@ -29,7 +29,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tabEngine">
     <attribute name="title">
@@ -61,7 +61,7 @@
       <string>Delete</string>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBox">
+    <widget class="QComboBox" name="engineComboBox">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -84,59 +84,13 @@
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
-    <widget class="QLabel" name="labelEvelDir">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>110</y>
-       <width>111</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>EvalDir</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="editEvalDir">
-     <property name="geometry">
-      <rect>
-       <x>140</x>
-       <y>110</y>
-       <width>311</width>
-       <height>31</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="labelBookDir">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>150</y>
-       <width>111</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>BookDir</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="editBookDir">
-     <property name="geometry">
-      <rect>
-       <x>140</x>
-       <y>150</y>
-       <width>311</width>
-       <height>31</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QTableWidget" name="tableWidget">
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>220</y>
+       <y>160</y>
        <width>421</width>
-       <height>111</height>
+       <height>161</height>
       </rect>
      </property>
     </widget>
@@ -144,13 +98,26 @@
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>190</y>
+       <y>120</y>
        <width>181</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Extended Options</string>
+      <string>Special options</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="resetSpecialOptButton">
+     <property name="geometry">
+      <rect>
+       <x>370</x>
+       <y>120</y>
+       <width>80</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Reset</string>
      </property>
     </widget>
    </widget>
@@ -162,23 +129,36 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>40</y>
-       <width>441</width>
-       <height>291</height>
+       <y>60</y>
+       <width>431</width>
+       <height>261</height>
       </rect>
      </property>
     </widget>
     <widget class="QLabel" name="labelEngineOptions">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>13</y>
-       <width>371</width>
-       <height>21</height>
+       <x>20</x>
+       <y>20</y>
+       <width>331</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Common engine options</string>
+      <string>General engine options</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="resetGeneralOptButton">
+     <property name="geometry">
+      <rect>
+       <x>370</x>
+       <y>20</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Reset</string>
      </property>
     </widget>
    </widget>
@@ -217,7 +197,7 @@
       <rect>
        <x>150</x>
        <y>40</y>
-       <width>121</width>
+       <width>101</width>
        <height>21</height>
       </rect>
      </property>
@@ -259,22 +239,17 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QDialogButtonBox" name="buttonBox">
+  <widget class="QPushButton" name="closeButton">
    <property name="geometry">
     <rect>
-     <x>410</x>
-     <y>360</y>
-     <width>181</width>
-     <height>41</height>
+     <x>489</x>
+     <y>361</y>
+     <width>101</width>
+     <height>31</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <property name="text">
+    <string>Close</string>
    </property>
   </widget>
  </widget>

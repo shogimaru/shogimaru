@@ -28,10 +28,10 @@ void Engine::init()
         int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
         std::string cmd = std::string("setoption name Threads value ") + std::to_string(threads);
         Command::instance().request(cmd);
-        //Command::instance().request("setoption name EvalHash value 256");  // WASMでエラーになる
         Command::instance().request("setoption name NetworkDelay value 50");  // ネットワーク遅延
         Command::instance().request("setoption name NetworkDelay2 value 500");  // 切れ負けになる場合のネットワーク遅延
         Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue-kp256/");
+        //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue/");
         Command::instance().request("setoption name BookDir value assets/YaneuraOu/");
 
         for (;;) {

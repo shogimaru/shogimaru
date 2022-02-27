@@ -973,63 +973,75 @@
         <translation type="unfinished">削除</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="97"/>
-        <source>EvalDir</source>
-        <translation type="unfinished"></translation>
+        <location filename="../forms/settingsdialog.ui" line="107"/>
+        <source>Special options</source>
+        <translation type="unfinished">個別エンジンオプション</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="120"/>
-        <source>BookDir</source>
-        <translation type="unfinished"></translation>
+        <location filename="../forms/settingsdialog.ui" line="161"/>
+        <source>Reset</source>
+        <translation type="unfinished">リセット</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="153"/>
-        <source>Extended Options</source>
-        <translation type="unfinished">拡張オプション</translation>
+        <location filename="../forms/settingsdialog.ui" line="148"/>
+        <source>General engine options</source>
+        <translation type="unfinished">共通エンジンオプション</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="159"/>
+        <location filename="../forms/settingsdialog.ui" line="126"/>
         <source>Option</source>
         <translation type="unfinished">オプション</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="181"/>
-        <source>Common engine options</source>
-        <translation type="unfinished">共通エンジンオプション</translation>
-    </message>
-    <message>
-        <location filename="../forms/settingsdialog.ui" line="187"/>
+        <location filename="../forms/settingsdialog.ui" line="167"/>
         <source>Preference</source>
         <translation type="unfinished">設定</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="199"/>
+        <location filename="../forms/settingsdialog.ui" line="179"/>
         <source>Sound</source>
         <translation type="unfinished">サウンド</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="212"/>
+        <location filename="../forms/settingsdialog.ui" line="192"/>
         <source>Piece Type</source>
         <translation type="unfinished">駒の種類</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="225"/>
+        <location filename="../forms/settingsdialog.ui" line="205"/>
         <source>ON</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="238"/>
+        <location filename="../forms/settingsdialog.ui" line="218"/>
         <source>Piece1</source>
         <translation type="unfinished">駒１</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="254"/>
+        <location filename="../forms/settingsdialog.ui" line="234"/>
         <source>Piece2</source>
         <translation type="unfinished">駒２</translation>
     </message>
     <message>
+        <location filename="../forms/settingsdialog.ui" line="252"/>
         <source>Close</source>
-        <translation type="obsolete">閉じる</translation>
+        <translation type="unfinished">閉じる</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="41"/>
+        <source>Select Engine</source>
+        <translation type="unfinished">エンジン選択</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="43"/>
+        <source>Executable (*.exe)</source>
+        <translation type="unfinished">実行ファイル (*.exe)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="45"/>
+        <source>Executable (*)</source>
+        <translation type="unfinished">実行ファイル (*)</translation>
     </message>
 </context>
 <context>
