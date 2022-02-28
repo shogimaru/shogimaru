@@ -48,4 +48,3 @@ build_script:
   - cmd: echo %PATH%
   - cmd: qmake -r CONFIG+=release
   - cmd: nmake install
-  - cmd: windeployqt shogimaru.exe
