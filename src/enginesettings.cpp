@@ -34,13 +34,17 @@ EngineSettings EngineSettings::load()
 #else
         int threads = std::max(con, 2);
 #endif
-        settings._generalOptions.insert(QString("Threads"), QString::number(threads));
-        settings._generalOptions.insert(QString("USI_Hash"), QString("256"));
+        settings._generalOptions.insert(QLatin1String("Threads"), threads);
+        settings._generalOptions.insert(QLatin1String("USI_Hash"), 256);
+#ifdef Q_OS_WASM
+        // WASMでのデフォルト
+        settings._generalOptions.insert(QLatin1String("NetworkDelay"), 300);  // ネットワーク遅延
+        settings._generalOptions.insert(QLatin1String("NetworkDelay2"), 600);  // 切れ負けになる場合のネットワーク遅延
+#endif
         return settings;
     }
 
     auto json = QJsonDocument::fromJson(file.readAll()).object();
-    qDebug() << "load" << json;
     for (const auto &engine : json.value(AVAILABLE_ENGINES_KEY).toArray()) {
         settings._availableEngines << EngineData::fromJsonObject(engine.toObject());
     }
@@ -84,6 +88,10 @@ void EngineSettings::save() const
     file.close();
 }
 
+
+/*
+  EngineData class
+*/
 
 QJsonObject EngineSettings::EngineData::toJsonObject() const
 {

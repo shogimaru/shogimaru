@@ -836,6 +836,33 @@
         <oldsource>impasse</oldsource>
         <translation type="unfinished">持将棋</translation>
     </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="25"/>
+        <location filename="settingsdialog.cpp" line="33"/>
+        <source>Option</source>
+        <translation type="unfinished">オプション</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="26"/>
+        <location filename="settingsdialog.cpp" line="34"/>
+        <source>Value</source>
+        <translation type="unfinished">値</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="106"/>
+        <source>Executable (*.exe)</source>
+        <translation type="unfinished">実行ファイル (*.exe)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="108"/>
+        <source>Executable (*)</source>
+        <translation type="unfinished">実行ファイル (*)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="111"/>
+        <source>Select Engine</source>
+        <translation type="unfinished">エンジン選択</translation>
+    </message>
 </context>
 <context>
     <name>RecordDialog</name>
@@ -1029,19 +1056,16 @@
         <translation type="unfinished">閉じる</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="41"/>
         <source>Select Engine</source>
-        <translation type="unfinished">エンジン選択</translation>
+        <translation type="obsolete">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="43"/>
         <source>Executable (*.exe)</source>
-        <translation type="unfinished">実行ファイル (*.exe)</translation>
+        <translation type="obsolete">実行ファイル (*.exe)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="45"/>
         <source>Executable (*)</source>
-        <translation type="unfinished">実行ファイル (*)</translation>
+        <translation type="obsolete">実行ファイル (*)</translation>
     </message>
 </context>
 <context>
