@@ -56,6 +56,7 @@ SOURCES += \
         analysisdialog.cpp \
         recorddialog.cpp \
         settingsdialog.cpp \
+        enginesettings.cpp \
         westerntabstyle.cpp \
         startdialog2.cpp \
         mypage.cpp \
@@ -84,6 +85,7 @@ HEADERS += \
         analysisdialog.h \
         recorddialog.h \
         settingsdialog.h \
+        enginesettings.h \
         westerntabstyle.h \
         startdialog2.h \
         mypage.h \
