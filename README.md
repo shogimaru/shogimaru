@@ -1,11 +1,14 @@
-将棋丸
-======
+# 将棋丸
+
+[![ActionsCI](https://github.com/shogimaru/shogimaru/actions/workflows/actions.yml/badge.svg)](https://github.com/shogimaru/shogimaru/actions/workflows/actions.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/shogimaru/shogimaru.svg)](https://github.com/shogimaru/shogimaru/releases)
 
 ブラウザで本格将棋が指せることを目指して、Qt/WebAssemblyで将棋GUIを作っています。
 エンジンにはやねうら王を使用しています。
 
-開発環境
-==========
+## 開発環境
+
  - WebAssembly
    - [Emscripten](https://emscripten.org/)
    - [Qt for WebAssembly (multithread)](https://www.qt.io/)  
@@ -13,17 +16,10 @@
 
  - デスクトップ版
    - コンパイラ （gccやclangなど）
-   - [Qt for Desktop](https://www.qt.io/) 
-   - [SDL](https://www.libsdl.org/)  
-     Ubuntuならこんな感じでインストールする
-     ```
-     $ sudo apt-get install libsdl1.2-dev libsdl-mixer1.2-dev
-     ```
+   - [Qt version 6 for Desktop](https://www.qt.io/)
 
- Linuxでしか動作確認していません..
+## ビルド
 
-ビルド
-======
 1. クローン
  ```
  $ git clone --recursive https://github.com/shogimaru/shogimaru.git
@@ -52,8 +48,8 @@
  $ qmake -spec linux-clang CONFIG+=release && make
  ```
 
-レーティング戦
-==============
+### レーティング戦
+
 コンピュータの設定はこんな感じ:  
   Skill : Rating  
   20 :   3000  最強  
@@ -76,10 +72,10 @@
  負けたらマイナス(-31〜-1)
 
 
-ウェブサイト
-============
+## ウェブサイト
+
+ 将棋丸 - WebAssembly
  https://shogimaru.com/
 
-Twitter
-=======
+### Twitter
  https://twitter.com/shogimaru
