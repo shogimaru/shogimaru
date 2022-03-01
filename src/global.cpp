@@ -48,14 +48,14 @@ std::string trim(const std::string &input)
 {
     std::string str = input;
     int pos = 0;
-    int len = str.length();
+    int len = (int)str.length();
 
     while (pos < len && is_space(str[pos])) {
         pos++;
     }
     if (pos > 0) {
         str = str.substr(pos);
-        len = str.length();
+        len = (int)str.length();
     }
 
     while (len > 0 && is_space(str[len - 1])) {

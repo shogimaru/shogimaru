@@ -194,7 +194,7 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 
     QByteArray cmd = "position ";
     cmd.reserve(256);
-    cmd += (_startPositionSfen.isEmpty()) ? "startpos" : _startPositionSfen;
+    cmd += (_startPositionSfen.isEmpty()) ? QByteArray("startpos") : _startPositionSfen;
     if (!moves.isEmpty()) {
         cmd += " moves ";
         cmd += moves.join(' ');
@@ -255,7 +255,7 @@ void Engine::stop()
 
 bool Engine::mated(const QByteArrayList &moves)
 {
-    QByteArray startpos = (_startPositionSfen.isEmpty()) ? "startpos" : _startPositionSfen;
+    QByteArray startpos = (_startPositionSfen.isEmpty()) ? QByteArray("startpos") : _startPositionSfen;
     return mated(startpos, moves);
 }
 

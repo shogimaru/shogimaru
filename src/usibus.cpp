@@ -10,11 +10,12 @@ public:
 
 int command_buf::sync()
 {
-    int size = pptr() - pbase();
+    int64_t size = pptr() - pbase();
     if (size > 0) {
         std::string msg(pbase(), size);
         Command::instance().reply(msg);
-        pbump(pbase() - pptr());    // reset
+        size = pbase() - pptr();
+        pbump((int)size);    // reset
     }
     return 0;
 }
