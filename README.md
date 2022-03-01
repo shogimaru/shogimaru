@@ -4,8 +4,9 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/shogimaru/shogimaru.svg)](https://github.com/shogimaru/shogimaru/releases)
 
-ブラウザで本格将棋が指せることを目指して、Qt/WebAssemblyで将棋GUIを作っています。
-エンジンにはやねうら王を使用しています。
+ブラウザでも本格的な将棋が指せることを目指して、オープンソースの将棋GUIを作っています。
+将棋エンジンにはやねうら王、UIにはQt/WebAssemblyを使用しています。  
+棋譜の検討モードも実装されています。
 
 ## 開発環境
 

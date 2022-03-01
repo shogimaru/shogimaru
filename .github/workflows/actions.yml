@@ -16,7 +16,7 @@ jobs:
       - name: build
         run: |
           qmake CONFIG+=release
-          make
+          make -j4
 
   # ci-ubuntu-gcc:
   #   runs-on: ubuntu-latest

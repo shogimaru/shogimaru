@@ -837,29 +837,29 @@
         <translation type="unfinished">持将棋</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="25"/>
-        <location filename="settingsdialog.cpp" line="33"/>
+        <location filename="settingsdialog.cpp" line="37"/>
+        <location filename="settingsdialog.cpp" line="45"/>
         <source>Option</source>
         <translation type="unfinished">オプション</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="26"/>
-        <location filename="settingsdialog.cpp" line="34"/>
+        <location filename="settingsdialog.cpp" line="38"/>
+        <location filename="settingsdialog.cpp" line="46"/>
         <source>Value</source>
         <translation type="unfinished">値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="106"/>
+        <location filename="settingsdialog.cpp" line="136"/>
         <source>Executable (*.exe)</source>
         <translation type="unfinished">実行ファイル (*.exe)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="108"/>
+        <location filename="settingsdialog.cpp" line="138"/>
         <source>Executable (*)</source>
         <translation type="unfinished">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="111"/>
+        <location filename="settingsdialog.cpp" line="141"/>
         <source>Select Engine</source>
         <translation type="unfinished">エンジン選択</translation>
     </message>
@@ -1066,6 +1066,28 @@
     <message>
         <source>Executable (*)</source>
         <translation type="obsolete">実行ファイル (*)</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="148"/>
+        <source>Invalid file</source>
+        <translation type="unfinished">ファイル不正</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="148"/>
+        <source>File not executable</source>
+        <translation type="unfinished">実行可能なファイルではありません</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="211"/>
+        <source>Delete %1.
+Are you sure?</source>
+        <translation type="unfinished">%1 を削除します。
+よろしいですか。</translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="212"/>
+        <source>Delete engine</source>
+        <translation type="unfinished">エンジン削除</translation>
     </message>
 </context>
 <context>

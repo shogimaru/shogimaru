@@ -132,13 +132,22 @@ void SettingsDialog::accept()
 
 void SettingsDialog::getEnginePath()
 {
-#if Q_OS_WIN
+#ifdef Q_OS_WIN
     QString filter = QObject::tr("Executable (*.exe)");
 #else
     QString filter = QObject::tr("Executable (*)");
 #endif
 
     QString path = QFileDialog::getOpenFileName(this, QObject::tr("Select Engine"), QString(), filter);
+
+    if (path.trimmed().isEmpty()) {
+        return;
+    }
+
+    if (!QFileInfo(path).isExecutable()) {
+        MessageBox::information(tr("Invalid file"), tr("File not executable"));
+        return;
+    }
 
     EngineSettings::EngineData data;
     data.name = [](const QString &path) {
@@ -200,13 +209,17 @@ void SettingsDialog::confirmDelete()
 {
     if (EngineSettings::instance().availableEngineCount() > 0 && _ui->engineComboBox->currentIndex() >= 0) {
         QString text = tr("Delete %1.\nAre you sure?").arg(_ui->engineComboBox->currentText());
-        MessageBox::question(tr("Delete engine"), text, this, SLOT(deleteEngine()));
+        MessageBox::question(tr("Delete engine"), text, [this]() {
+            // OKの場合
+            deleteEngine();
+        });
     }
 }
 
 
 void SettingsDialog::deleteEngine()
 {
+    // 削除
     int idx = _ui->engineComboBox->currentIndex();
     if (idx >= 0 && idx < EngineSettings::instance().availableEngineCount()) {
         EngineSettings::instance().removeEngine(idx);

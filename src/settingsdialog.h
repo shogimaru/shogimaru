@@ -13,14 +13,14 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog() { }
 
-public slots:
     void open();
     void accept();
     void getEnginePath();
     void setCurrentEngine(int index);
-    void showEngineOptions(int index) const;
     void confirmDelete();
     void deleteEngine();
+public slots:
+    void showEngineOptions(int index) const;
 
 protected:
     void save();

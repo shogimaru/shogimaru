@@ -13,7 +13,8 @@ void MessageBox::information(const QString &title, const QString &text, QObject 
     delete ibox;
     ibox = new QMessageBox(QMessageBox::Information, title, text, QMessageBox::Ok
 #ifndef Q_OS_WASM
-    , maru::mainWindow()
+        ,
+        maru::mainWindow()
 #endif
     );
     ibox->setMaximumSize(500, 200);
@@ -36,10 +37,20 @@ void MessageBox::question(const QString &title, const QString &text, QObject *re
     delete qbox;
     qbox = new QMessageBox(QMessageBox::Question, title, text, QMessageBox::Ok | QMessageBox::Cancel
 #ifndef Q_OS_WASM
-    , maru::mainWindow()
+        ,
+        maru::mainWindow()
 #endif
     );
     qbox->setMaximumSize(500, 200);
     qbox->setStyleSheet("QLabel{text-align: left; margin: 30px 20px 30px 0px;}");
     qbox->open(receiver, member);
+}
+
+
+void MessageBox::question(const QString &title, const QString &text, std::function<void(void)> functor)
+{
+    static Receiver *receiver = nullptr;
+    delete receiver;
+    receiver = new Receiver(functor);
+    MessageBox::question(title, text, receiver, SLOT(receive(QAbstractButton *)));
 }
