@@ -14,7 +14,9 @@ class Engine : public QObject
 public:
     virtual ~Engine();
 
-    void init();
+    void open();
+    void close();
+
     QByteArray startPosition() const { return _startPositionSfen; }
     void setStartPosition(const QByteArray &sfen = QByteArray());
     QByteArrayList allMoves() const { return _allMoves; }  // 全指し手（SFEN形式）
@@ -45,12 +47,12 @@ protected slots:
     void getResponse();
 
 private:
-    void start();
+    void start();  // start process/thread
     bool go(const QByteArrayList &position, bool ponderFlag, int senteTime, int goteTime, int byoyomi);
     void setTurn();
 
     enum State : int {
-        EngineStarting,
+        NotRunning,
         GameReady,  // 対局OK（初期化終了）
         Idle,       // 対局中アイドル
         Going,      // 考慮中
@@ -60,7 +62,7 @@ private:
 
     Engine(QObject *parent = nullptr);
     int _level {20};
-    State _state {EngineStarting};
+    State _state {NotRunning};
     QTimer *_timer {nullptr};  // ポーリングタイマー
     QByteArray _startPositionSfen;
     QByteArrayList _allMoves;

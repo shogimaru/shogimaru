@@ -2,6 +2,9 @@
 #include "global.h"
 #include <QDialog>
 
+class QTableWidget;
+class QTableWidgetItem;
+
 namespace Ui {
 class SettingsDialog;
 }
@@ -19,11 +22,20 @@ public:
     void setCurrentEngine(int index);
     void confirmDelete();
     void deleteEngine();
+    void slotItemClicked(QTableWidgetItem *item);
+    void resetEngineOptions();
+    void deleteEngineOption();
+    void deleteGeneralOption();
+
 public slots:
-    void showEngineOptions(int index) const;
+    void showEngineOptions(int index);
+
+protected slots:
+    void save();
 
 protected:
-    void save();
+    void updateEngineOptions(int index);
+    void deleteOption(QTableWidget *tableWidget, const QStringList &excludes = QStringList());
 
 private:
     Ui::SettingsDialog *_ui {nullptr};

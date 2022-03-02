@@ -9,7 +9,6 @@ Engine::Engine(QObject *parent) :
 {
     connect(_timer, &QTimer::timeout, this, &Engine::getResponse);
     connect(_engineThread, &QThread::finished, _engineThread, &QObject::deleteLater);
-    init();
 }
 
 
@@ -26,4 +25,12 @@ void Engine::start()
     while (!_engineThread->isRunning()) {
         QThread::msleep(10);
     }
+}
+
+
+void Engine::close()
+{
+    _engineThread->quit();
+    _engineThread->wait();
+    _state = NotRunning;
 }

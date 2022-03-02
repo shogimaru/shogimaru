@@ -3,6 +3,7 @@
 #include "board.h"
 #include "chessclock.h"
 #include "engine.h"
+#include "enginesettings.h"
 #include "evaluationgraph.h"
 #include "kifu.h"
 #include "messagebox.h"
@@ -128,6 +129,7 @@ MainController::MainController(QWidget *parent) :
 
     connect(_ui->newAction, &QAction::triggered, _startDialog, &QDialog::open);
     connect(_ui->settingsAction, &QAction::triggered, this, &MainController::slotSettingsAction);
+    connect(_settingsDialog, &SettingsDialog::finished, this, &MainController::updateButtonStates);
     connect(_ui->analysisAction, &QAction::triggered, this, &MainController::slotAnalysisAction);
     connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
@@ -261,11 +263,11 @@ void MainController::updateButtonStates()
 {
     switch (_mode) {
     case Watch:  // 棋譜再生
-        _ui->newAction->setEnabled(true);
+        _ui->newAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
         _ui->resignAction->setDisabled(true);
         _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
-        _ui->analysisAction->setEnabled(_recorder->count() > 1);
+        _ui->analysisAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0 && _recorder->count() > 1);
         _ui->recordAction->setEnabled(true);
         _ui->senteFrame->setStyleSheet("border: 1px solid silver");
         _ui->goteFrame->setStyleSheet("border: 1px solid silver");
@@ -278,9 +280,9 @@ void MainController::updateButtonStates()
         break;
 
     case Rating:  // 対局
-        _ui->newAction->setDisabled(true);
+        _ui->newAction->setDisabled(EngineSettings::instance().availableEngineCount() > 0);
         _ui->resignAction->setEnabled(true);
-        _ui->settingsAction->setEnabled(true);
+        _ui->settingsAction->setEnabled(false);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(false);
         _ui->recordAction->setEnabled(false);
@@ -295,9 +297,9 @@ void MainController::updateButtonStates()
     case Analyzing:  // 検討
         _ui->newAction->setEnabled(false);
         _ui->resignAction->setDisabled(true);
-        _ui->settingsAction->setEnabled(true);
+        _ui->settingsAction->setEnabled(false);
         _ui->analysisAction->setText(tr("Stop"));
-        _ui->analysisAction->setEnabled(true);
+        _ui->analysisAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
         _ui->recordAction->setEnabled(false);
         _ui->senteFrame->setStyleSheet("border: 1px solid silver");
         _ui->goteFrame->setStyleSheet("border: 1px solid silver");
@@ -310,7 +312,7 @@ void MainController::updateButtonStates()
         break;
 
     case Edit:  // 編集
-        _ui->newAction->setEnabled(true);
+        _ui->newAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
         _ui->resignAction->setDisabled(true);
         _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
@@ -444,6 +446,7 @@ void MainController::startGame()
     //     "----Pg-PN "
     //     "b BPrb4p 1";
 
+    Engine::instance().open();
     int basicTime = _startDialog->basicTime() * 60000;
     int byoyomi = _startDialog->byoyomi() * 1000;
 
@@ -1310,6 +1313,8 @@ void MainController::setCurrentRecordRow(int move)
 
 void MainController::startAnalyzing()
 {
+    Engine::instance().open();
+
     _analysisDialog->hide();
     User &user = User::load();
 
@@ -1343,6 +1348,7 @@ void MainController::startAnalyzing()
 
 void MainController::slotSettingsAction()
 {
+    Engine::instance().close();  // 設定ダイアログを開くときはエンジンを落とす
     _settingsDialog->open();
 }
 

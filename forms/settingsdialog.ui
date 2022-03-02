@@ -29,7 +29,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tabEngine">
     <attribute name="title">
@@ -107,7 +107,7 @@
       <string>Special options</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="resetSpecialOptButton">
+    <widget class="QPushButton" name="resetEngineOptButton">
      <property name="geometry">
       <rect>
        <x>370</x>
@@ -118,6 +118,19 @@
      </property>
      <property name="text">
       <string>Reset</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="deleteEngineOptButton">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>120</y>
+       <width>80</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Delete</string>
      </property>
     </widget>
    </widget>
@@ -148,7 +161,7 @@
       <string>General engine options</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="resetGeneralOptButton">
+    <widget class="QPushButton" name="deleteGeneralOptButton">
      <property name="geometry">
       <rect>
        <x>370</x>
@@ -158,7 +171,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Reset</string>
+      <string>Delete</string>
      </property>
     </widget>
    </widget>

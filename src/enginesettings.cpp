@@ -3,7 +3,7 @@
 
 constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
-constexpr auto SELECTED_ENGINES_KEY = "selectedEngine";
+constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
 constexpr auto GENERAL_OPTIONS_KEY = "generalOptions";
 
 
@@ -49,7 +49,7 @@ EngineSettings EngineSettings::load()
         settings._availableEngines << EngineData::fromJsonObject(engine.toObject());
     }
 
-    settings._selectedEngine = json.value(SELECTED_ENGINES_KEY).toInt();
+    settings._currentIndex = json.value(SELECTED_ENGINE_INDEX_KEY).toInt();
     settings._generalOptions = json.value(GENERAL_OPTIONS_KEY).toObject().toVariantMap();
     return settings;
 }
@@ -74,7 +74,7 @@ void EngineSettings::save() const
         return array;
     }();
 
-    jsonObject[SELECTED_ENGINES_KEY] = _selectedEngine;
+    jsonObject[SELECTED_ENGINE_INDEX_KEY] = _currentIndex;
     jsonObject[GENERAL_OPTIONS_KEY] = QJsonObject::fromVariantMap(_generalOptions);
 
     // ファイル書き込み
@@ -86,6 +86,29 @@ void EngineSettings::save() const
 
     file.write(QJsonDocument(jsonObject).toJson(QJsonDocument::Compact));
     file.close();
+}
+
+
+EngineSettings::EngineData EngineSettings::currentEngine() const
+{
+    return getEngine(_currentIndex);
+}
+
+
+EngineSettings::EngineData EngineSettings::getEngine(int index) const
+{
+    if (index >= 0 && index < _availableEngines.count()) {
+        return _availableEngines[index];
+    }
+    return EngineSettings::EngineData();
+}
+
+
+void EngineSettings::updateEngine(int index, const EngineData &data)
+{
+    if (index >= 0 && index < _availableEngines.count()) {
+        _availableEngines[index] = data;
+    }
 }
 
 

@@ -10,7 +10,6 @@ Engine::Engine(QObject *parent) :
 {
     connect(_timer, &QTimer::timeout, this, &Engine::getResponse);
     connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, EngineProcess::instance(), &EngineProcess::terminate);
-    init();
 }
 
 
@@ -24,4 +23,13 @@ Engine::~Engine()
 void Engine::start()
 {
     EngineProcess::instance()->start();
+}
+
+
+void Engine::close()
+{
+    EngineProcess::instance()->terminate();
+    EngineProcess::instance()->waitForFinished(5000);
+    _state = NotRunning;
+    qDebug() << "Engine::close()";
 }

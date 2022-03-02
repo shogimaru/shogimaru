@@ -1,54 +1,71 @@
 #include "engine.h"
 #include "command.h"
-#include "ponderinfo.h"
+#include "enginesettings.h"
 #include "enginethread.h"
+#include "ponderinfo.h"
 #include <QDebug>
-#include <thread>
 #include <cmath>
+#include <thread>
 
 
-Engine &Engine::Engine::instance()
+Engine &Engine::instance()
 {
     static auto engine = new Engine;
     return *engine;
 }
 
 
-void Engine::init()
+void Engine::open()
 {
+    if (_state != NotRunning) {
+        qDebug() << "Engine running";
+        return;
+    }
+
     // Starts engine
     start();
 
-    static std::once_flag once;
-    std::call_once(once, []() {
-        Command::instance().request("usi");
-        Command::instance().pollFor("usiok", 5000); // usiok
+    Command::instance().request("usi");
+    Command::instance().pollFor("usiok", 5000);  // usiok
 
-        int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-        int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
-        std::string cmd = std::string("setoption name Threads value ") + std::to_string(threads);
-        Command::instance().request(cmd);
-        Command::instance().request("setoption name NetworkDelay value 50");  // ネットワーク遅延
-        Command::instance().request("setoption name NetworkDelay2 value 500");  // 切れ負けになる場合のネットワーク遅延
-        Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue-kp256/");
-        //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue/");
-        Command::instance().request("setoption name BookDir value assets/YaneuraOu/");
+#if 0
+    int con = std::thread::hardware_concurrency();  // コア（スレッド）数
+    int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+    std::string cmd = std::string("setoption name Threads value ") + std::to_string(threads);
+    Command::instance().request(cmd);
+    Command::instance().request("setoption name NetworkDelay value 50");  // ネットワーク遅延
+    Command::instance().request("setoption name NetworkDelay2 value 500");  // 切れ負けになる場合のネットワーク遅延
+#else
+    auto engine = EngineSettings::instance().currentEngine();
+    QVariantMap options = EngineSettings::instance().generalOptions();
+    options.insert(engine.options);
+    for (auto it = options.begin(); it != options.end(); ++it) {
+        if (!it.key().isEmpty() && !it.value().isNull()) {
+            QString command = QString("setoption name %1 value %2").arg(it.key(), it.value().toString());
+            qDebug() << command;
+            Command::instance().request(command.toStdString());
+        }
+    }
+#endif
 
-        for (;;) {
-            auto res  = Command::instance().poll(200);
-            if (res.empty()) {
-                break;
-            }
+    //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue-kp256/");
+    //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue/");
+    //Command::instance().request("setoption name BookDir value assets/YaneuraOu/");
 
-            for (auto &msg : res) {
-                if (msg.find("Error") == 0) {
-                    qCritical() << "Engine" << msg.c_str();
-                } else {
-                    qDebug() << "Engine response:" << msg.c_str();
-                }
+    for (;;) {
+        auto res = Command::instance().poll(200);
+        if (res.empty()) {
+            break;
+        }
+
+        for (auto &msg : res) {
+            if (msg.find("Error") == 0) {
+                qCritical() << "Engine" << msg.c_str();
+            } else {
+                qDebug() << "Engine response:" << msg.c_str();
             }
         }
-    });
+    }
 
     _state = GameReady;
 }
@@ -78,10 +95,10 @@ bool Engine::startAnalysis()
     Command::instance().clearResponse();
     Command::instance().request("setoption name MultiPV value 5");
     Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
-    Command::instance().request("setoption name BookMoves value 0");     // 定跡を用いる手数
+    Command::instance().request("setoption name BookMoves value 0");  // 定跡を用いる手数
     Command::instance().request("setoption name BookEvalDiff value 0");  // 最善手のみを採用するなら0に。ソフトが指す定跡に幅を持たせたいなら、10〜50ぐらいの大きめの値に。
     Command::instance().request("setoption name SlowMover value 100");
-    Command::instance().request("setoption name SkillLevel value 20");   // MAX値
+    Command::instance().request("setoption name SkillLevel value 20");  // MAX値
 
     Command::instance().request("isready");
     Command::instance().pollFor("readyok", 5000);  // readyok

@@ -20,8 +20,11 @@ public:
 
     QList<EngineData> availableEngines() const { return _availableEngines; }
     int availableEngineCount() const { return _availableEngines.count(); }
-    int selectedEngine() const { return _selectedEngine; }
-    void setSelectedEngine(int index) { _selectedEngine = index; }
+    EngineData currentEngine() const;
+    EngineData getEngine(int index) const;
+    void updateEngine(int index, const EngineData &data);
+    int currentIndex() const { return _currentIndex; }
+    void setCurrentIndex(int index) { _currentIndex = index; }
     void addEngine(const EngineData &engine);
     void removeEngine(int index);
     QVariantMap &generalOptions() { return _generalOptions; }
@@ -34,8 +37,6 @@ private:
     static EngineSettings load();
 
     QList<EngineData> _availableEngines;
-    int _selectedEngine {0};
+    int _currentIndex {0};
     QVariantMap _generalOptions;
 };
-
-//Q_DECLARE_METATYPE(EngineSettings::EngineData)
