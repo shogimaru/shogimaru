@@ -242,7 +242,9 @@ void MainController::createInfoBox()
 
     QString text = QString("<h3>") + tr("Shogimaru") + "</h3><br><table><tbody>";
     text += QString("<tr><td>") + tr("Version") + "</td><td>" + SHOGIMARU_VERSION_STR + "</td>";
+#ifdef Q_OS_WASM
     text += QString("<tr><td>") + tr("YaneuraOu") + "</td><td>" + "7.00" + "</td>";
+#endif
     text += QString("<tr><td>Qt</td><td>") + QT_VERSION_STR + "</td>";
     text += QString("<tr><td>") + tr("Platform") + "</td><td>" + QSysInfo::prettyProductName() + "</td>";
     text += QString("</tbody></table>");
@@ -446,7 +448,23 @@ void MainController::startGame()
     //     "----Pg-PN "
     //     "b BPrb4p 1";
 
-    Engine::instance().open();
+    auto data = EngineSettings::instance().currentEngine();
+    if (data.path.isEmpty()) {
+        qCritical() << "No shogi engine";
+        return;
+    }
+
+    if (!QFileInfo(data.path).exists()) {
+        qCritical() << "Not found such shogi engine:" << data.path;
+        return;
+    }
+
+    qDebug() << "engine path:" << data.path;
+    Engine::instance().open(data.path);
+    // オプション
+    auto engineData = EngineSettings::instance().currentEngine();
+    Engine::instance().setOptions(engineData.options);
+
     int basicTime = _startDialog->basicTime() * 60000;
     int byoyomi = _startDialog->byoyomi() * 1000;
 
@@ -1313,7 +1331,21 @@ void MainController::setCurrentRecordRow(int move)
 
 void MainController::startAnalyzing()
 {
-    Engine::instance().open();
+    auto data = EngineSettings::instance().currentEngine();
+    if (data.path.isEmpty()) {
+        qCritical() << "No shogi engine";
+        return;
+    }
+
+    if (!QFileInfo(data.path).exists()) {
+        qCritical() << "Not found such shogi engine:" << data.path;
+        return;
+    }
+
+    Engine::instance().open(data.path);
+    // オプション設定
+    auto engineData = EngineSettings::instance().currentEngine();
+    Engine::instance().setOptions(engineData.options);
 
     _analysisDialog->hide();
     User &user = User::load();

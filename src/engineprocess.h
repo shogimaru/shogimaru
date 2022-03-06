@@ -1,18 +1,13 @@
 #pragma once
+#include "engine.h"
 #include <QProcess>
 
 
-class EngineProcess : public QProcess {
-    Q_OBJECT
+class EngineProcess : public Engine::EngineContext, public QProcess {
 public:
+    EngineProcess(const QString &program, QObject *parent = nullptr);
     virtual ~EngineProcess() {}
-    void start(QIODevice::OpenMode mode = ReadWrite);
 
-    static EngineProcess *instance();
-
-public slots:
-    void terminate();
-
-private:
-    EngineProcess();
+    void start() override;
+    void terminate() override;
 };

@@ -5,32 +5,32 @@
 Engine::Engine(QObject *parent) :
     QObject(parent),
     _timer(new QTimer(this)),
-    _engineThread(new EngineThread(this))
+    _engineContext(new EngineThread(this))
 {
     connect(_timer, &QTimer::timeout, this, &Engine::getResponse);
-    connect(_engineThread, &QThread::finished, _engineThread, &QObject::deleteLater);
+    connect(_engineContext, &QThread::finished, _engineContext, &QObject::deleteLater);
 }
 
 
 Engine::~Engine()
 {
-    _engineThread->terminate();
-    _engineThread->wait();
+    closeUsi();
 }
 
 
-void Engine::start()
+void Engine::openUsi(const QString &)
 {
-    _engineThread->start();
-    while (!_engineThread->isRunning()) {
+    auto *thread = dynamic_cast<EngineThread*>(_engineContext);
+    thread->start();
+    while (!thread->isRunning()) {
         QThread::msleep(10);
     }
 }
 
 
-void Engine::close()
+void Engine::closeUsi()
 {
-    _engineThread->quit();
-    _engineThread->wait();
-    _state = NotRunning;
+    auto *thread = dynamic_cast<EngineThread*>(_engineContext);
+    thread->quit();
+    thread->wait();
 }

@@ -1,4 +1,5 @@
 #include "settingsdialog.h"
+#include "engine.h"
 #include "enginesettings.h"
 #include "messagebox.h"
 #include "ui_settingsdialog.h"
@@ -36,6 +37,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 #ifdef Q_OS_WASM
     _ui->tabWidget->removeTab(0);  // WASMではエンジン設定を非表示
     //_ui->tabEngine->deleteLater();
+#else
+    _ui->tabWidget->removeTab(1);  // デスクトップ版ではオプション設定を非表示
 #endif
 
     // 個別オプション
@@ -152,61 +155,70 @@ void SettingsDialog::getEnginePath()
         return;
     }
 
-    if (!QFileInfo(path).isExecutable()) {
+    QFileInfo fi(path);
+    if (!fi.isExecutable()) {
         MessageBox::information(tr("Invalid file"), tr("File not executable"));
         return;
     }
 
+    auto info = Engine::getEngineInfo(path);
+
     // エンジン追加
     EngineSettings::EngineData data;
-    data.name = [](const QString &path) {
-        QString name;
-        QDir dir = QFileInfo(path).absoluteDir();
-        QFile nameFile(dir.absoluteFilePath("engine_name.txt"));
-        if (nameFile.open(QIODevice::ReadOnly)) {
-            name = nameFile.readLine().trimmed();
-        }
-        if (name.isEmpty()) {
-            name = QFileInfo(path).fileName();
-        }
-        return name;
-    }(path);
-
+    // data.name = [](const QFileInfo &fi) {
+    //     QString name;
+    //     QDir dir = fi.absoluteDir();
+    //     QFile nameFile(dir.absoluteFilePath("engine_name.txt"));
+    //     if (nameFile.open(QIODevice::ReadOnly)) {
+    //         name = nameFile.readLine().trimmed();
+    //     }
+    //     if (name.isEmpty()) {
+    //         name = fi.baseName().trimmed();
+    //     }
+    //     return name;
+    // }(fi);
+    data.name = info.name;
     data.path = path;
-    data.defaultOptions = [](const QString &path) {
+    data.defaultOptions = [](const QMap<QString, Engine::Option> &options) {
         QVariantMap map;
-        QDir dir = QFileInfo(path).absoluteDir();
-        QFile optionsFile(dir.absoluteFilePath("engine_options.txt"));
-        if (optionsFile.open(QIODevice::ReadOnly)) {
-            auto lines = optionsFile.readAll().trimmed().split('\n');
-            for (auto &line : lines) {
-                auto strs = line.trimmed().split(' ');
-                strs.removeAll("");
-                if (!strs.count()) {
-                    continue;
-                }
-
-                QByteArray name;
-                int index = strs.indexOf("name");
-                if (index >= 0) {
-                    name = strs.value(index + 1);
-                }
-
-                QByteArray value;
-                index = strs.indexOf("default");
-                if (index >= 0) {
-                    value = strs.value(index + 1);
-                }
-
-                if (!name.isEmpty() && !value.isEmpty()) {
-                    map.insert(name, value);
-                }
-            }
+        for (auto it = options.begin(); it != options.end(); ++it) {
+            map.insert(it.key(), it.value().value);
         }
         return map;
-    }(path);
-    data.defaultOptions.insert("EvalDir", QDir::homePath());
-    data.defaultOptions.insert("BookDir", QDir::homePath());
+    }(info.options);
+
+    // data.defaultOptions = [](const QFileInfo &fi) {
+    //     QVariantMap map;
+    //     QDir dir = fi.absoluteDir();
+    //     QFile optionsFile(dir.absoluteFilePath("engine_options.txt"));
+    //     if (optionsFile.open(QIODevice::ReadOnly)) {
+    //         auto lines = optionsFile.readAll().trimmed().split('\n');
+    //         for (auto &line : lines) {
+    //             auto strs = line.trimmed().split(' ');
+    //             strs.removeAll("");
+    //             if (!strs.count()) {
+    //                 continue;
+    //             }
+
+    //             QByteArray name;
+    //             int index = strs.indexOf("name");
+    //             if (index >= 0) {
+    //                 name = strs.value(index + 1);
+    //             }
+
+    //             QByteArray value;
+    //             index = strs.indexOf("default");
+    //             if (index >= 0) {
+    //                 value = strs.value(index + 1);
+    //             }
+
+    //             if (!name.isEmpty() && !value.isEmpty()) {
+    //                 map.insert(name, value);
+    //             }
+    //         }
+    //     }
+    //     return map;
+    // }(fi);
     data.options = data.defaultOptions;  // デフォルトオプションを設定する
 
     EngineSettings::instance().addEngine(data);

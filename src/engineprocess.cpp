@@ -1,32 +1,32 @@
 #include "engineprocess.h"
-#include "enginesettings.h"
 #include <QDebug>
 #include <QFileInfo>
 
 
-EngineProcess::EngineProcess() :
-    QProcess()
+EngineProcess::EngineProcess(const QString &program, QObject *parent) :
+    QProcess(parent)
 {
+    setProgram(program);
 }
 
 
-void EngineProcess::start(QIODevice::OpenMode mode)
+void EngineProcess::start()
 {
-    auto data = EngineSettings::instance().currentEngine();
-    if (data.path.isEmpty()) {
-        qCritical() << "No shogi engine";
-        return;
-    }
+    // auto data = EngineSettings::instance().currentEngine();
+    // if (data.path.isEmpty()) {
+    //     qCritical() << "No shogi engine";
+    //     return;
+    // }
 
-    if (QFileInfo(data.path).exists()) {
-        setProgram(data.path);
-    } else {
-        qCritical() << "Not found such shogi engine:" << data.path;
-        return;
-    }
+    // if (QFileInfo(data.path).exists()) {
+    //     setProgram(data.path);
+    // } else {
+    //     qCritical() << "Not found such shogi engine:" << data.path;
+    //     return;
+    // }
 
     if (state() == QProcess::NotRunning) {
-        QProcess::start(mode);
+        QProcess::start(QIODevice::ReadWrite);
         waitForStarted();
     }
 }
@@ -44,8 +44,8 @@ void EngineProcess::terminate()
 }
 
 
-EngineProcess *EngineProcess::instance()
-{
-    static EngineProcess engineProcess;
-    return &engineProcess;
-}
+// EngineProcess *EngineProcess::instance()
+// {
+//     static EngineProcess engineProcess;
+//     return &engineProcess;
+// }

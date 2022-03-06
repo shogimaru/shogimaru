@@ -4,6 +4,8 @@
 #include <condition_variable>
 #include <mutex>
 
+class EngineProcess;
+
 
 class CBus {
 public:
@@ -35,8 +37,11 @@ public:
     void reply(const std::string &response);
 
     static Command &instance();
+    static void setEngine(EngineProcess *engine);
 
 private:
+    static EngineProcess *engineProcess;
+
     CBus _request;
     CBus _response;
     Command() {}

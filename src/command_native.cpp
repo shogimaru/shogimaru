@@ -37,9 +37,9 @@ bool CBus::wait(int) const
 void Command::request(const std::string &command)
 {
     //qDebug() << "request" << command.c_str();
-    EngineProcess::instance()->write(command.c_str(), command.length());
-    EngineProcess::instance()->write("\n");
-    EngineProcess::instance()->waitForBytesWritten(1000);
+    Command::engineProcess->write(command.c_str(), command.length());
+    Command::engineProcess->write("\n");
+    Command::engineProcess->waitForBytesWritten(1000);
 }
 
 
@@ -47,15 +47,15 @@ std::list<std::string> Command::poll(int msecs)
 {
     std::list<std::string> responses;
 
-    if (EngineProcess::instance()->canReadLine()
-        || (EngineProcess::instance()->waitForReadyRead(msecs) && EngineProcess::instance()->canReadLine())) {
+    if (Command::engineProcess->canReadLine()
+        || (Command::engineProcess->waitForReadyRead(msecs) && Command::engineProcess->canReadLine())) {
         do {
-            auto line = EngineProcess::instance()->readLine().trimmed();
+            auto line = Command::engineProcess->readLine().trimmed();
             if (!line.isEmpty()) {
                 //qDebug() << "response" << line;
                 responses.push_back(line.data());
             }
-        } while (EngineProcess::instance()->canReadLine());
+        } while (Command::engineProcess->canReadLine());
     }
     return responses;
 }
@@ -65,9 +65,9 @@ bool Command::pollFor(const std::string &response, int msecs)
 {
     bool ret = false;
 
-    while (EngineProcess::instance()->canReadLine()
-        || (EngineProcess::instance()->waitForReadyRead(msecs) && EngineProcess::instance()->canReadLine())) {
-        auto line = EngineProcess::instance()->readLine().trimmed();
+    while (Command::engineProcess->canReadLine()
+        || (Command::engineProcess->waitForReadyRead(msecs) && Command::engineProcess->canReadLine())) {
+        auto line = Command::engineProcess->readLine().trimmed();
         //qDebug() << "pollFor" << line;
         if (line.startsWith(response.c_str())) {
             break;
@@ -79,8 +79,8 @@ bool Command::pollFor(const std::string &response, int msecs)
 
 void Command::clearResponse(int msecs)
 {
-    if (EngineProcess::instance()->waitForReadyRead(msecs)) {
-        EngineProcess::instance()->readAll();
+    if (Command::engineProcess->waitForReadyRead(msecs)) {
+        Command::engineProcess->readAll();
     }
 }
 

@@ -15,59 +15,149 @@ Engine &Engine::instance()
 }
 
 
-void Engine::open()
+bool Engine::open(const QString &path)
 {
     if (_state != NotRunning) {
         qDebug() << "Engine running";
-        return;
+        return true;
     }
 
     // Starts engine
-    start();
-
+    openUsi(path);
     Command::instance().request("usi");
-    Command::instance().pollFor("usiok", 5000);  // usiok
 
-#if 0
-    int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-    int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
-    std::string cmd = std::string("setoption name Threads value ") + std::to_string(threads);
-    Command::instance().request(cmd);
-    Command::instance().request("setoption name NetworkDelay value 50");  // ネットワーク遅延
-    Command::instance().request("setoption name NetworkDelay2 value 500");  // 切れ負けになる場合のネットワーク遅延
-#else
-    auto engine = EngineSettings::instance().currentEngine();
-    QVariantMap options = EngineSettings::instance().generalOptions();
-    options.insert(engine.options);
-    for (auto it = options.begin(); it != options.end(); ++it) {
-        if (!it.key().isEmpty() && !it.value().isNull()) {
-            QString command = QString("setoption name %1 value %2").arg(it.key(), it.value().toString());
-            qDebug() << command;
-            Command::instance().request(command.toStdString());
-        }
-    }
-#endif
+    auto parseUsi = [this]() {
+        // 変換マップ
+        static const QMap<QString, QMetaType::Type> conv {
+            {"check", QMetaType::Bool},
+            {"spin", QMetaType::LongLong},
+            {"string", QMetaType::QString},
+            {"combo", QMetaType::QStringList},
+        };
 
-    //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue-kp256/");
-    //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue/");
-    //Command::instance().request("setoption name BookDir value assets/YaneuraOu/");
+        // 次のワード
+        auto nextWord = [](const QStringList &items, const QString &word) {
+            int idx = items.indexOf(word);
+            return (idx >= 0) ? items.value(idx + 1) : QString();
+        };
 
-    for (;;) {
-        auto res = Command::instance().poll(200);
-        if (res.empty()) {
-            break;
-        }
+        while (true) {
+            auto responses = Command::instance().poll(1000);
+            if (responses.empty()) {
+                break;
+            }
 
-        for (auto &msg : res) {
-            if (msg.find("Error") == 0) {
-                qCritical() << "Engine" << msg.c_str();
-            } else {
-                qDebug() << "Engine response:" << msg.c_str();
+            for (auto &response : responses) {
+                auto str = QString::fromStdString(response).trimmed();
+                if (str == "usiok") {
+                    return true;
+                }
+
+                if (str.startsWith("id name ")) {
+                    _name = str.mid(8);
+                    continue;
+                }
+
+                if (str.startsWith("id author ")) {
+                    _author = str.mid(10);
+                    continue;
+                }
+
+                if (str.startsWith("option name ")) {
+                    auto items = str.mid(12).split(" ", Qt::SkipEmptyParts);
+                    if (items.count() >= 4) {
+                        Option option;
+                        auto type = nextWord(items, "type");
+                        option.type = conv.value(type, QMetaType::Void);
+                        if (option.type == QMetaType::Void) {
+                            qWarning() << "Invalid type:" << type;
+                            continue;
+                        }
+
+                        switch (option.type) {
+                        case QMetaType::Bool:
+                            option.value.setValue(nextWord(items, "default") == "true");
+                            break;
+                        case QMetaType::LongLong:
+                        case QMetaType::QString:
+                            option.value.setValue(nextWord(items, "default"));
+                            break;
+
+                        case QMetaType::QStringList: {
+                            int idx = items.indexOf("default");
+                            auto strs = (idx >= 0) ? items.mid(idx + 1) : QStringList();
+                            strs.removeAll("var");
+                            option.value.setValue(strs);
+                            break;
+                        }
+
+                        default:
+                            continue;
+                        }
+                        option.max = nextWord(items, "max").toLongLong();
+                        option.min = nextWord(items, "min").toLongLong();
+                        _defaultOptions.insert(items[0], option);
+                        qDebug() << "insert:" << items;
+                    }
+                }
             }
         }
+        return false;
+    };
+
+    if (!parseUsi()) {
+        qCritical() << "Error response";
+        return false;
     }
 
+    // #if 0
+    //     int con = std::thread::hardware_concurrency();  // コア（スレッド）数
+    //     int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+    //     std::string cmd = std::string("setoption name Threads value ") + std::to_string(threads);
+    //     Command::instance().request(cmd);
+    //     Command::instance().request("setoption name NetworkDelay value 50");  // ネットワーク遅延
+    //     Command::instance().request("setoption name NetworkDelay2 value 500");  // 切れ負けになる場合のネットワーク遅延
+    // #else
+    //     auto engine = EngineSettings::instance().currentEngine();
+    //     QVariantMap options = EngineSettings::instance().generalOptions();
+    //     options.insert(engine.options);
+    //     for (auto it = options.begin(); it != options.end(); ++it) {
+    //         if (!it.key().isEmpty() && !it.value().isNull()) {
+    //             QString command = QString("setoption name %1 value %2").arg(it.key(), it.value().toString());
+    //             qDebug() << command;
+    //             Command::instance().request(command.toStdString());
+    //         }
+    //     }
+    // #endif
+
+    //     //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue-kp256/");
+    //     //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue/");
+    //     //Command::instance().request("setoption name BookDir value assets/YaneuraOu/");
+
+    //     for (;;) {
+    //         auto res = Command::instance().poll(200);
+    //         if (res.empty()) {
+    //             break;
+    //         }
+
+    //         for (auto &msg : res) {
+    //             if (msg.find("Error") == 0) {
+    //                 qCritical() << "Engine" << msg.c_str();
+    //             } else {
+    //                 qDebug() << "Engine response:" << msg.c_str();
+    //             }
+    //         }
+    //     }
+
     _state = GameReady;
+    return true;
+}
+
+
+void Engine::close()
+{
+    closeUsi();
+    _state = NotRunning;
 }
 
 
@@ -85,6 +175,34 @@ void Engine::setStartPosition(const QByteArray &sfen)
 }
 
 
+void Engine::sendOptions(const QVariantMap &options)
+{
+    for (auto it = options.begin(); it != options.end(); ++it) {
+        auto opt = _defaultOptions.value(it.key());
+        QString value = it.value().toString();
+        if (opt.value.toString() != value) {  // デフォルトと違う場合に実行
+            auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
+            Command::instance().request(bytes.toStdString());
+        }
+    }
+
+    for (;;) {
+        auto res = Command::instance().poll(200);
+        if (res.empty()) {
+            break;
+        }
+
+        for (auto &msg : res) {
+            if (msg.find("Error") == 0) {
+                qCritical() << "Engine" << msg.c_str();
+            } else {
+                qDebug() << "Engine response:" << msg.c_str();
+            }
+        }
+    }
+}
+
+
 bool Engine::startAnalysis()
 {
     if (_state != GameReady) {
@@ -93,13 +211,25 @@ bool Engine::startAnalysis()
     }
 
     Command::instance().clearResponse();
+#if 0
     Command::instance().request("setoption name MultiPV value 5");
     Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
     Command::instance().request("setoption name BookMoves value 0");  // 定跡を用いる手数
     Command::instance().request("setoption name BookEvalDiff value 0");  // 最善手のみを採用するなら0に。ソフトが指す定跡に幅を持たせたいなら、10〜50ぐらいの大きめの値に。
-    Command::instance().request("setoption name SlowMover value 100");
+    Command::instance().request("setoption name SlowMover value 100");  // 序盤重視率[%]
     Command::instance().request("setoption name SkillLevel value 20");  // MAX値
-
+#else
+    QVariantMap opts = _options;
+    auto def = _defaultOptions.value("MultiPV");
+    if (!def.value.isNull()) {
+        opts.insert("MultiPV", 5);
+    }
+    def = _defaultOptions.value("SkillLevel");
+    if (!def.value.isNull()) {
+        opts.insert("SkillLevel", def.max);
+    }
+    sendOptions(opts);
+#endif
     Command::instance().request("isready");
     Command::instance().pollFor("readyok", 5000);  // readyok
     Command::instance().request("usinewgame");
@@ -137,6 +267,7 @@ bool Engine::newGame(int slowMover)
     }
 
     Command::instance().clearResponse();
+#if 0
     Command::instance().request("setoption name MultiPV value 1");
     Command::instance().request("setoption name BookFile value user_book1.db");  // 定跡ファイル:100テラショック定跡
     Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
@@ -148,7 +279,22 @@ bool Engine::newGame(int slowMover)
 
     std::string cmd = std::string("setoption name SkillLevel value ") + std::to_string(_level);
     Command::instance().request(cmd);
-
+#else
+    QVariantMap opts = _options;
+    auto def = _defaultOptions.value("MultiPV");
+    if (!def.value.isNull()) {
+        opts.insert("MultiPV", 1);
+    }
+    def = _defaultOptions.value("SlowMover");
+    if (!def.value.isNull()) {
+        opts.insert("SlowMover", slowMover);
+    }
+    def = _defaultOptions.value("SkillLevel");
+    if (!def.value.isNull()) {
+        opts.insert("SkillLevel", _level);
+    }
+    sendOptions(opts);
+#endif
     Command::instance().request("isready");
     Command::instance().pollFor("readyok", 5000);  // readyok
     Command::instance().request("usinewgame");
@@ -371,4 +517,20 @@ void Engine::getResponse()
             qDebug() << "Unknown response" << s.c_str();
         }
     }
+}
+
+
+Engine::EngineInfo Engine::getEngineInfo(const QString &path)
+{
+    Engine::EngineInfo info;
+    auto engine = new Engine;
+    if (engine->open(path)) {
+        info.name = engine->name();
+        info.path = path;
+        info.author = engine->author();
+        info.options = engine->_defaultOptions;
+    }
+    engine->close();
+    delete engine;
+    return info;
 }

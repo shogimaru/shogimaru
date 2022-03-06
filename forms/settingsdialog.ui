@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>400</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>581</width>
-     <height>341</height>
+     <height>541</height>
     </rect>
    </property>
    <property name="tabPosition">
@@ -76,7 +76,7 @@
       <rect>
        <x>5</x>
        <y>40</y>
-       <width>461</width>
+       <width>451</width>
        <height>20</height>
       </rect>
      </property>
@@ -88,9 +88,9 @@
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>160</y>
+       <y>180</y>
        <width>421</width>
-       <height>161</height>
+       <height>321</height>
       </rect>
      </property>
     </widget>
@@ -98,20 +98,20 @@
      <property name="geometry">
       <rect>
        <x>30</x>
-       <y>120</y>
+       <y>140</y>
        <width>181</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Special options</string>
+      <string>Engine options</string>
      </property>
     </widget>
     <widget class="QPushButton" name="resetEngineOptButton">
      <property name="geometry">
       <rect>
        <x>370</x>
-       <y>120</y>
+       <y>140</y>
        <width>80</width>
        <height>31</height>
       </rect>
@@ -124,13 +124,49 @@
      <property name="geometry">
       <rect>
        <x>270</x>
-       <y>120</y>
+       <y>140</y>
        <width>80</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
       <string>Delete</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelComplement">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>90</y>
+       <width>411</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>The selected engine is used for the game or analysis.</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelEngineOptInfo">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>500</y>
+       <width>411</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
      </property>
     </widget>
    </widget>
@@ -144,7 +180,7 @@
        <x>20</x>
        <y>59</y>
        <width>431</width>
-       <height>261</height>
+       <height>441</height>
       </rect>
      </property>
     </widget>
@@ -158,7 +194,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>General engine options</string>
+      <string>Engine options</string>
      </property>
     </widget>
     <widget class="QPushButton" name="deleteGeneralOptButton">
@@ -172,6 +208,24 @@
      </property>
      <property name="text">
       <string>Delete</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelGeneralOptInfo">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>500</y>
+       <width>411</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
      </property>
     </widget>
    </widget>
@@ -255,8 +309,8 @@
   <widget class="QPushButton" name="closeButton">
    <property name="geometry">
     <rect>
-     <x>489</x>
-     <y>361</y>
+     <x>490</x>
+     <y>560</y>
      <width>101</width>
      <height>31</height>
     </rect>
