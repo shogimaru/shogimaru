@@ -8,13 +8,6 @@ Engine::Engine(QObject *parent) :
     _engineContext(new EngineThread(this))
 {
     connect(_timer, &QTimer::timeout, this, &Engine::getResponse);
-    connect(_engineContext, &QThread::finished, _engineContext, &QObject::deleteLater);
-}
-
-
-Engine::~Engine()
-{
-    closeUsi();
 }
 
 
@@ -31,6 +24,8 @@ void Engine::openUsi(const QString &)
 void Engine::closeUsi()
 {
     auto *thread = dynamic_cast<EngineThread*>(_engineContext);
-    thread->quit();
-    thread->wait();
+    if (thread->isRunning()) {
+        thread->terminate();
+        thread->wait();
+    }
 }

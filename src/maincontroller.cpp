@@ -449,17 +449,19 @@ void MainController::startGame()
     //     "b BPrb4p 1";
 
     auto data = EngineSettings::instance().currentEngine();
-    if (data.path.isEmpty()) {
+    if (data.name.isEmpty()) {
         qCritical() << "No shogi engine";
         return;
     }
 
+#ifndef Q_OS_WASM
     if (!QFileInfo(data.path).exists()) {
         qCritical() << "Not found such shogi engine:" << data.path;
         return;
     }
-
     qDebug() << "engine path:" << data.path;
+#endif
+
     Engine::instance().open(data.path);
     // オプション
     auto engineData = EngineSettings::instance().currentEngine();

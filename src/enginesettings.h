@@ -33,7 +33,7 @@ public:
     static EngineSettings &instance();
 
 private:
-    EngineSettings() { }
+    EngineSettings();
     static EngineSettings load();
 
     QList<EngineData> _availableEngines;

@@ -8,6 +8,12 @@
 #include <thread>
 
 
+Engine::~Engine()
+{
+    close();
+}
+
+
 Engine &Engine::instance()
 {
     static auto engine = new Engine;
@@ -159,6 +165,7 @@ void Engine::close()
 {
     closeUsi();
     _state = NotRunning;
+    qDebug() << "Engine::close()";
 }
 
 
@@ -181,7 +188,12 @@ void Engine::sendOptions(const QVariantMap &options)
     QString value;
     for (auto it = options.begin(); it != options.end(); ++it) {
         auto opt = _defaultOptions.value(it.key());
-        switch (it.value().typeId()) {
+#if QT_VERSION < 0x060000
+        int type = it.value().type();
+#else
+        auto type = it.value().typeId();
+#endif
+        switch (type) {
         case QMetaType::Bool:
             value = (it.value().toBool()) ? QLatin1String("true") : QLatin1String("false");
             break;

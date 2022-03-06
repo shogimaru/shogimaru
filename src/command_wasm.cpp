@@ -86,13 +86,33 @@ void Command::reply(const std::string &response)
 
 void Command::request(const std::string &command)
 {
+    qDebug() << command.c_str();
     _request.set(command);
+}
+
+
+static std::string join(const std::list<std::string> &strs, const std::string &separator)
+{
+    std::string ret;
+    for (auto &str : strs) {
+        ret += str;
+        ret += separator;
+    }
+    if (ret.size() > 0) {
+        ret.resize(ret.size() - separator.size());
+    }
+    return ret;
 }
 
 
 std::list<std::string> Command::poll(int msecs)
 {
-    return _response.wait(msecs) ? _response.getAll() : std::list<std::string>();
+    if (_response.wait(msecs)) {
+        auto res = _response.getAll();
+        qDebug() << "response" << join(res, " / ").c_str();
+        return res;
+    }
+    return std::list<std::string>();
 }
 
 
@@ -100,6 +120,7 @@ bool Command::pollFor(const std::string &response, int msecs)
 {
     while (_response.wait(msecs)) {
         auto res = _response.get();
+        qDebug() << "response" << res.c_str();
         if (res.find(response) == 0) {
             //qDebug() << "pollFor" << QString::fromStdString(response) << ":" << QString::fromStdString(res);
             return true;

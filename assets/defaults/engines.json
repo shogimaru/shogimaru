@@ -1,0 +1,17 @@
+{
+  "availableEngines": [
+    {
+      "name": "YaneuraOu NNUE KP256",
+      "options": {
+        "BookDir": "assets/YaneuraOu",
+        "EvalDir": "assets/YaneuraOu/nnue-kp256",
+        "NetworkDelay": 300,
+        "NetworkDelay2": 600
+      },
+      "defaultOptions": {},
+      "path": ""
+    }
+  ],
+  "generalOptions": {},
+  "selectedEngineIndex": 0
+}

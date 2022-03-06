@@ -1,10 +1,23 @@
 #include "enginesettings.h"
 
-
+#ifdef Q_OS_WASM
+constexpr auto SETTINGS_JSON_FILE_NAME = "assets/defaults/engines.json";
+#else
 constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
+#endif
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
 constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
 constexpr auto GENERAL_OPTIONS_KEY = "generalOptions";
+
+
+EngineSettings::EngineSettings()
+{
+// #ifdef Q_OS_WASM
+//     EngineData data;
+//     data.name = QLatin1String("YaneuraOu NNUE KP256");
+//     _availableEngines << data;
+// #endif
+}
 
 
 void EngineSettings::addEngine(const EngineData &engine)
@@ -27,20 +40,20 @@ EngineSettings EngineSettings::load()
     QFile file(SETTINGS_JSON_FILE_NAME);
 
     if (!file.open(QIODevice::ReadOnly)) {
-        // デフォルト値
-        int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-#ifdef Q_OS_WASM
-        int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
-#else
-        int threads = std::max(con, 2);
-#endif
-        settings._generalOptions.insert(QLatin1String("Threads"), threads);
-        settings._generalOptions.insert(QLatin1String("USI_Hash"), 256);
-#ifdef Q_OS_WASM
-        // WASMでのデフォルト
-        settings._generalOptions.insert(QLatin1String("NetworkDelay"), 300);  // ネットワーク遅延
-        settings._generalOptions.insert(QLatin1String("NetworkDelay2"), 600);  // 切れ負けになる場合のネットワーク遅延
-#endif
+//         // デフォルト値
+//         int con = std::thread::hardware_concurrency();  // コア（スレッド）数
+// #ifdef Q_OS_WASM
+//         int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+// #else
+//         int threads = std::max(con, 2);
+// #endif
+//         settings._generalOptions.insert(QLatin1String("Threads"), threads);
+//         settings._generalOptions.insert(QLatin1String("USI_Hash"), 256);
+// #ifdef Q_OS_WASM
+//         // WASMでのデフォルト
+//         settings._generalOptions.insert(QLatin1String("NetworkDelay"), 300);  // ネットワーク遅延
+//         settings._generalOptions.insert(QLatin1String("NetworkDelay2"), 600);  // 切れ負けになる場合のネットワーク遅延
+// #endif
         return settings;
     }
 
@@ -51,6 +64,7 @@ EngineSettings EngineSettings::load()
 
     settings._currentIndex = json.value(SELECTED_ENGINE_INDEX_KEY).toInt();
     settings._generalOptions = json.value(GENERAL_OPTIONS_KEY).toObject().toVariantMap();
+    //qDebug() << json;
     return settings;
 }
 
