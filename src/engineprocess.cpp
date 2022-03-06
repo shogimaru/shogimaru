@@ -1,5 +1,6 @@
 #include "engineprocess.h"
 #include <QDebug>
+#include <QDir>
 #include <QFileInfo>
 
 
@@ -7,6 +8,7 @@ EngineProcess::EngineProcess(const QString &program, QObject *parent) :
     QProcess(parent)
 {
     setProgram(program);
+    setWorkingDirectory(QFileInfo(program).dir().absolutePath());
 }
 
 

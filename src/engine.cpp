@@ -79,10 +79,11 @@ bool Engine::open(const QString &path)
                             option.value.setValue(nextWord(items, "default") == "true");
                             break;
                         case QMetaType::LongLong:
+                            option.value.setValue(nextWord(items, "default").toLongLong());
+                            break;
                         case QMetaType::QString:
                             option.value.setValue(nextWord(items, "default"));
                             break;
-
                         case QMetaType::QStringList: {
                             int idx = items.indexOf("default");
                             auto strs = (idx >= 0) ? items.mid(idx + 1) : QStringList();
@@ -97,7 +98,7 @@ bool Engine::open(const QString &path)
                         option.max = nextWord(items, "max").toLongLong();
                         option.min = nextWord(items, "min").toLongLong();
                         _defaultOptions.insert(items[0], option);
-                        qDebug() << "insert:" << items;
+                        //qDebug() << "insert:" << option.value;
                     }
                 }
             }
@@ -177,9 +178,21 @@ void Engine::setStartPosition(const QByteArray &sfen)
 
 void Engine::sendOptions(const QVariantMap &options)
 {
+    QString value;
     for (auto it = options.begin(); it != options.end(); ++it) {
         auto opt = _defaultOptions.value(it.key());
-        QString value = it.value().toString();
+        switch (it.value().typeId()) {
+        case QMetaType::Bool:
+            value = (it.value().toBool()) ? QLatin1String("true") : QLatin1String("false");
+            break;
+        case QMetaType::QStringList:
+            value = it.value().toStringList().join(" ");
+            break;
+        default:
+            value = it.value().toString();
+            break;
+        }
+
         if (opt.value.toString() != value) {  // デフォルトと違う場合に実行
             auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
             Command::instance().request(bytes.toStdString());
@@ -247,7 +260,7 @@ bool Engine::analysis(const QByteArray &sfen)
 
     // 検討開始
     setStartPosition(sfen);
-    QByteArray cmd = "position ";
+    QByteArray cmd = "position sfen ";
     cmd.reserve(256);
     cmd += sfen;
     Command::instance().request(cmd.toStdString());
@@ -357,7 +370,7 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 
     QByteArray cmd = "position ";
     cmd.reserve(256);
-    cmd += (_startPositionSfen.isEmpty()) ? QByteArray("startpos") : _startPositionSfen;
+    cmd += (_startPositionSfen.isEmpty()) ? QByteArray("startpos") : QByteArray("sfen ") + _startPositionSfen;
     if (!moves.isEmpty()) {
         cmd += " moves ";
         cmd += moves.join(' ');
@@ -431,7 +444,7 @@ bool Engine::mated(const QByteArray &startPosition, const QByteArrayList &moves)
     case Idle:
     case Going:
     case Pondering: {
-        QString cmd = QString("position ") + startPosition;
+        QString cmd = QString("position sfen ") + startPosition;
         if (!moves.isEmpty()) {
             cmd += " moves ";
             cmd += moves.join(" ");
