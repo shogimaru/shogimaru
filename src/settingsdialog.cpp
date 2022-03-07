@@ -23,9 +23,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(_ui->closeButton, &QPushButton::clicked, this, &SettingsDialog::accept);
     connect(_ui->newEngineButton, &QPushButton::clicked, this, &SettingsDialog::getEnginePath);
     connect(_ui->deleteEngineButton, &QPushButton::clicked, this, &SettingsDialog::confirmDelete);
-    connect(_ui->deleteEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::deleteEngineOption);
+    //connect(_ui->deleteEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::deleteEngineOption);
     connect(_ui->resetEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::resetEngineOptions);
-    connect(_ui->deleteGeneralOptButton, &QPushButton::clicked, this, &SettingsDialog::deleteGeneralOption);
+    //connect(_ui->deleteGeneralOptButton, &QPushButton::clicked, this, &SettingsDialog::deleteGeneralOption);
     connect(_ui->tableEngineOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
     connect(_ui->tableGeneralOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
 #if QT_VERSION < 0x060000
@@ -36,7 +36,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
 #ifdef Q_OS_WASM
     _ui->tabWidget->removeTab(0);  // WASMではエンジン設定を非表示
-    //_ui->tabEngine->deleteLater();
 #else
     _ui->tabWidget->removeTab(1);  // デスクトップ版ではオプション設定を非表示
 #endif
@@ -61,12 +60,25 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
 void SettingsDialog::open()
 {
+    loadSettings();
+    QDialog::open();
+}
+
+
+void SettingsDialog::loadSettings()
+{
     // エンジン設定
     const auto &availableEngines = EngineSettings::instance().availableEngines();
     _ui->engineComboBox->blockSignals(true);  // シグナル無効化
     _ui->engineComboBox->clear();
     for (const auto &engine : availableEngines) {
-        _ui->engineComboBox->addItem(engine.name);
+        QString name = engine.name;
+        if (!engine.author.isEmpty()) {
+            name += " (";
+            name += engine.author;
+            name += ")";
+        }
+        _ui->engineComboBox->addItem(name);
     }
     _ui->engineComboBox->setCurrentIndex(-1);  // 次のsetCurrentIndexでシグナルが飛ぶように
     _ui->engineComboBox->blockSignals(false);  // シグナル有効化
@@ -77,7 +89,8 @@ void SettingsDialog::open()
 
     // 共通オプション
     const auto &generalOptions = EngineSettings::instance().generalOptions();
-    _ui->tableGeneralOptions->setRowCount(generalOptions.count() + 1);
+    _ui->tableGeneralOptions->clearContents();
+    _ui->tableGeneralOptions->setRowCount(generalOptions.count());
     int row = 0;
     for (auto it = generalOptions.begin(); it != generalOptions.end(); ++it) {
         int col = 0;
@@ -89,8 +102,6 @@ void SettingsDialog::open()
         _ui->tableGeneralOptions->setItem(row, col++, item);
         row++;
     }
-
-    QDialog::open();
 }
 
 
@@ -119,7 +130,7 @@ void SettingsDialog::showEngineOptions(int index)
     // エンジンオプション
     const auto &options = availableEngines[index].options;
     _ui->tableEngineOptions->clearContents();
-    _ui->tableEngineOptions->setRowCount(options.count() + 1);
+    _ui->tableEngineOptions->setRowCount(options.count());
 
     int row = 0;
     for (auto it = options.begin(); it != options.end(); ++it) {
@@ -165,19 +176,8 @@ void SettingsDialog::getEnginePath()
 
     // エンジン追加
     EngineSettings::EngineData data;
-    // data.name = [](const QFileInfo &fi) {
-    //     QString name;
-    //     QDir dir = fi.absoluteDir();
-    //     QFile nameFile(dir.absoluteFilePath("engine_name.txt"));
-    //     if (nameFile.open(QIODevice::ReadOnly)) {
-    //         name = nameFile.readLine().trimmed();
-    //     }
-    //     if (name.isEmpty()) {
-    //         name = fi.baseName().trimmed();
-    //     }
-    //     return name;
-    // }(fi);
     data.name = info.name;
+    data.author = info.author;
     data.path = path;
     data.defaultOptions = [](const QMap<QString, Engine::Option> &options) {
         QVariantMap map;
@@ -186,46 +186,12 @@ void SettingsDialog::getEnginePath()
         }
         return map;
     }(info.options);
-
-    // data.defaultOptions = [](const QFileInfo &fi) {
-    //     QVariantMap map;
-    //     QDir dir = fi.absoluteDir();
-    //     QFile optionsFile(dir.absoluteFilePath("engine_options.txt"));
-    //     if (optionsFile.open(QIODevice::ReadOnly)) {
-    //         auto lines = optionsFile.readAll().trimmed().split('\n');
-    //         for (auto &line : lines) {
-    //             auto strs = line.trimmed().split(' ');
-    //             strs.removeAll("");
-    //             if (!strs.count()) {
-    //                 continue;
-    //             }
-
-    //             QByteArray name;
-    //             int index = strs.indexOf("name");
-    //             if (index >= 0) {
-    //                 name = strs.value(index + 1);
-    //             }
-
-    //             QByteArray value;
-    //             index = strs.indexOf("default");
-    //             if (index >= 0) {
-    //                 value = strs.value(index + 1);
-    //             }
-
-    //             if (!name.isEmpty() && !value.isEmpty()) {
-    //                 map.insert(name, value);
-    //             }
-    //         }
-    //     }
-    //     return map;
-    // }(fi);
     data.options = data.defaultOptions;  // デフォルトオプションを設定する
 
     EngineSettings::instance().addEngine(data);
     int newidx = EngineSettings::instance().availableEngineCount() - 1;
     EngineSettings::instance().setCurrentIndex(newidx);
-    _ui->engineComboBox->addItem(data.name);
-    _ui->engineComboBox->setCurrentIndex(newidx);
+    loadSettings();
 }
 
 
@@ -278,51 +244,51 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 }
 
 
-void SettingsDialog::deleteEngineOption()
-{
-    const QStringList excludes = {QLatin1String("EvalDir"), QLatin1String("BookDir")};
-    deleteOption(_ui->tableEngineOptions, excludes);
-}
+// void SettingsDialog::deleteEngineOption()
+// {
+//     const QStringList excludes = {QLatin1String("EvalDir"), QLatin1String("BookDir")};
+//     deleteOption(_ui->tableEngineOptions, excludes);
+// }
 
 
-void SettingsDialog::deleteGeneralOption()
-{
-    deleteOption(_ui->tableGeneralOptions);
-}
+// void SettingsDialog::deleteGeneralOption()
+// {
+//     deleteOption(_ui->tableGeneralOptions);
+// }
 
 
-void SettingsDialog::deleteOption(QTableWidget *tableWidget, const QStringList &excludes)
-{
-    // エンジンオプション or 共通オプションのエントリ削除
-    if (!tableWidget) {
-        return;
-    }
+// void SettingsDialog::deleteOption(QTableWidget *tableWidget, const QStringList &excludes)
+// {
+//     // エンジンオプション or 共通オプションのエントリ削除
+//     if (!tableWidget) {
+//         return;
+//     }
 
-    int row = tableWidget->currentRow();
-    if (row < 0) {
-        return;
-    }
+//     int row = tableWidget->currentRow();
+//     if (row < 0) {
+//         return;
+//     }
 
-    auto *item = tableWidget->item(row, 0);
-    if (!item || item->text().trimmed().isEmpty()) {
-        item = tableWidget->item(row, 1);
-        if (!item || item->text().trimmed().isEmpty()) {
-            // Option&Valueが空の場合
-            return;
-        }
-    } else {
-        QString option = item->text().trimmed();
-        if (excludes.contains(option)) {
-            QString msg = tr("%1 option cannot be deleted.").arg(option);
-            MessageBox::information("Warning", msg);
-            return;
-        }
-    }
+//     auto *item = tableWidget->item(row, 0);
+//     if (!item || item->text().trimmed().isEmpty()) {
+//         item = tableWidget->item(row, 1);
+//         if (!item || item->text().trimmed().isEmpty()) {
+//             // Option&Valueが空の場合
+//             return;
+//         }
+//     } else {
+//         QString option = item->text().trimmed();
+//         if (excludes.contains(option)) {
+//             QString msg = tr("%1 option cannot be deleted.").arg(option);
+//             MessageBox::information("Warning", msg);
+//             return;
+//         }
+//     }
 
-    int col = tableWidget->currentColumn();
-    tableWidget->removeRow(row);
-    tableWidget->setCurrentCell(row, col);
-}
+//     int col = tableWidget->currentColumn();
+//     tableWidget->removeRow(row);
+//     tableWidget->setCurrentCell(row, col);
+// }
 
 
 void SettingsDialog::resetEngineOptions()

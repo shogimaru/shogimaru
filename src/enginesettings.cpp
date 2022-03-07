@@ -141,6 +141,7 @@ QJsonObject EngineSettings::EngineData::toJsonObject() const
 
     QJsonObject jo;
     SET_JSON_VALUE(jo, name);
+    SET_JSON_VALUE(jo, author);
     SET_JSON_VALUE(jo, path);
     SET_JSON_VALUE(jo, options);
     SET_JSON_VALUE(jo, defaultOptions);
@@ -152,6 +153,7 @@ EngineSettings::EngineData EngineSettings::EngineData::fromJsonObject(const QJso
 {
     EngineSettings::EngineData data;
     data.name = object["name"].toString();
+    data.author = object["author"].toString();
     data.path = object["path"].toString();
     data.options = object["options"].toVariant().toMap();
     data.defaultOptions = object["defaultOptions"].toVariant().toMap();

@@ -60,12 +60,12 @@ bool Engine::open(const QString &path)
                 }
 
                 if (str.startsWith("id name ")) {
-                    _name = str.mid(8);
+                    _name = str.mid(8).trimmed();
                     continue;
                 }
 
                 if (str.startsWith("id author ")) {
-                    _author = str.mid(10);
+                    _author = str.mid(10).trimmed();
                     continue;
                 }
 
@@ -249,9 +249,13 @@ bool Engine::startAnalysis()
     if (!def.value.isNull()) {
         opts.insert("MultiPV", 5);
     }
+    def = _defaultOptions.value("SlowMover");
+    if (!def.value.isNull()) {
+        opts.insert("SlowMover", def.value);
+    }
     def = _defaultOptions.value("SkillLevel");
     if (!def.value.isNull()) {
-        opts.insert("SkillLevel", def.max);
+        opts.insert("SkillLevel", def.value);
     }
     sendOptions(opts);
 #endif
@@ -301,7 +305,6 @@ bool Engine::newGame(int slowMover)
     //Command::instance().request("setoption name BookFile value no_book");  // 定跡を使わない
     Command::instance().request("setoption name SlowMover value " + std::to_string(slowMover));  // 序盤重視率[%]
     //qDebug() << "序盤重視率(SlowMover):" << slowMover;
-
     std::string cmd = std::string("setoption name SkillLevel value ") + std::to_string(_level);
     Command::instance().request(cmd);
 #else

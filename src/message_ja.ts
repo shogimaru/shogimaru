@@ -255,159 +255,159 @@
         <translation type="unfinished">対局開始</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="499"/>
-        <location filename="maincontroller.cpp" line="1471"/>
+        <location filename="maincontroller.cpp" line="501"/>
+        <location filename="maincontroller.cpp" line="1473"/>
         <source>  0 Start</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="689"/>
-        <location filename="maincontroller.cpp" line="696"/>
+        <location filename="maincontroller.cpp" line="691"/>
+        <location filename="maincontroller.cpp" line="698"/>
         <source>Sente</source>
         <translation type="unfinished">先手</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="689"/>
-        <location filename="maincontroller.cpp" line="697"/>
+        <location filename="maincontroller.cpp" line="691"/>
+        <location filename="maincontroller.cpp" line="699"/>
         <source>Gote</source>
         <translation type="unfinished">後手</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="699"/>
+        <location filename="maincontroller.cpp" line="701"/>
         <source>%1 win. %2</source>
         <oldsource>%1 win %2</oldsource>
         <translation type="unfinished">%1 %2勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="725"/>
+        <location filename="maincontroller.cpp" line="727"/>
         <source>Thank you</source>
         <translation type="unfinished">ありがとうございました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="726"/>
+        <location filename="maincontroller.cpp" line="728"/>
         <source>Game over</source>
         <translation type="unfinished">対局終了</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="767"/>
+        <location filename="maincontroller.cpp" line="769"/>
         <source>Illegal - Two Pawns.</source>
         <translation type="unfinished">二歩は禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="780"/>
+        <location filename="maincontroller.cpp" line="782"/>
         <source>Illegal - Drop Pawn Mate.</source>
         <translation type="unfinished">打ち歩詰めは禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="790"/>
+        <location filename="maincontroller.cpp" line="792"/>
         <source>Illegal - Overlooked Check.</source>
         <translation type="unfinished">王手放置は禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="799"/>
+        <location filename="maincontroller.cpp" line="801"/>
         <source>Illegal - Perpetual Check.</source>
         <translation type="unfinished">連続王手の千日手は禁じ手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="804"/>
+        <location filename="maincontroller.cpp" line="806"/>
         <source>Repetition.</source>
         <translation type="unfinished">千日手です。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="847"/>
+        <location filename="maincontroller.cpp" line="849"/>
         <source>Checkmate.</source>
         <translation type="unfinished">詰みました。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1011"/>
-        <location filename="maincontroller.cpp" line="1403"/>
+        <location filename="maincontroller.cpp" line="1013"/>
+        <location filename="maincontroller.cpp" line="1405"/>
         <source>Information</source>
         <translation type="unfinished">情報</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1011"/>
+        <location filename="maincontroller.cpp" line="1013"/>
         <source>Analysis completed</source>
         <translation type="unfinished">解析が終了しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1159"/>
+        <location filename="maincontroller.cpp" line="1161"/>
         <source>Resign</source>
         <translation type="unfinished">投了</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1159"/>
+        <location filename="maincontroller.cpp" line="1161"/>
         <source>Resign?</source>
         <translation type="unfinished">投了しますか</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1161"/>
+        <location filename="maincontroller.cpp" line="1163"/>
         <source>Abort</source>
         <translation type="unfinished">中断</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1161"/>
+        <location filename="maincontroller.cpp" line="1163"/>
         <source>Abort?</source>
         <translation type="unfinished">中断しますか</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1176"/>
+        <location filename="maincontroller.cpp" line="1178"/>
         <source>You resigned.</source>
         <translation type="unfinished">あなたは投了しました。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1199"/>
+        <location filename="maincontroller.cpp" line="1201"/>
         <source>The computer declared victory by entering the king, according to CSA rules.</source>
         <translation type="unfinished">コンピュータが入玉勝ちを宣言しました。勝ち宣言はCSAルールに基づいています。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1206"/>
+        <location filename="maincontroller.cpp" line="1208"/>
         <source>You win!</source>
         <translation type="unfinished">参りました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1263"/>
+        <location filename="maincontroller.cpp" line="1265"/>
         <source>Even</source>
         <translation type="unfinished">互角</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1290"/>
+        <location filename="maincontroller.cpp" line="1292"/>
         <source>Pnd</source>
         <oldsource>Ponder</oldsource>
         <translation type="unfinished">読み筋</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1300"/>
+        <location filename="maincontroller.cpp" line="1302"/>
         <source> byoyomi</source>
         <oldsource>  Byoyomi</oldsource>
         <translation type="unfinished">  秒読み</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1321"/>
+        <location filename="maincontroller.cpp" line="1323"/>
         <source>Out of time.</source>
         <translation type="unfinished">時間切れです。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1355"/>
+        <location filename="maincontroller.cpp" line="1357"/>
         <source>Warning</source>
         <translation type="unfinished">警告</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1355"/>
+        <location filename="maincontroller.cpp" line="1357"/>
         <source>Enter at least one condition.</source>
         <translation type="unfinished">１つ以上の条件にチェックを入れてください</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1403"/>
+        <location filename="maincontroller.cpp" line="1405"/>
         <source>Analysis aborted</source>
         <translation type="unfinished">解析を停止しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1433"/>
+        <location filename="maincontroller.cpp" line="1435"/>
         <source>Elapsed</source>
         <translation type="unfinished">経過時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1437"/>
+        <location filename="maincontroller.cpp" line="1439"/>
         <source>Analysis Time</source>
         <translation type="unfinished">解析時間</translation>
     </message>
@@ -416,17 +416,17 @@
         <translation type="obsolete">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1441"/>
+        <location filename="maincontroller.cpp" line="1443"/>
         <source>Depth</source>
         <translation type="unfinished">深度</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1445"/>
+        <location filename="maincontroller.cpp" line="1447"/>
         <source>Nodes</source>
         <translation type="unfinished">ノード</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1449"/>
+        <location filename="maincontroller.cpp" line="1451"/>
         <source>NPS</source>
         <translation type="unfinished"></translation>
     </message>
@@ -439,7 +439,7 @@
         <translation type="obsolete">後手勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1283"/>
+        <location filename="maincontroller.cpp" line="1285"/>
         <source>Best</source>
         <translation type="unfinished">最善</translation>
     </message>
@@ -728,73 +728,73 @@
         <translation type="unfinished">%1%4%2%5%3</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="542"/>
+        <location filename="maincontroller.cpp" line="544"/>
         <source>win</source>
         <translation type="unfinished">勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="543"/>
+        <location filename="maincontroller.cpp" line="545"/>
         <source>lose</source>
         <translation type="unfinished">負け</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="545"/>
+        <location filename="maincontroller.cpp" line="547"/>
         <source>illegal</source>
         <translation type="unfinished">反則</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="549"/>
+        <location filename="maincontroller.cpp" line="551"/>
         <source>Resign</source>
         <translation type="unfinished">投了</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="552"/>
+        <location filename="maincontroller.cpp" line="554"/>
         <source>Illegal - out of time</source>
         <translation type="unfinished">反則（時間切れ）</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="553"/>
+        <location filename="maincontroller.cpp" line="555"/>
         <source>Illegal - two pawns</source>
         <translation type="unfinished">反則（二歩）</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="554"/>
+        <location filename="maincontroller.cpp" line="556"/>
         <source>Illegal - drop pawn mate</source>
         <translation type="unfinished">反則（打ち歩詰め）</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="555"/>
+        <location filename="maincontroller.cpp" line="557"/>
         <source>Illegal - overlooked check</source>
         <translation type="unfinished">反則（王手放置）</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="556"/>
+        <location filename="maincontroller.cpp" line="558"/>
         <source>Illegal - perpetual check</source>
         <translation type="unfinished">反則（連続王手）</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="557"/>
+        <location filename="maincontroller.cpp" line="559"/>
         <source>Illegal - other</source>
         <translation type="unfinished">反則（その他）</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="558"/>
+        <location filename="maincontroller.cpp" line="560"/>
         <source>Abort - game aborted</source>
         <translation type="unfinished">対局中断</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="544"/>
+        <location filename="maincontroller.cpp" line="546"/>
         <source>draw</source>
         <translation type="unfinished">引き分け</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="546"/>
+        <location filename="maincontroller.cpp" line="548"/>
         <source>abort</source>
         <oldsource>Abort</oldsource>
         <translation type="unfinished">中断</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="548"/>
+        <location filename="maincontroller.cpp" line="550"/>
         <source>Declare</source>
         <oldsource>declare</oldsource>
         <translation type="unfinished">入玉宣言</translation>
@@ -825,46 +825,46 @@
         <translation type="obsolete">反則（連続王手）</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="550"/>
+        <location filename="maincontroller.cpp" line="552"/>
         <source>Repetition</source>
         <oldsource>repetition</oldsource>
         <translation type="unfinished">千日手</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="551"/>
+        <location filename="maincontroller.cpp" line="553"/>
         <source>Impasse</source>
         <oldsource>impasse</oldsource>
         <translation type="unfinished">持将棋</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="46"/>
-        <location filename="settingsdialog.cpp" line="54"/>
+        <location filename="settingsdialog.cpp" line="45"/>
+        <location filename="settingsdialog.cpp" line="53"/>
         <source>Option</source>
         <translation type="unfinished">オプション</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="47"/>
-        <location filename="settingsdialog.cpp" line="55"/>
+        <location filename="settingsdialog.cpp" line="46"/>
+        <location filename="settingsdialog.cpp" line="54"/>
         <source>Value</source>
         <translation type="unfinished">値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="147"/>
+        <location filename="settingsdialog.cpp" line="158"/>
         <source>Executable (*.exe)</source>
         <translation type="unfinished">実行ファイル (*.exe)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="149"/>
+        <location filename="settingsdialog.cpp" line="160"/>
         <source>Executable (*)</source>
         <translation type="unfinished">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="152"/>
+        <location filename="settingsdialog.cpp" line="163"/>
         <source>Select Engine</source>
         <translation type="unfinished">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="270"/>
+        <location filename="settingsdialog.cpp" line="236"/>
         <source>Open Directory</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1001,8 +1001,6 @@
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="61"/>
-        <location filename="../forms/settingsdialog.ui" line="133"/>
-        <location filename="../forms/settingsdialog.ui" line="210"/>
         <source>Delete</source>
         <translation type="unfinished">削除</translation>
     </message>
@@ -1020,59 +1018,59 @@
         <translation type="obsolete">共通エンジンオプション</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="175"/>
+        <location filename="../forms/settingsdialog.ui" line="162"/>
         <source>Option</source>
         <translation type="unfinished">オプション</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="151"/>
+        <location filename="../forms/settingsdialog.ui" line="138"/>
         <source>The selected engine is used for the game or analysis.</source>
         <translation type="unfinished">ここで選択されているエンジンが対局や解析で使用されます。</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="107"/>
-        <location filename="../forms/settingsdialog.ui" line="197"/>
+        <location filename="../forms/settingsdialog.ui" line="184"/>
         <source>Engine options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="169"/>
-        <location filename="../forms/settingsdialog.ui" line="228"/>
+        <location filename="../forms/settingsdialog.ui" line="156"/>
+        <location filename="../forms/settingsdialog.ui" line="202"/>
         <source>TextLabel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="234"/>
+        <location filename="../forms/settingsdialog.ui" line="208"/>
         <source>Preference</source>
         <translation type="unfinished">設定</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="246"/>
+        <location filename="../forms/settingsdialog.ui" line="220"/>
         <source>Sound</source>
         <translation type="unfinished">サウンド</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="259"/>
+        <location filename="../forms/settingsdialog.ui" line="233"/>
         <source>Piece Type</source>
         <translation type="unfinished">駒の種類</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="272"/>
+        <location filename="../forms/settingsdialog.ui" line="246"/>
         <source>ON</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="285"/>
+        <location filename="../forms/settingsdialog.ui" line="259"/>
         <source>Piece1</source>
         <translation type="unfinished">駒１</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="301"/>
+        <location filename="../forms/settingsdialog.ui" line="275"/>
         <source>Piece2</source>
         <translation type="unfinished">駒２</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="319"/>
+        <location filename="../forms/settingsdialog.ui" line="293"/>
         <source>Close</source>
         <translation type="unfinished">閉じる</translation>
     </message>
@@ -1089,39 +1087,38 @@
         <translation type="obsolete">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="160"/>
+        <location filename="settingsdialog.cpp" line="171"/>
         <source>Invalid file</source>
         <translation type="unfinished">ファイル不正</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="160"/>
+        <location filename="settingsdialog.cpp" line="171"/>
         <source>File not executable</source>
         <translation type="unfinished">実行可能なファイルではありません</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="235"/>
+        <location filename="settingsdialog.cpp" line="201"/>
         <source>Delete %1.
 Are you sure?</source>
         <translation type="unfinished">%1 を削除します。
 よろしいですか。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="236"/>
+        <location filename="settingsdialog.cpp" line="202"/>
         <source>Delete engine</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="316"/>
         <source>%1 option cannot be deleted.</source>
-        <translation type="unfinished">%1 オプションは削除できません。</translation>
+        <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="330"/>
+        <location filename="settingsdialog.cpp" line="296"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="330"/>
+        <location filename="settingsdialog.cpp" line="296"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。

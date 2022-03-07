@@ -24,8 +24,8 @@ public:
     void deleteEngine();
     void slotItemClicked(QTableWidgetItem *item);
     void resetEngineOptions();
-    void deleteEngineOption();
-    void deleteGeneralOption();
+    //void deleteEngineOption();
+    //void deleteGeneralOption();
 
 public slots:
     void showEngineOptions(int index);
@@ -34,8 +34,9 @@ protected slots:
     void save();
 
 protected:
+    void loadSettings();
     void updateEngineOptions(int index);
-    void deleteOption(QTableWidget *tableWidget, const QStringList &excludes = QStringList());
+    //void deleteOption(QTableWidget *tableWidget, const QStringList &excludes = QStringList());
 
 private:
     Ui::SettingsDialog *_ui {nullptr};

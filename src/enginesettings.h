@@ -7,6 +7,7 @@ public:
     class EngineData {
     public:
         QString name;
+        QString author;
         QString path;
         QVariantMap options;
         QVariantMap defaultOptions;
