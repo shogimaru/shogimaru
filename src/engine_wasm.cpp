@@ -13,18 +13,23 @@ Engine::Engine(QObject *parent) :
 
 void Engine::openUsi(const QString &)
 {
-    auto *thread = dynamic_cast<EngineThread*>(_engineContext);
-    thread->start();
-    while (!thread->isRunning()) {
-        QThread::msleep(10);
+    auto *thread = dynamic_cast<EngineThread *>(_engineContext);
+
+    if (!thread->isRunning()) {
+        thread->start();
+        while (!thread->isRunning()) {
+            QThread::msleep(10);
+        }
     }
 }
 
 
 void Engine::closeUsi()
 {
-    auto *thread = dynamic_cast<EngineThread*>(_engineContext);
+    auto *thread = dynamic_cast<EngineThread *>(_engineContext);
+
     if (thread->isRunning()) {
+        quit();
         thread->terminate();
         thread->wait();
     }

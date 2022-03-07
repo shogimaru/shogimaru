@@ -433,6 +433,7 @@ void Engine::stop()
         _state = Idle;
         break;
 
+    case GameReady:
     default:
         // do nothing
         qCritical() << "stop(): Invalid state:" << _state;
@@ -470,11 +471,31 @@ bool Engine::mated(const QByteArray &startPosition, const QByteArrayList &moves)
         }
         return (*res.begin() == "1");
     }
+    case GameReady:
     default:
         // do nothing
         break;
     }
     return false;
+}
+
+
+void Engine::quit()
+{
+    switch (_state) {
+    case GameReady:
+    case Idle:
+    case Going:
+    case Pondering:
+        Command::instance().request("quit");
+        break;
+
+    default:
+        // do nothing
+        break;
+    }
+    _timer->stop();
+    _state = NotRunning;
 }
 
 
@@ -487,6 +508,7 @@ void Engine::gameover()
         Command::instance().request("gameover win");  // win固定
         break;
 
+    case GameReady:
     default:
         // do nothing
         break;

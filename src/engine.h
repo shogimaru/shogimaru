@@ -49,6 +49,7 @@ public:
     void setSkillLevel(int level) { _level = level; }
     bool newGame(int slowMover = 100);
     void gameover();
+    void quit();
     bool go(const QByteArrayList &position, int senteTime, int goteTime, int byoyomi);  // 考慮開始
     bool ponder(int senteTime, int goteTime, int byoyomi);  // 先読み開始
     void stop();  // 考慮中止
