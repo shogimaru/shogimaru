@@ -165,7 +165,6 @@ void Engine::close()
 {
     closeUsi();
     _state = NotRunning;
-    qDebug() << "Engine::close()";
 }
 
 
@@ -260,7 +259,12 @@ bool Engine::startAnalysis()
     sendOptions(opts);
 #endif
     Command::instance().request("isready");
-    Command::instance().pollFor("readyok", 5000);  // readyok
+    std::list<std::string> response;
+    if (!Command::instance().pollFor("readyok", 1000, response)) {  // readyok
+        _error = QString::fromStdString(maru::join(response, "\n"));
+        _state = EngineError;
+        return false;
+    }
     Command::instance().request("usinewgame");
     _state = Idle;
     return true;
@@ -324,7 +328,12 @@ bool Engine::newGame(int slowMover)
     sendOptions(opts);
 #endif
     Command::instance().request("isready");
-    Command::instance().pollFor("readyok", 5000);  // readyok
+    std::list<std::string> response;
+    if (!Command::instance().pollFor("readyok", 1000, response)) {  // readyok
+        _error = QString::fromStdString(maru::join(response, "\n"));
+        _state = EngineError;
+        return false;
+    }
     Command::instance().request("usinewgame");
     _state = Idle;
     _timer->start(100);
@@ -425,13 +434,13 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 void Engine::stop()
 {
     bool res;
+    std::list<std::string> response;
 
     switch (_state) {
     case Going:
     case Pondering:
         Command::instance().request("stop");
-        res = Command::instance().pollFor("bestmove", 1000);
-
+        res = Command::instance().pollFor("bestmove", 1000, response);
         //qDebug() << "go stop" << res;
         _state = Idle;
         break;

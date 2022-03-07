@@ -78,6 +78,21 @@ bool contains(const std::list<std::string> &stringlist, const std::string &str)
 }
 
 
+std::string join(const std::list<std::string> &stringlist, const std::string &separator)
+{
+    std::string ret;
+    for (auto &str : stringlist) {
+        ret += str;
+        ret += separator;
+    }
+    if (ret.size() > 0) {
+        ret.resize(ret.size() - separator.size());
+    }
+    return ret;
+}
+
+
+
 std::vector<std::string> split(const std::string &str, char sep, bool skipEmptyParts)
 {
     std::vector<std::string> ret;

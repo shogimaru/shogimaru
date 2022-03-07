@@ -61,19 +61,21 @@ std::list<std::string> Command::poll(int msecs)
 }
 
 
-bool Command::pollFor(const std::string &response, int msecs)
+bool Command::pollFor(const std::string &waitingResponse, int msecs, std::list<std::string> &response)
 {
-    bool ret = false;
+    response.clear();
 
     while (Command::engineProcess->canReadLine()
         || (Command::engineProcess->waitForReadyRead(msecs) && Command::engineProcess->canReadLine())) {
         auto line = Command::engineProcess->readLine().trimmed();
         //qDebug() << "pollFor" << line;
-        if (line.startsWith(response.c_str())) {
-            break;
+        response.push_back(line.toStdString());
+
+        if (line.startsWith(waitingResponse.c_str())) {
+            return true;
         }
     }
-    return ret;
+    return false;
 }
 
 

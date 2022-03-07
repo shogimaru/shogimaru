@@ -459,7 +459,6 @@ void MainController::startGame()
         qCritical() << "Not found such shogi engine:" << data.path;
         return;
     }
-    qDebug() << "engine path:" << data.path;
 #endif
 
     Engine::instance().open(data.path);
@@ -484,7 +483,10 @@ void MainController::startGame()
         _recorder->setFirstPosition(Sfen::defaultPostion());
 
         int slowMover = qBound(10, basicTime / 60000, 100);  // 序盤重視率
-        Engine::instance().newGame(slowMover);
+        if (!Engine::instance().newGame(slowMover)) {
+            MessageBox::information(tr("Engine error"), Engine::instance().error());
+            return;
+        }
     }
 
     _rotated = (_players[maru::Sente].type() == maru::Computer && _players[maru::Gote].type() == maru::Human);  // 反転有無
@@ -1007,6 +1009,7 @@ void MainController::nextAnalysis()
         Engine::instance().gameover();
         _ponderTimer.stop();
         killTimer(_analysisTimerId);
+        _analysisTimerId = 0;
         _ui->infoLine->clear();
         _lastPonder.clear();
         _mode = Watch;
@@ -1364,6 +1367,7 @@ void MainController::startAnalyzing()
 
     // 解析開始
     if (!Engine::instance().startAnalysis()) {
+        MessageBox::information(tr("Engine error"), Engine::instance().error());
         qCritical() << "Failed start engine";
         return;
     }
@@ -1399,6 +1403,7 @@ void MainController::slotAnalysisAction()
         Engine::instance().gameover();
         _ponderTimer.stop();
         killTimer(_analysisTimerId);
+        _analysisTimerId = 0;
         _ui->infoLine->clear();
         _lastPonder.clear();
         _mode = Watch;

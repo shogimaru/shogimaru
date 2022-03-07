@@ -79,6 +79,7 @@ void setGlobalStringParameter(ParameterName name, const QString &value);
 
 std::string trim(const std::string &input);
 bool contains(const std::list<std::string> &stringlist, const std::string &str);
+std::string join(const std::list<std::string> &stringlist, const std::string &separator);
 std::vector<std::string> split(const std::string &str, char sep, bool skipEmptyParts = false);
 int random(int min, int max);
 QWidget *mainWindow();

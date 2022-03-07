@@ -29,7 +29,7 @@ public:
     // GUI side
     void request(const std::string &command);
     std::list<std::string> poll(int msecs = 1000);
-    bool pollFor(const std::string &response, int msecs);
+    bool pollFor(const std::string &waitingResponse, int msecs, std::list<std::string> &error);
     void clearResponse(int msecs = 100);
 
     // Engine side

@@ -315,7 +315,7 @@ void SettingsDialog::updateEngineOptions(int index)
             auto engine = EngineSettings::instance().getEngine(index);
             engine.options = options;
             EngineSettings::instance().updateEngine(index, engine);
-            qDebug() << options;
+            //qDebug() << options;
         }
     }
 }

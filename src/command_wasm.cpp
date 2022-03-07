@@ -91,38 +91,27 @@ void Command::request(const std::string &command)
 }
 
 
-static std::string join(const std::list<std::string> &strs, const std::string &separator)
-{
-    std::string ret;
-    for (auto &str : strs) {
-        ret += str;
-        ret += separator;
-    }
-    if (ret.size() > 0) {
-        ret.resize(ret.size() - separator.size());
-    }
-    return ret;
-}
-
-
 std::list<std::string> Command::poll(int msecs)
 {
     if (_response.wait(msecs)) {
         auto res = _response.getAll();
-        qDebug() << "response" << join(res, " / ").c_str();
+        //qDebug() << "response" << maru::join(res, " / ").c_str();
         return res;
     }
     return std::list<std::string>();
 }
 
 
-bool Command::pollFor(const std::string &response, int msecs)
+bool Command::pollFor(const std::string &waitingResponse, int msecs, std::list<std::string> &response)
 {
+    response.clear();
+
     while (_response.wait(msecs)) {
         auto res = _response.get();
-        qDebug() << "response" << res.c_str();
-        if (res.find(response) == 0) {
-            //qDebug() << "pollFor" << QString::fromStdString(response) << ":" << QString::fromStdString(res);
+        //qDebug() << "response" << res.c_str();
+        response.push_back(res);
+
+        if (res.find(waitingResponse) == 0) {
             return true;
         }
     }

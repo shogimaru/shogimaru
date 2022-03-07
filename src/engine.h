@@ -2,8 +2,8 @@
 #include "global.h"
 #include "ponderinfo.h"
 #include <QObject>
-#include <QVariant>
 #include <QTimer>
+#include <QVariant>
 
 class EngineThread;
 class EngineProcess;
@@ -28,9 +28,9 @@ public:
 
     class EngineContext {
     public:
-        virtual ~EngineContext() {}
+        virtual ~EngineContext() { }
         virtual void start() = 0;
-        virtual void terminate() {}
+        virtual void terminate() { }
     };
 
     virtual ~Engine();
@@ -57,6 +57,7 @@ public:
     bool mated(const QByteArray &startPosition, const QByteArrayList &moves = QByteArrayList());
     QByteArray lastPondered() const { return _lastPondered; }
     maru::Turn currentTurn() const { return _turn; }
+    QString error() const { return _error; }
 
     // 棋譜解析
     bool startAnalysis();
@@ -105,5 +106,6 @@ private:
     maru::Turn _turn {maru::Sente};
     QByteArrayList _ponderingMoves;
     QByteArray _lastPondered;
+    QString _error;
     EngineContext *_engineContext {nullptr};
 };
