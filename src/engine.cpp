@@ -227,6 +227,55 @@ void Engine::sendOptions(const QVariantMap &options)
 }
 
 
+bool Engine::newGame(int slowMover)
+{
+    if (_state != GameReady) {
+        qCritical() << "newGame() Invalid state:" << _state;
+        return false;
+    }
+
+    Command::instance().clearResponse();
+#if 0
+    Command::instance().request("setoption name MultiPV value 1");
+    Command::instance().request("setoption name BookFile value user_book1.db");  // 定跡ファイル:100テラショック定跡
+    Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
+    Command::instance().request("setoption name BookMoves value 256");
+    Command::instance().request("setoption name BookEvalDiff value 30");  // 最善手のみを採用するなら0に。ソフトが指す定跡に幅を持たせたいなら、10〜50ぐらいの大きめの値に。
+    //Command::instance().request("setoption name BookFile value no_book");  // 定跡を使わない
+    Command::instance().request("setoption name SlowMover value " + std::to_string(slowMover));  // 序盤重視率[%]
+    //qDebug() << "序盤重視率(SlowMover):" << slowMover;
+    std::string cmd = std::string("setoption name SkillLevel value ") + std::to_string(_level);
+    Command::instance().request(cmd);
+#else
+    QVariantMap opts = _options;
+    auto def = _defaultOptions.value("MultiPV");  // 対局では1
+    if (!def.value.isNull()) {
+        opts.insert("MultiPV", 1);
+    }
+    def = _defaultOptions.value("SlowMover");  // 序盤重視率[%]
+    if (!def.value.isNull()) {
+        opts.insert("SlowMover", slowMover);
+    }
+    def = _defaultOptions.value("SkillLevel");
+    if (!def.value.isNull()) {
+        opts.insert("SkillLevel", _level);
+    }
+    sendOptions(opts);
+#endif
+    Command::instance().request("isready");
+    std::list<std::string> response;
+    if (!Command::instance().pollFor("readyok", 1000, response)) {  // readyok
+        _error = QString::fromStdString(maru::join(response, "\n"));
+        _state = EngineError;
+        return false;
+    }
+    Command::instance().request("usinewgame");
+    _state = Idle;
+    _timer->start(100);
+    return true;
+}
+
+
 bool Engine::startAnalysis()
 {
     if (_state != GameReady) {
@@ -291,54 +340,6 @@ bool Engine::analysis(const QByteArray &sfen)
     return true;
 }
 
-
-bool Engine::newGame(int slowMover)
-{
-    if (_state != GameReady) {
-        qCritical() << "newGame() Invalid state:" << _state;
-        return false;
-    }
-
-    Command::instance().clearResponse();
-#if 0
-    Command::instance().request("setoption name MultiPV value 1");
-    Command::instance().request("setoption name BookFile value user_book1.db");  // 定跡ファイル:100テラショック定跡
-    Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
-    Command::instance().request("setoption name BookMoves value 256");
-    Command::instance().request("setoption name BookEvalDiff value 30");  // 最善手のみを採用するなら0に。ソフトが指す定跡に幅を持たせたいなら、10〜50ぐらいの大きめの値に。
-    //Command::instance().request("setoption name BookFile value no_book");  // 定跡を使わない
-    Command::instance().request("setoption name SlowMover value " + std::to_string(slowMover));  // 序盤重視率[%]
-    //qDebug() << "序盤重視率(SlowMover):" << slowMover;
-    std::string cmd = std::string("setoption name SkillLevel value ") + std::to_string(_level);
-    Command::instance().request(cmd);
-#else
-    QVariantMap opts = _options;
-    auto def = _defaultOptions.value("MultiPV");
-    if (!def.value.isNull()) {
-        opts.insert("MultiPV", 1);
-    }
-    def = _defaultOptions.value("SlowMover");
-    if (!def.value.isNull()) {
-        opts.insert("SlowMover", slowMover);
-    }
-    def = _defaultOptions.value("SkillLevel");
-    if (!def.value.isNull()) {
-        opts.insert("SkillLevel", _level);
-    }
-    sendOptions(opts);
-#endif
-    Command::instance().request("isready");
-    std::list<std::string> response;
-    if (!Command::instance().pollFor("readyok", 1000, response)) {  // readyok
-        _error = QString::fromStdString(maru::join(response, "\n"));
-        _state = EngineError;
-        return false;
-    }
-    Command::instance().request("usinewgame");
-    _state = Idle;
-    _timer->start(100);
-    return true;
-}
 
 // 手番再設定
 void Engine::setTurn()
@@ -592,4 +593,10 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
     engine->close();
     delete engine;
     return info;
+}
+
+
+bool Engine::hasSkillLevelOption() const
+{
+    return !_defaultOptions.value("SkillLevel").value.isNull();
 }

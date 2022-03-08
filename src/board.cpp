@@ -622,7 +622,11 @@ public:
         insert(maru::Gote | Piece::PromotedPawn,   MovableCoords{Coords{-10, -9, -1, 1, 10, 11}, Coords{}, Coords{}});
     }
 };
-Q_GLOBAL_STATIC(MovableCoordsMap, movableCoordsMap)
+static const MovableCoordsMap &movableCoordsMap()
+{
+    static MovableCoordsMap map;
+    return map;
+}
 
 
 // 駒として移動できるマスか／駒が打てるかの判定
@@ -634,7 +638,7 @@ bool Board::canMove(const Piece *piece, int coord) const
         return ret;
     }
 
-    MovableCoords crds = movableCoordsMap()->value(piece->owner() | piece->name());
+    MovableCoords crds = movableCoordsMap().value(piece->owner() | piece->name());
     const int currentCrd = piece->data(maru::Coord).toInt();
 
     if (currentCrd < 11 || currentCrd > 99) {  // 駒打ち

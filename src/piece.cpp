@@ -300,17 +300,21 @@ public:
         insert(Piece::PromotedPawn, QCoreApplication::translate("KanjiMap", "+P"));  // と
     }
 };
-Q_GLOBAL_STATIC(KanjiMap, kanjiMap)
+static const KanjiMap &kanjiMap()
+{
+    static KanjiMap map;
+    return map;
+}
 
 
 QString Piece::kanjiName() const
 {
-    return kanjiMap()->value(name());
+    return kanjiMap().value(name());
 }
 
 QString Piece::kanjiName(Name name)
 {
-    return kanjiMap()->value(name);
+    return kanjiMap().value(name);
 }
 
 

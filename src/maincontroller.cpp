@@ -51,7 +51,11 @@ public:
         insert(maru::R3000, 20);
     }
 };
-Q_GLOBAL_STATIC(EngineLevelMap, engineLevelMap)
+static const EngineLevelMap &engineLevelMap()
+{
+    static EngineLevelMap map;
+    return map;
+}
 
 
 class EngineLevelName : public QMap<int, QString> {
@@ -72,7 +76,11 @@ public:
         insert(maru::R3000, QString("R3000"));
     }
 };
-Q_GLOBAL_STATIC(EngineLevelName, engineLevelName)
+static const EngineLevelName &engineLevelName()
+{
+    static EngineLevelName map;
+    return map;
+}
 
 
 MainController::MainController(QWidget *parent) :
@@ -370,9 +378,9 @@ void MainController::newRatingGame()
         } while (std::abs(user.rating() - comRating) > 300);
     }
 
-    int engineLevel = engineLevelMap()->value(comRating, 0);
+    int engineLevel = engineLevelMap().value(comRating, 0);
     Engine::instance().setSkillLevel(engineLevel);
-    Player computer(maru::Computer, engineLevelName()->value(comRating), comRating);
+    Player computer(maru::Computer, engineLevelName().value(comRating), comRating);
     Player human(maru::Human, user.nickname(), user.rating());
 
     QString msg;
@@ -535,7 +543,12 @@ public:
         insert(maru::Abort_GameAborted, QLatin1String("game_aborted"));
     }
 };
-Q_GLOBAL_STATIC(ResultCode, resultCode)
+static const ResultCode &resultCode()
+{
+    static ResultCode codes;
+    return codes;
+}
+
 
 class ResultString : public QMap<int, QString> {
 public:
@@ -562,7 +575,11 @@ public:
         insert(maru::Abort_GameAborted, QObject::tr("Abort - game aborted"));  // 中断
     }
 };
-Q_GLOBAL_STATIC(ResultString, resultString)
+static const ResultString &resultString()
+{
+    static ResultString map;
+    return map;
+}
 
 
 void MainController::stopGame(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail)
@@ -621,7 +638,7 @@ void MainController::recordResult(maru::Turn turn, maru::GameResult result, maru
         kifu.sente = _players[maru::Sente].name();
         kifu.gote = _players[maru::Gote].name();
         kifu.user = (_players[maru::Sente].type() == maru::Human) ? "s" : "g";
-        kifu.detail = resultCode()->value(detail);
+        kifu.detail = resultCode().value(detail);
 
         auto &user = User::load();
         maru::Turn opp = (turn == maru::Sente) ? maru::Gote : maru::Sente;
@@ -683,16 +700,16 @@ void MainController::showResult(maru::Turn turn, maru::GameResult result, maru::
 
     if (result == maru::Abort) {
         // 中断
-        msg = resultString()->value(detail);
+        msg = resultString().value(detail);
     } else if (result == maru::Draw) {
         // 引き分け
-        msg = resultString()->value(detail);
+        msg = resultString().value(detail);
     } else {
         if (detail == maru::Loss_Resign) {
             // 投了
             msg = (turn == maru::Sente) ? tr("Sente") : tr("Gote");
             msg += " ";
-            msg += resultString()->value(detail).toLower();
+            msg += resultString().value(detail).toLower();
         } else {
             // 勝負あり
             QString winner = ((turn == maru::Sente && result == maru::Win)
@@ -700,7 +717,7 @@ void MainController::showResult(maru::Turn turn, maru::GameResult result, maru::
                 ? tr("Sente")
                 : tr("Gote");
 
-            msg = tr("%1 win. %2").arg(winner).arg(resultString()->value(detail));
+            msg = tr("%1 win. %2").arg(winner).arg(resultString().value(detail));
         }
     }
 

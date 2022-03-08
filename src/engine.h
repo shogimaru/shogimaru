@@ -57,6 +57,7 @@ public:
     bool mated(const QByteArray &startPosition, const QByteArrayList &moves = QByteArrayList());
     QByteArray lastPondered() const { return _lastPondered; }
     maru::Turn currentTurn() const { return _turn; }
+    bool hasSkillLevelOption() const;
     QString error() const { return _error; }
 
     // 棋譜解析
