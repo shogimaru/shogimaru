@@ -33,53 +33,47 @@ const QSize BaseMainWindowSize(960, 820);
 const QList<int> RatingList = {maru::R1000, maru::R1200, maru::R1400, maru::R1600, maru::R1800, maru::R2000, maru::R2200, maru::R2400, maru::R2600, maru::R2800, maru::R3000};
 
 
-class EngineLevelMap : public QMap<int, int> {
-public:
-    EngineLevelMap() :
-        QMap<int, int>()
-    {
-        insert(maru::R1000, 0);
-        insert(maru::R1200, 2);
-        insert(maru::R1400, 4);
-        insert(maru::R1600, 6);
-        insert(maru::R1800, 8);
-        insert(maru::R2000, 10);
-        insert(maru::R2200, 12);
-        insert(maru::R2400, 14);
-        insert(maru::R2600, 16);
-        insert(maru::R2800, 18);
-        insert(maru::R3000, 20);
-    }
-};
-static const EngineLevelMap &engineLevelMap()
+static int engineSkillLevel(int level, int defaultValue = 0)
 {
-    static EngineLevelMap map;
-    return map;
+    // Skill Level Map
+    static auto skillLevelMap = [] {
+        QMap<int, int> map;
+        map.insert(maru::R1000, 0);
+        map.insert(maru::R1200, 2);
+        map.insert(maru::R1400, 4);
+        map.insert(maru::R1600, 6);
+        map.insert(maru::R1800, 8);
+        map.insert(maru::R2000, 10);
+        map.insert(maru::R2200, 12);
+        map.insert(maru::R2400, 14);
+        map.insert(maru::R2600, 16);
+        map.insert(maru::R2800, 18);
+        map.insert(maru::R3000, 20);
+        return map;
+    }();
+    return skillLevelMap.value(level, defaultValue);
 }
 
 
-class EngineLevelName : public QMap<int, QString> {
-public:
-    EngineLevelName() :
-        QMap<int, QString>()
-    {
-        insert(maru::R1000, QString("R1000"));
-        insert(maru::R1200, QString("R1200"));
-        insert(maru::R1400, QString("R1400"));
-        insert(maru::R1600, QString("R1600"));
-        insert(maru::R1800, QString("R1800"));
-        insert(maru::R2000, QString("R2000"));
-        insert(maru::R2200, QString("R2200"));
-        insert(maru::R2400, QString("R2400"));
-        insert(maru::R2600, QString("R2600"));
-        insert(maru::R2800, QString("R2800"));
-        insert(maru::R3000, QString("R3000"));
-    }
-};
-static const EngineLevelName &engineLevelName()
+static QString engineLevelName(int level)
 {
-    static EngineLevelName map;
-    return map;
+    // Engine Level Name Map
+    static auto EngineLevelNameMap = [] {
+        QMap<int, QString> map;
+        map.insert(maru::R1000, QString("R1000"));
+        map.insert(maru::R1200, QString("R1200"));
+        map.insert(maru::R1400, QString("R1400"));
+        map.insert(maru::R1600, QString("R1600"));
+        map.insert(maru::R1800, QString("R1800"));
+        map.insert(maru::R2000, QString("R2000"));
+        map.insert(maru::R2200, QString("R2200"));
+        map.insert(maru::R2400, QString("R2400"));
+        map.insert(maru::R2600, QString("R2600"));
+        map.insert(maru::R2800, QString("R2800"));
+        map.insert(maru::R3000, QString("R3000"));
+        return map;
+    }();
+    return EngineLevelNameMap.value(level);
 }
 
 
@@ -365,6 +359,25 @@ void MainController::newRatingGame()
         return;
     }
 
+    // エンジン起動
+    auto data = EngineSettings::instance().currentEngine();
+    if (data.name.isEmpty()) {
+        qCritical() << "No shogi engine";
+        return;
+    }
+
+#ifndef Q_OS_WASM
+    if (!QFileInfo(data.path).exists()) {
+        qCritical() << "Not found such shogi engine:" << data.path;
+        return;
+    }
+#endif
+
+    Engine::instance().open(data.path);
+    // オプション
+    auto engineData = EngineSettings::instance().currentEngine();
+    Engine::instance().setOptions(engineData.options);
+
     // エンジンレベル
     int comRating = 0;
     if (user.rating() > maru::R3000) {
@@ -378,9 +391,15 @@ void MainController::newRatingGame()
         } while (std::abs(user.rating() - comRating) > 300);
     }
 
-    int engineLevel = engineLevelMap().value(comRating, 0);
-    Engine::instance().setSkillLevel(engineLevel);
-    Player computer(maru::Computer, engineLevelName().value(comRating), comRating);
+    QString name;
+    if (Engine::instance().hasSkillLevelOption()) {
+        name = engineLevelName(comRating);
+        int skillLevel = engineSkillLevel(comRating, 0);
+        Engine::instance().setSkillLevel(skillLevel);
+    } else {
+        name = Engine::instance().name();
+    }
+    Player computer(maru::Computer, name, comRating);
     Player human(maru::Human, user.nickname(), user.rating());
 
     QString msg;
@@ -456,24 +475,6 @@ void MainController::startGame()
     //     "----Pg-PN "
     //     "b BPrb4p 1";
 
-    auto data = EngineSettings::instance().currentEngine();
-    if (data.name.isEmpty()) {
-        qCritical() << "No shogi engine";
-        return;
-    }
-
-#ifndef Q_OS_WASM
-    if (!QFileInfo(data.path).exists()) {
-        qCritical() << "Not found such shogi engine:" << data.path;
-        return;
-    }
-#endif
-
-    Engine::instance().open(data.path);
-    // オプション
-    auto engineData = EngineSettings::instance().currentEngine();
-    Engine::instance().setOptions(engineData.options);
-
     int basicTime = _startDialog->basicTime() * 60000;
     int byoyomi = _startDialog->byoyomi() * 1000;
 
@@ -490,6 +491,7 @@ void MainController::startGame()
         }
         _recorder->setFirstPosition(Sfen::defaultPostion());
 
+        // 対局開始
         int slowMover = qBound(10, basicTime / 60000, 100);  // 序盤重視率
         if (!Engine::instance().newGame(slowMover)) {
             MessageBox::information(tr("Engine error"), Engine::instance().error());
@@ -647,10 +649,14 @@ void MainController::recordResult(maru::Turn turn, maru::GameResult result, maru
             // 勝敗
             kifu.winner = ((turn == maru::Sente && result == maru::Win) || (turn == maru::Gote && (result == maru::Loss || result == maru::Illegal))) ? "s" : "g";
             bool win = (kifu.user == kifu.winner);
-            // レーティング
-            kifu.rating = calcRating(user.rating(), _players[opp].rating(), win, gameCount);
-            user.setRating(kifu.rating);
-            qDebug() << "new rating:" << kifu.rating;
+            if (Engine::instance().hasSkillLevelOption()) {
+                // レーティング
+                kifu.rating = calcRating(user.rating(), _players[opp].rating(), win, gameCount);
+                user.setRating(kifu.rating);
+                qDebug() << "new rating:" << kifu.rating;
+            } else {
+                kifu.rating = user.rating();  // レーティング変更なし
+            }
 
             if (win) {
                 user.setWins(user.wins() + 1);
