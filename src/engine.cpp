@@ -39,6 +39,7 @@ bool Engine::open(const QString &path)
             {"spin", QMetaType::LongLong},
             {"string", QMetaType::QString},
             {"combo", QMetaType::QStringList},
+            {"filename", QMetaType::QUrl},
         };
 
         // 次のワード
@@ -87,6 +88,7 @@ bool Engine::open(const QString &path)
                         case QMetaType::LongLong:
                             option.value.setValue(nextWord(items, "default").toLongLong());
                             break;
+                        case QMetaType::QUrl:
                         case QMetaType::QString:
                             option.value.setValue(nextWord(items, "default"));
                             break;
@@ -599,4 +601,11 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
 bool Engine::hasSkillLevelOption() const
 {
     return !_defaultOptions.value("SkillLevel").value.isNull();
+}
+
+
+QMetaType::Type Engine::optionType(const QString &option) const
+{
+    auto optionData = _defaultOptions.value(option);
+    return optionData.type;
 }

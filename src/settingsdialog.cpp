@@ -136,7 +136,7 @@ void SettingsDialog::showEngineOptions(int index)
     for (auto it = options.begin(); it != options.end(); ++it) {
         int col = 0;
         auto item = new QTableWidgetItem(it.key());
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
         _ui->tableEngineOptions->setItem(row, col++, item);
         item = new QTableWidgetItem(it.value().toString());
         item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -228,19 +228,34 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 {
     auto *optionTableWidget = item->tableWidget();
     if (item->column() == 1) {
+#ifndef Q_OS_WASM
         auto *optItem = optionTableWidget->item(item->row(), 0);  // Optionセル
         if (optItem) {
+            int index = _ui->engineComboBox->currentIndex();
+            auto engineData = EngineSettings::instance().getEngine(index);
+            auto engineDir = QFileInfo(engineData.path).dir().absolutePath();
+
             QRegularExpression re("[a-z_]+Dir$");
-            auto match = re.match(optItem->text());
+            auto match = re.match(optItem->text());  // オプション名
             if (match.hasMatch()) {
-                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Open Directory"), QString());
+                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Open Directory"), engineDir);
                 if (!dir.isEmpty()) {
                     item->setText(dir);
                 }
+            } else {
+                auto type = Engine::instance().optionType(optItem->text());
+                if (type == QMetaType::QUrl) {
+                    // ファイル読込
+                    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), engineDir, "*");
+                    if (!fileName.isEmpty()) {
+                        item->setText(fileName);
+                    }
+                }
             }
         }
+#endif
+        optionTableWidget->editItem(item);  // シングルクリックで編集モードにする
     }
-    optionTableWidget->editItem(item);  // シングルクリックで編集モードにする
 }
 
 

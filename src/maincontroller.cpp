@@ -202,6 +202,7 @@ void MainController::setSentePlayer(const Player &player)
     _players[maru::Sente] = player;
     QString text = maru::elideText(QString::fromUtf8(u8"▲") + player.name(), _ui->senteLabel);
     _ui->senteLabel->setText(text);
+    showRemainingTime(maru::Sente, 0, 0);
 }
 
 
@@ -210,6 +211,7 @@ void MainController::setGotePlayer(const Player &player)
     _players[maru::Gote] = player;
     QString text = maru::elideText(QString::fromUtf8(u8"△") + player.name(), _ui->goteLabel);
     _ui->goteLabel->setText(text);
+    showRemainingTime(maru::Gote, 0, 0);
 }
 
 

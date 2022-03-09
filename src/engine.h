@@ -58,6 +58,7 @@ public:
     QByteArray lastPondered() const { return _lastPondered; }
     maru::Turn currentTurn() const { return _turn; }
     bool hasSkillLevelOption() const;
+    QMetaType::Type optionType(const QString &option) const;
     QString error() const { return _error; }
 
     // 棋譜解析
