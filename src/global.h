@@ -1,4 +1,5 @@
 #pragma once
+#include <QFont>
 #include <QString>
 #include <functional>
 #include <list>
@@ -6,6 +7,7 @@
 #include <vector>
 
 class QWidget;
+class QLabel;
 
 namespace maru {
 
@@ -82,6 +84,8 @@ bool contains(const std::list<std::string> &stringlist, const std::string &str);
 std::string join(const std::list<std::string> &stringlist, const std::string &separator);
 std::vector<std::string> split(const std::string &str, char sep, bool skipEmptyParts = false);
 int random(int min, int max);
+QString elideText(const QString &text, int width, const QFont &font);
+QString elideText(const QString &text, const QLabel *label);
 QWidget *mainWindow();
 
 }

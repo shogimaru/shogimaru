@@ -1,7 +1,8 @@
 #include "global.h"
+#include <QApplication>
+#include <QLabel>
 #include <QMap>
 #include <QWidget>
-#include <QApplication>
 #include <random>
 
 namespace maru {
@@ -92,7 +93,6 @@ std::string join(const std::list<std::string> &stringlist, const std::string &se
 }
 
 
-
 std::vector<std::string> split(const std::string &str, char sep, bool skipEmptyParts)
 {
     std::vector<std::string> ret;
@@ -122,6 +122,17 @@ int random(int min, int max)
     return uniform(randeng);
 }
 
+
+QString elideText(const QString &text, int width, const QFont &font)
+{
+    return QFontMetrics(font).elidedText(text, Qt::ElideRight, width);
+};
+
+
+QString elideText(const QString &text, const QLabel *label)
+{
+    return QFontMetrics(label->font()).elidedText(text, Qt::ElideRight, label->width());
+}
 
 QWidget *mainWindow()
 {

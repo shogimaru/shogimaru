@@ -200,14 +200,16 @@ MainController::~MainController()
 void MainController::setSentePlayer(const Player &player)
 {
     _players[maru::Sente] = player;
-    _ui->senteLabel->setText(QString::fromUtf8(u8"▲") + player.name());
+    QString text = maru::elideText(QString::fromUtf8(u8"▲") + player.name(), _ui->senteLabel);
+    _ui->senteLabel->setText(text);
 }
 
 
 void MainController::setGotePlayer(const Player &player)
 {
     _players[maru::Gote] = player;
-    _ui->goteLabel->setText(QString::fromUtf8(u8"△") + player.name());
+    QString text = maru::elideText(QString::fromUtf8(u8"△") + player.name(), _ui->goteLabel);
+    _ui->goteLabel->setText(text);
 }
 
 
