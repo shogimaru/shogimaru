@@ -9,8 +9,8 @@ public:
         QString name;
         QString author;
         QString path;
-        QVariantMap options;
-        QVariantMap defaultOptions;
+        QVariantMap options;  // <QString, QVariant>
+        QVariantMap types;  // type of option <QString, QMetaType::Type>
 
         EngineData() {}
         EngineData(const EngineData &) = default;
@@ -28,7 +28,7 @@ public:
     void setCurrentIndex(int index) { _currentIndex = index; }
     void addEngine(const EngineData &engine);
     void removeEngine(int index);
-    QVariantMap &generalOptions() { return _generalOptions; }
+    //QVariantMap &generalOptions() { return _generalOptions; }
     void save() const;
 
     static EngineSettings &instance();
@@ -39,5 +39,5 @@ private:
 
     QList<EngineData> _availableEngines;
     int _currentIndex {0};
-    QVariantMap _generalOptions;
+    //QVariantMap _generalOptions;
 };

@@ -58,7 +58,7 @@ public:
     QByteArray lastPondered() const { return _lastPondered; }
     maru::Turn currentTurn() const { return _turn; }
     bool hasSkillLevelOption() const;
-    QMetaType::Type optionType(const QString &option) const;
+    QMetaType::Type type(const QString &option) const;
     QString error() const { return _error; }
 
     // 棋譜解析
@@ -98,8 +98,8 @@ private:
     QString _enginePath;
     QString _name;
     QString _author;
+    QVariantMap _options;  // カスタムオプション
     QMap<QString, Option> _defaultOptions;  // デフォルトオプション
-    QVariantMap _options;
     int _level {20};
     State _state {NotRunning};
     QTimer *_timer {nullptr};  // ポーリングタイマー

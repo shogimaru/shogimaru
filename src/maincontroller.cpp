@@ -36,21 +36,19 @@ const QList<int> RatingList = {maru::R1000, maru::R1200, maru::R1400, maru::R160
 static int engineSkillLevel(int level, int defaultValue = 0)
 {
     // Skill Level Map
-    static auto skillLevelMap = [] {
-        QMap<int, int> map;
-        map.insert(maru::R1000, 0);
-        map.insert(maru::R1200, 2);
-        map.insert(maru::R1400, 4);
-        map.insert(maru::R1600, 6);
-        map.insert(maru::R1800, 8);
-        map.insert(maru::R2000, 10);
-        map.insert(maru::R2200, 12);
-        map.insert(maru::R2400, 14);
-        map.insert(maru::R2600, 16);
-        map.insert(maru::R2800, 18);
-        map.insert(maru::R3000, 20);
-        return map;
-    }();
+    static QMap<int, int> skillLevelMap {
+        {maru::R1000, 0},
+        {maru::R1200, 2},
+        {maru::R1400, 4},
+        {maru::R1600, 6},
+        {maru::R1800, 8},
+        {maru::R2000, 10},
+        {maru::R2200, 12},
+        {maru::R2400, 14},
+        {maru::R2600, 16},
+        {maru::R2800, 18},
+        {maru::R3000, 20},
+    };
     return skillLevelMap.value(level, defaultValue);
 }
 
@@ -58,21 +56,19 @@ static int engineSkillLevel(int level, int defaultValue = 0)
 static QString engineLevelName(int level)
 {
     // Engine Level Name Map
-    static auto EngineLevelNameMap = [] {
-        QMap<int, QString> map;
-        map.insert(maru::R1000, QString("R1000"));
-        map.insert(maru::R1200, QString("R1200"));
-        map.insert(maru::R1400, QString("R1400"));
-        map.insert(maru::R1600, QString("R1600"));
-        map.insert(maru::R1800, QString("R1800"));
-        map.insert(maru::R2000, QString("R2000"));
-        map.insert(maru::R2200, QString("R2200"));
-        map.insert(maru::R2400, QString("R2400"));
-        map.insert(maru::R2600, QString("R2600"));
-        map.insert(maru::R2800, QString("R2800"));
-        map.insert(maru::R3000, QString("R3000"));
-        return map;
-    }();
+    static QMap<int, QString> EngineLevelNameMap = {
+        {maru::R1000, QString("R1000")},
+        {maru::R1200, QString("R1200")},
+        {maru::R1400, QString("R1400")},
+        {maru::R1600, QString("R1600")},
+        {maru::R1800, QString("R1800")},
+        {maru::R2000, QString("R2000")},
+        {maru::R2200, QString("R2200")},
+        {maru::R2400, QString("R2400")},
+        {maru::R2600, QString("R2600")},
+        {maru::R2800, QString("R2800")},
+        {maru::R3000, QString("R3000")},
+    };
     return EngineLevelNameMap.value(level);
 }
 
@@ -495,7 +491,7 @@ void MainController::startGame()
         }
         _recorder->setFirstPosition(Sfen::defaultPostion());
 
-        // 対局開始
+        // エンジン開始
         int slowMover = qBound(10, basicTime / 60000, 100);  // 序盤重視率
         if (!Engine::instance().newGame(slowMover)) {
             MessageBox::information(tr("Engine error"), Engine::instance().error());
@@ -1388,17 +1384,16 @@ void MainController::startAnalyzing()
         return;
     }
 
-    _mode = Analyzing;
-    // 解析開始手数
-    _analysisMoves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
-
-    // 解析開始
+    // エンジン解析開始
     if (!Engine::instance().startAnalysis()) {
         MessageBox::information(tr("Engine error"), Engine::instance().error());
         qCritical() << "Failed start engine";
         return;
     }
 
+    _mode = Analyzing;
+    // 解析開始手数
+    _analysisMoves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
     auto sfen = _recorder->sfen(_analysisMoves);
     Engine::instance().analysis(sfen);
     setCurrentRecordRow(_analysisMoves);

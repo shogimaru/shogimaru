@@ -27,7 +27,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(_ui->resetEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::resetEngineOptions);
     //connect(_ui->deleteGeneralOptButton, &QPushButton::clicked, this, &SettingsDialog::deleteGeneralOption);
     connect(_ui->tableEngineOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
-    connect(_ui->tableGeneralOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
+    //connect(_ui->tableGeneralOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
 #if QT_VERSION < 0x060000
     connect(_ui->engineComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(showEngineOptions(int)));
 #else
@@ -35,9 +35,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 #endif
 
 #ifdef Q_OS_WASM
-    _ui->tabWidget->removeTab(0);  // WASMではエンジン設定を非表示
-#else
-    _ui->tabWidget->removeTab(1);  // デスクトップ版ではオプション設定を非表示
+    _ui->newEngineButton->hide();
+    _ui->deleteEngineButton->hide();
 #endif
 
     // 個別オプション
@@ -48,13 +47,13 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     _ui->tableEngineOptions->setColumnWidth(0, 200);  // 1列目の幅
     _ui->tableEngineOptions->horizontalHeader()->setStretchLastSection(true);
 
-    // 共通オプション
-    _ui->tableGeneralOptions->setColumnCount(2);
-    _ui->tableGeneralOptions->setHorizontalHeaderItem(0, new QTableWidgetItem(QObject::tr("Option")));
-    _ui->tableGeneralOptions->setHorizontalHeaderItem(1, new QTableWidgetItem(QObject::tr("Value")));
-    _ui->tableGeneralOptions->setWordWrap(false);
-    _ui->tableGeneralOptions->setColumnWidth(0, 200);  // 1列目の幅
-    _ui->tableGeneralOptions->horizontalHeader()->setStretchLastSection(true);
+    // // 共通オプション
+    // _ui->tableGeneralOptions->setColumnCount(2);
+    // _ui->tableGeneralOptions->setHorizontalHeaderItem(0, new QTableWidgetItem(QObject::tr("Option")));
+    // _ui->tableGeneralOptions->setHorizontalHeaderItem(1, new QTableWidgetItem(QObject::tr("Value")));
+    // _ui->tableGeneralOptions->setWordWrap(false);
+    // _ui->tableGeneralOptions->setColumnWidth(0, 200);  // 1列目の幅
+    // _ui->tableGeneralOptions->horizontalHeader()->setStretchLastSection(true);
 }
 
 
@@ -87,21 +86,21 @@ void SettingsDialog::loadSettings()
         _ui->engineComboBox->setCurrentIndex(EngineSettings::instance().currentIndex());
     }
 
-    // 共通オプション
-    const auto &generalOptions = EngineSettings::instance().generalOptions();
-    _ui->tableGeneralOptions->clearContents();
-    _ui->tableGeneralOptions->setRowCount(generalOptions.count());
-    int row = 0;
-    for (auto it = generalOptions.begin(); it != generalOptions.end(); ++it) {
-        int col = 0;
-        auto item = new QTableWidgetItem(it.key());
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
-        _ui->tableGeneralOptions->setItem(row, col++, item);
-        item = new QTableWidgetItem(it.value().toString());
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
-        _ui->tableGeneralOptions->setItem(row, col++, item);
-        row++;
-    }
+    // // 共通オプション
+    // const auto &generalOptions = EngineSettings::instance().generalOptions();
+    // _ui->tableGeneralOptions->clearContents();
+    // _ui->tableGeneralOptions->setRowCount(generalOptions.count());
+    // int row = 0;
+    // for (auto it = generalOptions.begin(); it != generalOptions.end(); ++it) {
+    //     int col = 0;
+    //     auto item = new QTableWidgetItem(it.key());
+    //     item->setFlags(item->flags() | Qt::ItemIsEditable);
+    //     _ui->tableGeneralOptions->setItem(row, col++, item);
+    //     item = new QTableWidgetItem(it.value().toString());
+    //     item->setFlags(item->flags() | Qt::ItemIsEditable);
+    //     _ui->tableGeneralOptions->setItem(row, col++, item);
+    //     row++;
+    // }
 }
 
 
@@ -128,17 +127,32 @@ void SettingsDialog::showEngineOptions(int index)
     updateEngineOptions(EngineSettings::instance().currentIndex());
 
     // エンジンオプション
-    const auto &options = availableEngines[index].options;
+    auto options = availableEngines[index].options;
+#ifdef Q_OS_WASM
+    // WASM用デフォルトオプション
+    if (options.count() == 0) {
+        auto info = Engine::getEngineInfo(QString());
+        for (auto it = info.options.begin(); it != info.options.end(); ++it) {
+            options.insert(it.key(), it.value().value);
+        }
+
+        options["BookDir"] = "assets/YaneuraOu";
+        options["EvalDir"] = "assets/YaneuraOu/nnue-kp256";
+    }
+#endif
     _ui->tableEngineOptions->clearContents();
     _ui->tableEngineOptions->setRowCount(options.count());
 
+    QStringList keys = options.keys();
+    keys.sort(Qt::CaseInsensitive);  // ソート
     int row = 0;
-    for (auto it = options.begin(); it != options.end(); ++it) {
+    for (auto &key : keys) {
         int col = 0;
-        auto item = new QTableWidgetItem(it.key());
+        const auto &value = options[key];
+        auto item = new QTableWidgetItem(key);
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
         _ui->tableEngineOptions->setItem(row, col++, item);
-        item = new QTableWidgetItem(it.value().toString());
+        item = new QTableWidgetItem(value.toString());
         item->setFlags(item->flags() | Qt::ItemIsEditable);
         _ui->tableEngineOptions->setItem(row, col++, item);
         row++;
@@ -179,14 +193,10 @@ void SettingsDialog::getEnginePath()
     data.name = info.name;
     data.author = info.author;
     data.path = path;
-    data.defaultOptions = [](const QMap<QString, Engine::Option> &options) {
-        QVariantMap map;
-        for (auto it = options.begin(); it != options.end(); ++it) {
-            map.insert(it.key(), it.value().value);
-        }
-        return map;
-    }(info.options);
-    data.options = data.defaultOptions;  // デフォルトオプションを設定する
+    for (auto it = info.options.begin(); it != info.options.end(); ++it) {
+        data.options.insert(it.key(), it.value().value);
+        data.types.insert(it.key(), QVariant((int)it.value().type));
+    }
 
     EngineSettings::instance().addEngine(data);
     int newidx = EngineSettings::instance().availableEngineCount() - 1;
@@ -234,19 +244,25 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
             int index = _ui->engineComboBox->currentIndex();
             auto engineData = EngineSettings::instance().getEngine(index);
             auto engineDir = QFileInfo(engineData.path).dir().absolutePath();
-
+            QFileInfo fi(engineDir + QDir::separator() + item->text());
             QRegularExpression re("[a-z_]+Dir$");
-            auto match = re.match(optItem->text());  // オプション名
-            if (match.hasMatch()) {
-                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Open Directory"), engineDir);
+            auto matchd = re.match(optItem->text());  // オプション名
+
+            if (matchd.hasMatch()) {
+                QString path = (fi.isDir() && fi.exists()) ? fi.absoluteFilePath() : engineDir;
+                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Open Directory"), path);
                 if (!dir.isEmpty()) {
                     item->setText(dir);
                 }
             } else {
-                auto type = Engine::instance().optionType(optItem->text());
-                if (type == QMetaType::QUrl) {
+                int type = engineData.types.value(optItem->text()).toInt();
+                QRegularExpression refile("[a-z_]+File$");
+                auto matchf = refile.match(optItem->text());  // オプション名
+
+                if (type == QMetaType::QUrl || matchf.hasMatch()) {
                     // ファイル読込
-                    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), engineDir, "*");
+                    QString path = fi.dir().exists() ? fi.dir().absolutePath() : engineDir;
+                    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), path, "*");
                     if (!fileName.isEmpty()) {
                         item->setText(fileName);
                     }
@@ -338,21 +354,20 @@ void SettingsDialog::updateEngineOptions(int index)
 
 void SettingsDialog::save()
 {
-    // 共通オプション反映
-    auto &generalOptions = EngineSettings::instance().generalOptions();
-    generalOptions.clear();
+    // // 共通オプション反映
+    // auto &generalOptions = EngineSettings::instance().generalOptions();
+    // generalOptions.clear();
 
-    for (int i = 0; i < _ui->tableGeneralOptions->rowCount(); i++) {
-        auto *opt = _ui->tableGeneralOptions->item(i, 0);
-        auto *val = _ui->tableGeneralOptions->item(i, 1);
-        if (opt && !opt->text().isEmpty() && val && !val->text().isEmpty()) {
-            generalOptions.insert(opt->text(), val->text());
-        }
-    }
+    // for (int i = 0; i < _ui->tableGeneralOptions->rowCount(); i++) {
+    //     auto *opt = _ui->tableGeneralOptions->item(i, 0);
+    //     auto *val = _ui->tableGeneralOptions->item(i, 1);
+    //     if (opt && !opt->text().isEmpty() && val && !val->text().isEmpty()) {
+    //         generalOptions.insert(opt->text(), val->text());
+    //     }
+    // }
 
     int index = _ui->engineComboBox->currentIndex();
     updateEngineOptions(index);
     EngineSettings::instance().setCurrentIndex(index);
     EngineSettings::instance().save();
-    //qDebug() << "EngineSettings::instance().save()";
 }

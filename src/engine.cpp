@@ -119,45 +119,6 @@ bool Engine::open(const QString &path)
         return false;
     }
 
-    // #if 0
-    //     int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-    //     int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
-    //     std::string cmd = std::string("setoption name Threads value ") + std::to_string(threads);
-    //     Command::instance().request(cmd);
-    //     Command::instance().request("setoption name NetworkDelay value 50");  // ネットワーク遅延
-    //     Command::instance().request("setoption name NetworkDelay2 value 500");  // 切れ負けになる場合のネットワーク遅延
-    // #else
-    //     auto engine = EngineSettings::instance().currentEngine();
-    //     QVariantMap options = EngineSettings::instance().generalOptions();
-    //     options.insert(engine.options);
-    //     for (auto it = options.begin(); it != options.end(); ++it) {
-    //         if (!it.key().isEmpty() && !it.value().isNull()) {
-    //             QString command = QString("setoption name %1 value %2").arg(it.key(), it.value().toString());
-    //             qDebug() << command;
-    //             Command::instance().request(command.toStdString());
-    //         }
-    //     }
-    // #endif
-
-    //     //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue-kp256/");
-    //     //Command::instance().request("setoption name EvalDir value assets/YaneuraOu/nnue/");
-    //     //Command::instance().request("setoption name BookDir value assets/YaneuraOu/");
-
-    //     for (;;) {
-    //         auto res = Command::instance().poll(200);
-    //         if (res.empty()) {
-    //             break;
-    //         }
-
-    //         for (auto &msg : res) {
-    //             if (msg.find("Error") == 0) {
-    //                 qCritical() << "Engine" << msg.c_str();
-    //             } else {
-    //                 qDebug() << "Engine response:" << msg.c_str();
-    //             }
-    //         }
-    //     }
-
     _state = GameReady;
     return true;
 }
@@ -205,8 +166,9 @@ void Engine::sendOptions(const QVariantMap &options)
             value = it.value().toString();
             break;
         }
+        value = value.trimmed();
 
-        if (opt.value.toString() != value) {  // デフォルトと違う場合に実行
+        if (!value.isEmpty() && opt.value.toString() != value) {  // デフォルトと違う場合に実行
             auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
             Command::instance().request(bytes.toStdString());
         }
@@ -295,11 +257,7 @@ bool Engine::startAnalysis()
     Command::instance().request("setoption name SkillLevel value 20");  // MAX値
 #else
     QVariantMap opts = _options;
-    auto def = _defaultOptions.value("MultiPV");
-    if (!def.value.isNull()) {
-        opts.insert("MultiPV", 5);
-    }
-    def = _defaultOptions.value("SlowMover");
+    auto def = _defaultOptions.value("SlowMover");
     if (!def.value.isNull()) {
         opts.insert("SlowMover", def.value);
     }
@@ -341,7 +299,6 @@ bool Engine::analysis(const QByteArray &sfen)
     _timer->start(100);
     return true;
 }
-
 
 // 手番再設定
 void Engine::setTurn()
@@ -591,6 +548,18 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
         info.path = path;
         info.author = engine->author();
         info.options = engine->_defaultOptions;
+
+        // 将棋丸用デフォルト値
+        if (info.options.contains("MultiPV")) {
+            info.options["MultiPV"].value.setValue(5);
+        }
+
+        // エンジンスレッド数
+        if (info.options.contains("Threads")) {
+            int con = std::thread::hardware_concurrency();  // コア（スレッド）数
+            int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+            info.options["Threads"].value.setValue(threads);
+        }
     }
     engine->close();
     delete engine;
@@ -603,8 +572,8 @@ bool Engine::hasSkillLevelOption() const
     return !_defaultOptions.value("SkillLevel").value.isNull();
 }
 
-
-QMetaType::Type Engine::optionType(const QString &option) const
+// Type of the option
+QMetaType::Type Engine::type(const QString &option) const
 {
     auto optionData = _defaultOptions.value(option);
     return optionData.type;

@@ -195,7 +195,7 @@ void RecordDialog::loadItem(QListWidgetItem *item)
     int id = obj.value("id").toInt();
     // HTTP request
     request(Url.arg(id), SLOT(parseRecordJson()));
-
+    //qDebug() << Url.arg(id);
     _ui->listWidget->setEnabled(false);
 }
 
@@ -217,6 +217,10 @@ void RecordDialog::parseRecordJson()
     auto body = reply->readAll();
     QJsonDocument doc = QJsonDocument::fromJson(body);
     auto array = doc.object().value("evals").toArray();
+    if (array.count() == 0) {
+        MessageBox::information(tr("Error"), tr("Failed to retrieve the Shogi game record."));
+        return;
+    }
 
     QString csa;
     for (auto it = array.begin(); it != array.end(); ++it) {

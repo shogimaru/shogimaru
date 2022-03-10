@@ -7,16 +7,10 @@ constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
 #endif
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
 constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
-constexpr auto GENERAL_OPTIONS_KEY = "generalOptions";
 
 
 EngineSettings::EngineSettings()
 {
-// #ifdef Q_OS_WASM
-//     EngineData data;
-//     data.name = QLatin1String("YaneuraOu NNUE KP256");
-//     _availableEngines << data;
-// #endif
 }
 
 
@@ -40,20 +34,6 @@ EngineSettings EngineSettings::load()
     QFile file(SETTINGS_JSON_FILE_NAME);
 
     if (!file.open(QIODevice::ReadOnly)) {
-//         // デフォルト値
-//         int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-// #ifdef Q_OS_WASM
-//         int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
-// #else
-//         int threads = std::max(con, 2);
-// #endif
-//         settings._generalOptions.insert(QLatin1String("Threads"), threads);
-//         settings._generalOptions.insert(QLatin1String("USI_Hash"), 256);
-// #ifdef Q_OS_WASM
-//         // WASMでのデフォルト
-//         settings._generalOptions.insert(QLatin1String("NetworkDelay"), 300);  // ネットワーク遅延
-//         settings._generalOptions.insert(QLatin1String("NetworkDelay2"), 600);  // 切れ負けになる場合のネットワーク遅延
-// #endif
         return settings;
     }
 
@@ -63,7 +43,6 @@ EngineSettings EngineSettings::load()
     }
 
     settings._currentIndex = json.value(SELECTED_ENGINE_INDEX_KEY).toInt();
-    settings._generalOptions = json.value(GENERAL_OPTIONS_KEY).toObject().toVariantMap();
     //qDebug() << json;
     return settings;
 }
@@ -89,7 +68,7 @@ void EngineSettings::save() const
     }();
 
     jsonObject[SELECTED_ENGINE_INDEX_KEY] = _currentIndex;
-    jsonObject[GENERAL_OPTIONS_KEY] = QJsonObject::fromVariantMap(_generalOptions);
+    //jsonObject[GENERAL_OPTIONS_KEY] = QJsonObject::fromVariantMap(_generalOptions);
 
     // ファイル書き込み
     QFile file(SETTINGS_JSON_FILE_NAME);
@@ -144,7 +123,7 @@ QJsonObject EngineSettings::EngineData::toJsonObject() const
     SET_JSON_VALUE(jo, author);
     SET_JSON_VALUE(jo, path);
     SET_JSON_VALUE(jo, options);
-    SET_JSON_VALUE(jo, defaultOptions);
+    SET_JSON_VALUE(jo, types);
     return jo;
 }
 
@@ -156,7 +135,7 @@ EngineSettings::EngineData EngineSettings::EngineData::fromJsonObject(const QJso
     data.author = object["author"].toString();
     data.path = object["path"].toString();
     data.options = object["options"].toVariant().toMap();
-    data.defaultOptions = object["defaultOptions"].toVariant().toMap();
+    data.types = object["types"].toVariant().toMap();
     return data;
 }
 
