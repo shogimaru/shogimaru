@@ -34,7 +34,7 @@ wasm {
 }
 
 msvc {
-  QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus
+  QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus /utf-8
 }
 
 SOURCES += \

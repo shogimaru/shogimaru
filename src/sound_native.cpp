@@ -5,6 +5,7 @@
 
 void Sound::playBleep()
 {
+#if QT_VERSION >= 0x060000
     static QMediaPlayer *player = []() {
         auto player = new QMediaPlayer;
         auto audioOutput = new QAudioOutput;
@@ -15,11 +16,13 @@ void Sound::playBleep()
     }();
     player->stop();
     player->play();
+#endif
 }
 
 
 void Sound::playSnap()
 {
+#if QT_VERSION >= 0x060000
     static QMediaPlayer *player = []() {
         auto player = new QMediaPlayer;
         auto audioOutput = new QAudioOutput;
@@ -30,4 +33,5 @@ void Sound::playSnap()
     }();
     player->stop();
     player->play();
+#endif
 }
