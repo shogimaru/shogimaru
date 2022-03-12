@@ -19,7 +19,10 @@ wasm {
   SOURCES += enginethread.cpp
   DESTDIR  = ../html/
 } else {
-  QT      += core5compat multimedia
+  QT      += multimedia
+  !lessThan(QT_MAJOR_VERSION, 6) {
+    QT    += core5compat
+  }
   SOURCES += maincontroller_native.cpp
   SOURCES += file.cpp
   SOURCES += engine_native.cpp
