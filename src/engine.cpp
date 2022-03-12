@@ -563,8 +563,8 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
         }
 
 #ifdef Q_OS_WASM
-        info.options["BookDir"].value.setValue("assets/YaneuraOu");
-        info.options["EvalDir"].value.setValue("assets/YaneuraOu/nnue-kp256");
+        info.options["BookDir"].value.setValue(QString("assets/YaneuraOu"));
+        info.options["EvalDir"].value.setValue(QString("assets/YaneuraOu/nnue-kp256"));
 #endif
     }
     engine->close();
