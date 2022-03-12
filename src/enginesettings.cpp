@@ -68,7 +68,7 @@ void EngineSettings::save() const
     }();
 
     jsonObject[SELECTED_ENGINE_INDEX_KEY] = _currentIndex;
-    //jsonObject[GENERAL_OPTIONS_KEY] = QJsonObject::fromVariantMap(_generalOptions);
+    jsonObject["version"] = 1;
 
     // ファイル書き込み
     QFile file(SETTINGS_JSON_FILE_NAME);

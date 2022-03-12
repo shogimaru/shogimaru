@@ -19,6 +19,7 @@ public:
         qint64 min {0};
     };
 
+
     struct EngineInfo {
         QString name;
         QString path;
@@ -111,3 +112,5 @@ private:
     QString _error;
     EngineContext *_engineContext {nullptr};
 };
+
+Q_DECLARE_METATYPE(Engine::Option)

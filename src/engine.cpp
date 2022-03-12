@@ -83,7 +83,7 @@ bool Engine::open(const QString &path)
 
                         switch (option.type) {
                         case QMetaType::Bool:
-                            option.value.setValue(nextWord(items, "default") == "true");
+                            option.value.setValue(nextWord(items, "default") == "true");  // true or false
                             break;
                         case QMetaType::LongLong:
                             option.value.setValue(nextWord(items, "default").toLongLong());
@@ -170,6 +170,7 @@ void Engine::sendOptions(const QVariantMap &options)
 
         if (!value.isEmpty() && opt.value.toString() != value) {  // デフォルトと違う場合に実行
             auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
+            qDebug() << bytes;
             Command::instance().request(bytes.toStdString());
         }
     }
@@ -560,6 +561,11 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
             int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
             info.options["Threads"].value.setValue(threads);
         }
+
+#ifdef Q_OS_WASM
+        info.options["BookDir"].value.setValue("assets/YaneuraOu");
+        info.options["EvalDir"].value.setValue("assets/YaneuraOu/nnue-kp256");
+#endif
     }
     engine->close();
     delete engine;

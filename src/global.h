@@ -1,5 +1,4 @@
 #pragma once
-#include <QFont>
 #include <QString>
 #include <functional>
 #include <list>
@@ -8,6 +7,7 @@
 
 class QWidget;
 class QLabel;
+class QFont;
 
 namespace maru {
 

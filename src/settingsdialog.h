@@ -1,6 +1,8 @@
 #pragma once
 #include "global.h"
+#include "engine.h"
 #include <QDialog>
+#include <QMap>
 
 class QTableWidget;
 class QTableWidgetItem;
@@ -24,8 +26,6 @@ public:
     void deleteEngine();
     void slotItemClicked(QTableWidgetItem *item);
     void resetEngineOptions();
-    //void deleteEngineOption();
-    //void deleteGeneralOption();
 
 public slots:
     void showEngineOptions(int index);
@@ -36,8 +36,9 @@ protected slots:
 protected:
     void loadSettings();
     void updateEngineOptions(int index);
-    //void deleteOption(QTableWidget *tableWidget, const QStringList &excludes = QStringList());
 
 private:
     Ui::SettingsDialog *_ui {nullptr};
+
+    QMap<QString, Engine::Option> _defaultOptions;  // 選択中のエンジンのデフォルトオプション
 };

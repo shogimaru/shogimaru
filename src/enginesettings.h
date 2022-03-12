@@ -19,7 +19,7 @@ public:
         static EngineData fromJsonObject(const QJsonObject &object);
     };
 
-    QList<EngineData> availableEngines() const { return _availableEngines; }
+    const QList<EngineData> &availableEngines() const { return _availableEngines; }
     int availableEngineCount() const { return _availableEngines.count(); }
     EngineData currentEngine() const;
     EngineData getEngine(int index) const;

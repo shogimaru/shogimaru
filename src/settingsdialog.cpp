@@ -127,19 +127,19 @@ void SettingsDialog::showEngineOptions(int index)
     updateEngineOptions(EngineSettings::instance().currentIndex());
 
     // エンジンオプション
-    auto options = availableEngines[index].options;
+    const auto &engineData = availableEngines[index];
+    auto info = Engine::getEngineInfo(engineData.path);
+    _defaultOptions = info.options;  // デフォルトオプション取得
+    auto options = engineData.options;
 #ifdef Q_OS_WASM
-    // WASM用デフォルトオプション
+    // WASM用デフォルトオプション設定
     if (options.count() == 0) {
-        auto info = Engine::getEngineInfo(QString());
-        for (auto it = info.options.begin(); it != info.options.end(); ++it) {
+        for (auto it = _defaultOptions.begin(); it != _defaultOptions.end(); ++it) {
             options.insert(it.key(), it.value().value);
         }
-
-        options["BookDir"] = "assets/YaneuraOu";
-        options["EvalDir"] = "assets/YaneuraOu/nnue-kp256";
     }
 #endif
+
     _ui->tableEngineOptions->clearContents();
     _ui->tableEngineOptions->setRowCount(options.count());
 
@@ -148,12 +148,22 @@ void SettingsDialog::showEngineOptions(int index)
     int row = 0;
     for (auto &key : keys) {
         int col = 0;
-        const auto &value = options[key];
         auto item = new QTableWidgetItem(key);
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
         _ui->tableEngineOptions->setItem(row, col++, item);
-        item = new QTableWidgetItem(value.toString());
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
+
+        int type = engineData.types.value(key).toInt();
+        auto value = options[key].toString();
+        item = new QTableWidgetItem(value, type);
+
+        if (type == QMetaType::Bool) {
+            Qt::CheckState state = (value == QLatin1String("true")) ? Qt::Checked : Qt::Unchecked;
+            item->setCheckState(state);
+            item->setFlags(item->flags() ^ Qt::ItemIsEditable);
+            item->setText((state == Qt::Checked) ? tr("true") : tr("false"));
+        } else {
+            item->setFlags(item->flags() | Qt::ItemIsEditable);
+        }
         _ui->tableEngineOptions->setItem(row, col++, item);
         row++;
     }
@@ -236,13 +246,14 @@ void SettingsDialog::deleteEngine()
 
 void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 {
+    int index = _ui->engineComboBox->currentIndex();
+    auto engineData = EngineSettings::instance().getEngine(index);
     auto *optionTableWidget = item->tableWidget();
+    auto *optItem = optionTableWidget->item(item->row(), 0);  // Optionセル
+
     if (item->column() == 1) {
 #ifndef Q_OS_WASM
-        auto *optItem = optionTableWidget->item(item->row(), 0);  // Optionセル
         if (optItem) {
-            int index = _ui->engineComboBox->currentIndex();
-            auto engineData = EngineSettings::instance().getEngine(index);
             auto engineDir = QFileInfo(engineData.path).dir().absolutePath();
             QFileInfo fi(engineDir + QDir::separator() + item->text());
             QRegularExpression re("[a-z_]+Dir$");
@@ -250,7 +261,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 
             if (matchd.hasMatch()) {
                 QString path = (fi.isDir() && fi.exists()) ? fi.absoluteFilePath() : engineDir;
-                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Open Directory"), path);
+                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Select Directory"), path);
                 if (!dir.isEmpty()) {
                     item->setText(dir);
                 }
@@ -262,7 +273,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
                 if (type == QMetaType::QUrl || matchf.hasMatch()) {
                     // ファイル読込
                     QString path = fi.dir().exists() ? fi.dir().absolutePath() : engineDir;
-                    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), path, "*");
+                    QString fileName = QFileDialog::getOpenFileName(this, tr("Select File"), path, "*");
                     if (!fileName.isEmpty()) {
                         item->setText(fileName);
                     }
@@ -270,7 +281,33 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
             }
         }
 #endif
-        optionTableWidget->editItem(item);  // シングルクリックで編集モードにする
+
+        if (item->type() == QMetaType::Bool) {
+            // チェックステートを変更
+            auto state = item->checkState();
+            item->setText((state == Qt::Checked) ? tr("true") : tr("false"));
+        } else {
+            optionTableWidget->editItem(item);  // シングルクリックで編集モードにする
+        }
+    }
+
+    if (optItem) {
+        auto option = _defaultOptions.value(optItem->text());
+        QString str = optItem->text() + "\n";
+        str += tr("Default");
+        str += " ";
+        str += option.value.toString();
+        if (option.type == QMetaType::LongLong) {
+            str += "  ";
+            str += tr("Max");
+            str += " ";
+            str += QString::number(option.max);
+            str += "  ";
+            str += tr("Min");
+            str += " ";
+            str += QString::number(option.min);
+        }
+        _ui->labelEngineOptInfo->setText(str);
     }
 }
 
@@ -335,13 +372,19 @@ void SettingsDialog::updateEngineOptions(int index)
     if (index >= 0 && index < EngineSettings::instance().availableEngineCount()) {
         QVariantMap options;  // 画面の設定取得
         for (int i = 0; i < _ui->tableEngineOptions->rowCount(); i++) {
-            auto *opt = _ui->tableEngineOptions->item(i, 0);
-            auto *val = _ui->tableEngineOptions->item(i, 1);
-            if (opt && !opt->text().isEmpty() && val && !val->text().isEmpty()) {
-                options.insert(opt->text(), val->text());
+            auto *optItem = _ui->tableEngineOptions->item(i, 0);
+            auto *valItem = _ui->tableEngineOptions->item(i, 1);
+            if (optItem && !optItem->text().isEmpty() && valItem && !valItem->text().isEmpty()) {
+                if (valItem->type() == QMetaType::Bool) {
+                    bool check = (valItem->checkState() == Qt::Checked);
+                    options.insert(optItem->text(), check);  // boolean
+                } else {
+                    options.insert(optItem->text(), valItem->text());
+                }
             }
         }
 
+        // 設定に反映
         if (options.count() > 0) {
             auto engine = EngineSettings::instance().getEngine(index);
             engine.options = options;
