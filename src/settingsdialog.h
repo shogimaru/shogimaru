@@ -35,10 +35,11 @@ protected slots:
     void save();
 
 protected:
-    void loadSettings();
+    void loadSettings(int currentIndex);
     void updateEngineOptions(int index);
 
 private:
     Ui::SettingsDialog *_ui {nullptr};
+    int prevIndex {-1};
     QMap<QString, Engine::Option> _defaultOptions;  // 選択中のエンジンのデフォルトオプション
 };
