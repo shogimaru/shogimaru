@@ -19,7 +19,6 @@ public:
         qint64 min {0};
     };
 
-
     struct EngineInfo {
         QString name;
         QString path;
@@ -70,17 +69,21 @@ public:
     static EngineInfo getEngineInfo(const QString &path);
 
 signals:
+    void ready();  // 準備完了
     void bestMove(const QByteArray &best);  // 指し手
     void pondering(const PonderInfo &info);
     void resign();  // 投了
     void win();  // 入玉勝ち宣言
+    void errorOccurred();
 
 protected slots:
     void getResponse();
+    void usiNewGame();
+    void engineError();
 
 private:
-    void openUsi(const QString &path);  // start process/thread
-    void closeUsi();
+    bool openContext(const QString &path);  // start process/thread
+    void closeContext();
     bool go(const QByteArrayList &position, bool ponderFlag, int senteTime, int goteTime, int byoyomi);
     void setTurn();
     void sendOptions(const QVariantMap &options);
@@ -100,10 +103,15 @@ private:
     QString _name;
     QString _author;
     QVariantMap _options;  // カスタムオプション
+#ifdef Q_OS_WASM
+    static QMap<QString, Option> _defaultOptions;  // WASMでは初回1回のみ正しい
+#else
     QMap<QString, Option> _defaultOptions;  // デフォルトオプション
+#endif
     int _level {20};
     State _state {NotRunning};
     QTimer *_timer {nullptr};  // ポーリングタイマー
+    QTimer *_errorTimer {nullptr};  // エラータイマー
     QByteArray _startPositionSfen;
     QByteArrayList _allMoves;
     maru::Turn _turn {maru::Sente};

@@ -1,4 +1,5 @@
 #include <enginethread.h>
+#include <QDebug>
 
 extern int YaneuraOu();
 

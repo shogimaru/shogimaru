@@ -79,6 +79,7 @@ void setGlobalIntParameter(ParameterName name, int64_t value);
 QString globalStringParameter(ParameterName name);
 void setGlobalStringParameter(ParameterName name, const QString &value);
 
+std::string toLower(const std::string &str);
 std::string trim(const std::string &input);
 bool contains(const std::list<std::string> &stringlist, const std::string &str);
 std::string join(const std::list<std::string> &stringlist, const std::string &separator);

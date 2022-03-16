@@ -25,10 +25,11 @@ public:
     void confirmDelete();
     void deleteEngine();
     void slotItemClicked(QTableWidgetItem *item);
+    void showEngineOptions(int index);
     void resetEngineOptions();
 
 public slots:
-    void showEngineOptions(int index);
+    void switchEngineOptions(int index);
 
 protected slots:
     void save();
@@ -39,6 +40,5 @@ protected:
 
 private:
     Ui::SettingsDialog *_ui {nullptr};
-
     QMap<QString, Engine::Option> _defaultOptions;  // 選択中のエンジンのデフォルトオプション
 };

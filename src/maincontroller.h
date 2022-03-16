@@ -77,12 +77,14 @@ public slots:
     void updateRemainingTime();  // 残り時間表示更新
     void setCurrentRecordRow(int move);
     void slotSettingsAction();  // 設定ボタン
-    void startAnalyzing();  // 棋譜解析
+    void startAnalysis();  // 棋譜解析
+    void startGo();
     void slotAnalysisAction();  // 解析ボタンクリック
     void openInfoBox();
     void loadSfen();
     void saveFile(const QString &filePath);
     void slotAnalysisTimeout();
+    void engineError();
 
 protected:
     void recordResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail);

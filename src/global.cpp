@@ -42,6 +42,14 @@ bool is_space(char c)
     return (c == '\r' || c == '\n' || c == ' ' || c == '\t');
 }
 
+
+std::string toLower(const std::string &str)
+{
+    std::string ret = str;
+    std::transform(ret.begin(), ret.end(), ret.begin(), [](unsigned char c) { return std::tolower(c); });
+    return ret;
+}
+
 /*!
   先頭・末尾から空白文字を削除
 */

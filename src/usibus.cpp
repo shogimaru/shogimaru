@@ -1,6 +1,7 @@
 #include "usibus.h"
 #include "command.h"
 
+
 class command_buf : public std::basic_stringbuf<char>
 {
 public:

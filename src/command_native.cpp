@@ -4,14 +4,14 @@
 #include <QDebug>
 
 
-std::string CBus::get()
+std::string CBus::get(int)
 {
     // do nothing
     return std::string();
 }
 
 
-std::list<std::string> CBus::getAll()
+std::list<std::string> CBus::getAll(int)
 {
     // do nothing
     return std::list<std::string>();
@@ -21,16 +21,6 @@ std::list<std::string> CBus::getAll()
 void CBus::set(const std::string &)
 {
     // do nothing
-}
-
-/*!
-  コマンド待機
-  msecs:ミリ秒  -1:無期限待機  0:ノンブロック
-*/
-bool CBus::wait(int) const
-{
-    // do nothing
-    return true;
 }
 
 

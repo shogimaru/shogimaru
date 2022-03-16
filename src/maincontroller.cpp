@@ -131,7 +131,7 @@ MainController::MainController(QWidget *parent) :
     connect(_ui->analysisAction, &QAction::triggered, this, &MainController::slotAnalysisAction);
     connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
-    connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalyzing);
+    connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalysis);
     connect(_ui->recordAction, &QAction::triggered, _recordDialog, &RecordDialog::open);
     connect(_recordDialog, &QDialog::accepted, this, &MainController::loadSfen);
     connect(_recordDialog, &RecordDialog::saveFileSelected, this, &MainController::saveFile);
@@ -141,10 +141,12 @@ MainController::MainController(QWidget *parent) :
     connect(_ui->myPageAction, &QAction::triggered, _myPage, &MyPage::open);
     connect(_ui->infoAction, &QAction::triggered, this, &MainController::openInfoBox);
     connect(_ui->recordWidget, &QListWidget::itemSelectionChanged, this, &MainController::slotRecordItemSelected);
+    connect(&Engine::instance(), &Engine::ready, this, &MainController::startGo);
     connect(&Engine::instance(), &Engine::bestMove, _board, &Board::movePiece);
     connect(&Engine::instance(), &Engine::pondering, this, &MainController::pondered);
     connect(&Engine::instance(), &Engine::win, this, &MainController::engineWin);
     connect(&Engine::instance(), &Engine::resign, this, &MainController::engineResign);
+    connect(&Engine::instance(), &Engine::errorOccurred, this, &MainController::engineError);
     connect(_clock, &ChessClock::secondElapsed, this, &MainController::updateRemainingTime);
     connect(_clock, &ChessClock::timeout, this, &MainController::gameoverTimeout);
     connect(_board, &Board::moved, this, &MainController::move);
@@ -478,7 +480,7 @@ void MainController::startGame()
     int basicTime = _startDialog->basicTime() * 60000;
     int byoyomi = _startDialog->byoyomi() * 1000;
 
-    maru::Turn turn = maru::Sente;
+
     _clock->setTime(basicTime, byoyomi);
     _ponderFlag = (_players[maru::Sente].type() != _players[maru::Gote].type());
     _recorder->clear();
@@ -506,17 +508,14 @@ void MainController::startGame()
 
     // 対局開始
     _mode = Rating;
-    _clock->start(turn);
-    setTurn(turn);
+    updateButtonStates();
+    showRemainingTime(maru::Sente, basicTime, byoyomi);
+    showRemainingTime(maru::Gote, basicTime, byoyomi);
 
     // 棋譜記録
     auto *item = new QListWidgetItem(tr("  0 Start"), _ui->recordWidget);
     _ui->recordWidget->addItem(item);
     _ui->recordWidget->scrollToItem(item);
-
-    updateButtonStates();
-    showRemainingTime(maru::Sente, basicTime, byoyomi);
-    showRemainingTime(maru::Gote, basicTime, byoyomi);
 }
 
 
@@ -1102,6 +1101,19 @@ void MainController::slotAnalysisTimeout()
     }
 }
 
+
+void MainController::engineError()
+{
+    _clock->stop();
+    _board->stopGame();
+    _lastPonder.clear();
+    Engine::instance().gameover();
+
+    _mode = Watch;
+    updateButtonStates();
+    MessageBox::information(tr("Engine Error"), Engine::instance().error());
+}
+
 /*!
   待った
 */
@@ -1357,18 +1369,20 @@ void MainController::setCurrentRecordRow(int move)
 }
 
 
-void MainController::startAnalyzing()
+void MainController::startAnalysis()
 {
     auto data = EngineSettings::instance().currentEngine();
-    if (data.path.isEmpty()) {
+    if (data.name.isEmpty()) {
         qCritical() << "No shogi engine";
         return;
     }
 
+#ifndef Q_OS_WASM
     if (!QFileInfo(data.path).exists()) {
         qCritical() << "Not found such shogi engine:" << data.path;
         return;
     }
+#endif
 
     Engine::instance().open(data.path);
     // オプション設定
@@ -1387,22 +1401,35 @@ void MainController::startAnalyzing()
     // エンジン解析開始
     if (!Engine::instance().startAnalysis()) {
         MessageBox::information(tr("Engine error"), Engine::instance().error());
-        qCritical() << "Failed start engine";
         return;
     }
 
     _mode = Analyzing;
-    // 解析開始手数
-    _analysisMoves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
-    auto sfen = _recorder->sfen(_analysisMoves);
-    Engine::instance().analysis(sfen);
-    setCurrentRecordRow(_analysisMoves);
-    _analysisTimerId = startTimer(1000);
-    _analysisTimer.start();
-    _elapsedTimer.start();
     updateButtonStates();
     showRemainingTime(maru::Sente, 0, 0);  // 先手残り時間
     showRemainingTime(maru::Gote, 0, 0);  // 後手残り時間
+}
+
+
+void MainController::startGo()
+{
+    qDebug() << "startGo()";
+    if (_mode == Rating) {
+        maru::Turn turn = maru::Sente;
+        _clock->start(turn);
+        setTurn(turn);
+    } else if (_mode == Analyzing) {
+        // 解析開始手数
+        _analysisMoves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
+        auto sfen = _recorder->sfen(_analysisMoves);
+        Engine::instance().analysis(sfen);
+        setCurrentRecordRow(_analysisMoves);
+        _analysisTimerId = startTimer(1000);
+        _analysisTimer.start();
+        _elapsedTimer.start();
+    } else {
+        qCritical() << "Invalid mode:" << _mode << "line:" << __LINE__;
+    }
 }
 
 
@@ -1488,7 +1515,7 @@ void MainController::timerEvent(QTimerEvent *event)
         // 更新
         showAnalysisInfo();
     } else {
-        qDebug() << "timerEvent" << event->timerId();
+        qDebug() << "timerEvent" << event->timerId() << "analysisTimerId:" << _analysisTimerId;
     }
 }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "engine.h"
 #include <QtCore>
 
 
@@ -28,16 +29,16 @@ public:
     void setCurrentIndex(int index) { _currentIndex = index; }
     void addEngine(const EngineData &engine);
     void removeEngine(int index);
-    //QVariantMap &generalOptions() { return _generalOptions; }
     void save() const;
 
     static EngineSettings &instance();
+    static void setCustomOptions(QVariantMap &options);
 
 private:
-    EngineSettings();
+    EngineSettings() {}
     static EngineSettings load();
+    static EngineSettings loadJson(const QString &path);
 
     QList<EngineData> _availableEngines;
     int _currentIndex {0};
-    //QVariantMap _generalOptions;
 };

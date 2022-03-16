@@ -29,7 +29,7 @@ bool Engine::open(const QString &path)
     }
 
     // Starts engine
-    openUsi(path);
+    openContext(path);
     Command::instance().request("usi");
 
     auto parseUsi = [this]() {
@@ -114,9 +114,19 @@ bool Engine::open(const QString &path)
         return false;
     };
 
-    if (!parseUsi()) {
-        qCritical() << "Error response";
-        return false;
+    if (_defaultOptions.isEmpty()) {
+        if (!parseUsi()) {
+            qCritical() << "Error response";
+            emit errorOccurred();
+            return false;
+        }
+    } else {
+        std::list<std::string> response;
+        if (!Command::instance().pollFor("usiok", 1000, response)) {
+            qCritical() << "USI Error";
+            emit errorOccurred();
+            return false;
+        }
     }
 
     _state = GameReady;
@@ -126,7 +136,11 @@ bool Engine::open(const QString &path)
 
 void Engine::close()
 {
-    closeUsi();
+    closeContext();
+#ifndef Q_OS_WASM
+    _defaultOptions.clear();
+    _options.clear();
+#endif
     _state = NotRunning;
 }
 
@@ -170,7 +184,7 @@ void Engine::sendOptions(const QVariantMap &options)
 
         if (!value.isEmpty() && opt.value.toString() != value) {  // デフォルトと違う場合に実行
             auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
-            qDebug() << bytes;
+            qDebug() << "sendOptions:" << bytes;
             Command::instance().request(bytes.toStdString());
         }
     }
@@ -227,17 +241,25 @@ bool Engine::newGame(int slowMover)
     }
     sendOptions(opts);
 #endif
+
     Command::instance().request("isready");
-    std::list<std::string> response;
-    if (!Command::instance().pollFor("readyok", 1000, response)) {  // readyok
-        _error = QString::fromStdString(maru::join(response, "\n"));
-        _state = EngineError;
-        return false;
+    _timer->start(66);  // 受信開始
+    _errorTimer->start(3000);  // エラータイマー開始
+    return true;
+}
+
+
+void Engine::usiNewGame()
+{
+    if (_state != GameReady) {
+        qCritical() << "usiNewGame() Invalid state:" << _state;
+        return;
     }
+
+    _errorTimer->stop();
     Command::instance().request("usinewgame");
     _state = Idle;
-    _timer->start(100);
-    return true;
+    emit ready();
 }
 
 
@@ -268,15 +290,10 @@ bool Engine::startAnalysis()
     }
     sendOptions(opts);
 #endif
+
     Command::instance().request("isready");
-    std::list<std::string> response;
-    if (!Command::instance().pollFor("readyok", 1000, response)) {  // readyok
-        _error = QString::fromStdString(maru::join(response, "\n"));
-        _state = EngineError;
-        return false;
-    }
-    Command::instance().request("usinewgame");
-    _state = Idle;
+    _timer->start(66);  // 受信開始
+    _errorTimer->start(3000);  // エラータイマー開始
     return true;
 }
 
@@ -296,10 +313,17 @@ bool Engine::analysis(const QByteArray &sfen)
     Command::instance().request(cmd.toStdString());
     Command::instance().request("go infinite");
     _state = Pondering;
-
-    _timer->start(100);
     return true;
 }
+
+
+void Engine::engineError()
+{
+    qWarning() << "Engine Error!";
+    _error = "Engine Error";
+    emit errorOccurred();
+}
+
 
 // 手番再設定
 void Engine::setTurn()
@@ -335,7 +359,7 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 {
     if (_state == Pondering) {
         if (ponder) {
-            qDebug() << "Error status";
+            qDebug() << "go() Error status" << _state << "line:" << __LINE__;
             return false;
         }
 
@@ -349,7 +373,7 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
     }
 
     if (_state != Idle) {
-        qDebug() << "Error status";
+        qDebug() << "go() Error status:" << _state << "line:" << __LINE__;
         return false;
     }
 
@@ -500,7 +524,9 @@ void Engine::getResponse()
     }
 
     for (auto &s : response) {
-        if (s.find("bestmove ") == 0) {
+        if (s.find("readyok") == 0) {
+            usiNewGame();
+        } else if (s.find("bestmove ") == 0) {
             _state = Idle;
             auto strs = maru::split(s, ' ', true);
 
@@ -534,7 +560,13 @@ void Engine::getResponse()
             //qDebug() << "multipv" << info.multipv << "pondering score:" << info.scoreCp << "mate:" << info.mate << "mateCount:" << info.mateCount << "depth:" << info.depth << "nodes:" << info.nodes << "pv:" << info.pv;
             emit pondering(info);
         } else {
-            qDebug() << "Unknown response" << s.c_str();
+            if (maru::toLower(s).find("error") != std::string::npos) {  // errorがある場合
+                _error = QString::fromStdString(s);
+                emit errorOccurred();
+                _errorTimer->stop();
+            } else {
+                qDebug() << "Unknown response" << s.c_str();
+            }
         }
     }
 }
@@ -549,23 +581,6 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
         info.path = path;
         info.author = engine->author();
         info.options = engine->_defaultOptions;
-
-        // 将棋丸用デフォルト値
-        if (info.options.contains("MultiPV")) {
-            info.options["MultiPV"].value.setValue(5);
-        }
-
-        // エンジンスレッド数
-        if (info.options.contains("Threads")) {
-            int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-            int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
-            info.options["Threads"].value.setValue(threads);
-        }
-
-#ifdef Q_OS_WASM
-        info.options["BookDir"].value.setValue(QString("assets/YaneuraOu"));
-        info.options["EvalDir"].value.setValue(QString("assets/YaneuraOu/nnue-kp256"));
-#endif
     }
     engine->close();
     delete engine;

@@ -1,17 +1,11 @@
 #include "enginesettings.h"
 
 #ifdef Q_OS_WASM
-constexpr auto SETTINGS_JSON_FILE_NAME = "assets/defaults/engines.json";
-#else
-constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
+constexpr auto DEFAULT_SETTINGS_JSON_FILE_NAME = "assets/defaults/engines.json";
 #endif
+constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
 constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
-
-
-EngineSettings::EngineSettings()
-{
-}
 
 
 void EngineSettings::addEngine(const EngineData &engine)
@@ -28,10 +22,10 @@ void EngineSettings::removeEngine(int index)
 }
 
 
-EngineSettings EngineSettings::load()
+EngineSettings EngineSettings::loadJson(const QString &path)
 {
     EngineSettings settings;
-    QFile file(SETTINGS_JSON_FILE_NAME);
+    QFile file(path);
 
     if (!file.open(QIODevice::ReadOnly)) {
         return settings;
@@ -44,6 +38,34 @@ EngineSettings EngineSettings::load()
 
     settings._currentIndex = json.value(SELECTED_ENGINE_INDEX_KEY).toInt();
     //qDebug() << json;
+    return settings;
+}
+
+
+EngineSettings EngineSettings::load()
+{
+    EngineSettings settings = loadJson(SETTINGS_JSON_FILE_NAME);
+
+    if (settings._availableEngines.isEmpty()) {
+#ifdef Q_OS_WASM
+        settings = loadJson(DEFAULT_SETTINGS_JSON_FILE_NAME);
+        if (settings.availableEngines().isEmpty()) {
+            qCritical() << "Error load settings:" << DEFAULT_SETTINGS_JSON_FILE_NAME;
+            return settings;
+        }
+
+        QVariantMap options;
+        auto info = Engine::getEngineInfo(QString());
+        for (auto it = info.options.begin(); it != info.options.end(); ++it) {
+            options.insert(it.key(), it.value().value);
+            //qDebug() << it.key() << it.value().value;
+        }
+        setCustomOptions(options);  // カスタムオプション
+        settings._availableEngines[0].options = options;
+        qDebug() << "Loaded default json:" << DEFAULT_SETTINGS_JSON_FILE_NAME;
+        settings.save();
+#endif
+    }
     return settings;
 }
 
@@ -105,6 +127,41 @@ void EngineSettings::updateEngine(int index, const EngineData &data)
 }
 
 
+#ifdef Q_OS_WASM
+
+void EngineSettings::setCustomOptions(QVariantMap &options)
+{
+    // 将棋丸用デフォルト値
+    options["MultiPV"].setValue(5);
+
+    // エンジンスレッド数
+    int con = std::thread::hardware_concurrency();  // コア（スレッド）数
+    int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+    options["Threads"].setValue(threads);
+
+    options["BookDir"].setValue(QString("assets/YaneuraOu"));
+    options["EvalDir"].setValue(QString("assets/YaneuraOu/nnue-kp256"));
+}
+
+#else
+
+void EngineSettings::setCustomOptions(QVariantMap &options)
+{
+    // 将棋丸用デフォルト値
+    if (options.contains("MultiPV")) {
+        options["MultiPV"].setValue(5);
+    }
+
+    // エンジンスレッド数
+    if (options.contains("Threads")) {
+        int con = std::thread::hardware_concurrency();  // コア（スレッド）数
+        int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+        options["Threads"].setValue(threads);
+    }
+}
+
+#endif
+
 /*
   EngineData class
 */
@@ -146,36 +203,27 @@ EngineSettings::EngineData EngineSettings::EngineData::fromJsonObject(const QJso
         {
             "name": "engine1",
             "path": "xxxx/hoge",
+            "author": "xxxx",
             "options": {
                 "EvalDir": "fuga",
                 "BookDir": "fuga",
                 "option1": 1,
                 "option2": 3
-            },
-            "defaultOptions": {
-                "option1": 1,
-                "option2": 1
             }
         },
         {
             "name": "engine2",
             "path": "xxxx/foo",
+            "author": "xxxx",
             "options": {
-                "EvalDir": "fuga",
-                "BookDir": "fuga",
+                "EvalDir": "foo1",
+                "BookDir": "foo2",
                 "option1": 16,
                 "option2": 32
-            },
-            "defaultOptions": {
-                "option1": 1,
-                "option2": 1
             }
         }
     ],
-    "selectedEngine": 0,
-    "generalOptions": {
-        "option1": 0,
-        "option2": 0,
-    }
+    "selectedEngineIndex": 0,
+    "version": 1
 }
 */

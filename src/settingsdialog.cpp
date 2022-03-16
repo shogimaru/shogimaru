@@ -23,15 +23,12 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(_ui->closeButton, &QPushButton::clicked, this, &SettingsDialog::accept);
     connect(_ui->newEngineButton, &QPushButton::clicked, this, &SettingsDialog::getEnginePath);
     connect(_ui->deleteEngineButton, &QPushButton::clicked, this, &SettingsDialog::confirmDelete);
-    //connect(_ui->deleteEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::deleteEngineOption);
     connect(_ui->resetEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::resetEngineOptions);
-    //connect(_ui->deleteGeneralOptButton, &QPushButton::clicked, this, &SettingsDialog::deleteGeneralOption);
     connect(_ui->tableEngineOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
-    //connect(_ui->tableGeneralOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
 #if QT_VERSION < 0x060000
-    connect(_ui->engineComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(showEngineOptions(int)));
+    connect(_ui->engineComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(switchEngineOptions(int)));
 #else
-    connect(_ui->engineComboBox, &QComboBox::currentIndexChanged, this, &SettingsDialog::showEngineOptions);
+    connect(_ui->engineComboBox, &QComboBox::currentIndexChanged, this, &SettingsDialog::switchEngineOptions);
 #endif
 
 #ifdef Q_OS_WASM
@@ -46,14 +43,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     _ui->tableEngineOptions->setWordWrap(false);
     _ui->tableEngineOptions->setColumnWidth(0, 200);  // 1列目の幅
     _ui->tableEngineOptions->horizontalHeader()->setStretchLastSection(true);
-
-    // // 共通オプション
-    // _ui->tableGeneralOptions->setColumnCount(2);
-    // _ui->tableGeneralOptions->setHorizontalHeaderItem(0, new QTableWidgetItem(QObject::tr("Option")));
-    // _ui->tableGeneralOptions->setHorizontalHeaderItem(1, new QTableWidgetItem(QObject::tr("Value")));
-    // _ui->tableGeneralOptions->setWordWrap(false);
-    // _ui->tableGeneralOptions->setColumnWidth(0, 200);  // 1列目の幅
-    // _ui->tableGeneralOptions->horizontalHeader()->setStretchLastSection(true);
 }
 
 
@@ -85,22 +74,6 @@ void SettingsDialog::loadSettings()
     if (_ui->engineComboBox->count() > 0) {
         _ui->engineComboBox->setCurrentIndex(EngineSettings::instance().currentIndex());
     }
-
-    // // 共通オプション
-    // const auto &generalOptions = EngineSettings::instance().generalOptions();
-    // _ui->tableGeneralOptions->clearContents();
-    // _ui->tableGeneralOptions->setRowCount(generalOptions.count());
-    // int row = 0;
-    // for (auto it = generalOptions.begin(); it != generalOptions.end(); ++it) {
-    //     int col = 0;
-    //     auto item = new QTableWidgetItem(it.key());
-    //     item->setFlags(item->flags() | Qt::ItemIsEditable);
-    //     _ui->tableGeneralOptions->setItem(row, col++, item);
-    //     item = new QTableWidgetItem(it.value().toString());
-    //     item->setFlags(item->flags() | Qt::ItemIsEditable);
-    //     _ui->tableGeneralOptions->setItem(row, col++, item);
-    //     row++;
-    // }
 }
 
 
@@ -115,30 +88,43 @@ void SettingsDialog::setCurrentEngine(int index)
 }
 
 
-void SettingsDialog::showEngineOptions(int index)
+void SettingsDialog::switchEngineOptions(int index)
 {
     const auto &availableEngines = EngineSettings::instance().availableEngines();
-
     if (index < 0 || index >= availableEngines.count()) {
         _ui->tableEngineOptions->clearContents();
         return;
     }
     // 切り替える前のエンジンオプションを反映させる
     updateEngineOptions(EngineSettings::instance().currentIndex());
+    // 設定表示
+    showEngineOptions(index);
+}
+
+
+void SettingsDialog::showEngineOptions(int index)
+{
+    // 該当するエンジン設定を取得
+    const auto &availableEngines = EngineSettings::instance().availableEngines();
+
+    if (index < 0 || index >= availableEngines.count()) {
+        _ui->tableEngineOptions->clearContents();
+        return;
+    }
 
     // エンジンオプション
     const auto &engineData = availableEngines[index];
     auto info = Engine::getEngineInfo(engineData.path);
     _defaultOptions = info.options;  // デフォルトオプション取得
     auto options = engineData.options;
-#ifdef Q_OS_WASM
-    // WASM用デフォルトオプション設定
-    if (options.count() == 0) {
-        for (auto it = _defaultOptions.begin(); it != _defaultOptions.end(); ++it) {
-            options.insert(it.key(), it.value().value);
-        }
-    }
-#endif
+// #ifdef Q_OS_WASM
+//     // WASM用デフォルトオプション設定
+//     if (options.count() == 0) {
+//         for (auto it = _defaultOptions.begin(); it != _defaultOptions.end(); ++it) {
+//             options.insert(it.key(), it.value().value);
+//         }
+//     }
+// #endif
 
     _ui->tableEngineOptions->clearContents();
     _ui->tableEngineOptions->setRowCount(options.count());
@@ -167,6 +153,9 @@ void SettingsDialog::showEngineOptions(int index)
         _ui->tableEngineOptions->setItem(row, col++, item);
         row++;
     }
+
+    // オプション情報非表示
+    _ui->labelEngineOptInfo->setText("");
 }
 
 
@@ -196,9 +185,8 @@ void SettingsDialog::getEnginePath()
         return;
     }
 
-    auto info = Engine::getEngineInfo(path);
-
     // エンジン追加
+    auto info = Engine::getEngineInfo(path);
     EngineSettings::EngineData data;
     data.name = info.name;
     data.author = info.author;
@@ -208,6 +196,7 @@ void SettingsDialog::getEnginePath()
         data.types.insert(it.key(), QVariant((int)it.value().type));
     }
 
+    EngineSettings::setCustomOptions(data.options);
     EngineSettings::instance().addEngine(data);
     int newidx = EngineSettings::instance().availableEngineCount() - 1;
     EngineSettings::instance().setCurrentIndex(newidx);
@@ -253,6 +242,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 
     if (item->column() == 1) {
 #ifndef Q_OS_WASM
+        // クリックされた項目によってファイル選択ダイアログを表示
         if (optItem) {
             auto engineDir = QFileInfo(engineData.path).dir().absolutePath();
             QFileInfo fi(engineDir + QDir::separator() + item->text());
@@ -362,7 +352,15 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 void SettingsDialog::resetEngineOptions()
 {
     MessageBox::question(tr("Reset option"), tr("Reset the engine options.\nAre you sure?"), [this]() {
-
+        int index = _ui->engineComboBox->currentIndex();
+        auto engineData = EngineSettings::instance().getEngine(index);
+        engineData.options.clear();
+        for (auto it = _defaultOptions.begin(); it != _defaultOptions.end(); ++it) {
+            engineData.options.insert(it.key(), it.value().value);
+            qDebug() << it.key() << it.value().value;
+        }
+        EngineSettings::instance().updateEngine(index, engineData);
+        showEngineOptions(index);
     });
 }
 
@@ -397,18 +395,7 @@ void SettingsDialog::updateEngineOptions(int index)
 
 void SettingsDialog::save()
 {
-    // // 共通オプション反映
-    // auto &generalOptions = EngineSettings::instance().generalOptions();
-    // generalOptions.clear();
-
-    // for (int i = 0; i < _ui->tableGeneralOptions->rowCount(); i++) {
-    //     auto *opt = _ui->tableGeneralOptions->item(i, 0);
-    //     auto *val = _ui->tableGeneralOptions->item(i, 1);
-    //     if (opt && !opt->text().isEmpty() && val && !val->text().isEmpty()) {
-    //         generalOptions.insert(opt->text(), val->text());
-    //     }
-    // }
-
+    // オプション反映
     int index = _ui->engineComboBox->currentIndex();
     updateEngineOptions(index);
     EngineSettings::instance().setCurrentIndex(index);

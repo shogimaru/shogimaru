@@ -11,11 +11,22 @@ static int64_t currentMSecsSinceEpoch()
     return tv.tv_sec * 1000LL + tv.tv_usec / 1000LL;
 }
 
-
-std::string CBus::get()
+// コマンド取得
+//  msecs:ミリ秒  -1:無期限待機  0:ノンブロック
+std::string CBus::get(int msecs)
 {
     std::string ret;
     std::unique_lock<std::mutex> lock(_mutex);
+
+    if (_commands.empty()) {
+        if (msecs < 0) {
+            _cond.wait(lock);
+        } else if (msecs > 0) {
+            _cond.wait_for(lock, std::chrono::milliseconds(msecs));
+        } else {
+            return ret;
+        }
+    }
 
     if (!_commands.empty()) {
         ret = _commands.front();
@@ -24,12 +35,27 @@ std::string CBus::get()
     return ret;
 }
 
-
-std::list<std::string> CBus::getAll()
+// コマンド取得
+//  msecs:ミリ秒  -1:無期限待機  0:ノンブロック
+std::list<std::string> CBus::getAll(int msecs)
 {
+    std::list<std::string> ret;
     std::unique_lock<std::mutex> lock(_mutex);
-    auto ret = _commands;  // copy
-    _commands.clear();
+
+    if (_commands.empty()) {
+        if (msecs < 0) {
+            _cond.wait(lock);
+        } else if (msecs > 0) {
+            _cond.wait_for(lock, std::chrono::milliseconds(msecs));
+        } else {
+            return ret;
+        }
+    }
+
+    if (!_commands.empty()) {
+        ret = _commands;  // copy
+        _commands.clear();
+    }
     return ret;
 }
 
@@ -45,59 +71,44 @@ void CBus::set(const std::string &cmd)
     for (auto &s : cmds) {
         _commands.push_back(s);
     }
+    lock.unlock();
     _cond.notify_one();
-}
-
-/*!
-  コマンド待機
-  msecs:ミリ秒  -1:無期限待機  0:ノンブロック
-*/
-bool CBus::wait(int msecs) const
-{
-    std::unique_lock<std::mutex> lock(_mutex);
-
-    if (_commands.empty()) {
-        if (msecs < 0) {
-            _cond.wait(lock);
-        } else if (msecs > 0) {
-            _cond.wait_for(lock, std::chrono::milliseconds(msecs));
-        } else {
-            return false;
-        }
-    }
-    return !_commands.empty();
 }
 
 
 std::string Command::wait(int msecs)
 {
-    return _request.wait(msecs) ? _request.get() : std::string();
+    return _request.get(msecs);
 }
 
 
 void Command::reply(const std::string &response)
 {
-    if (!response.empty()) {
-        //qDebug() << response.c_str();
-        _response.set(response);
+    auto res = maru::trim(response);
+    if (!res.empty()) {
+        _response.set(res);
     }
 }
 
 
 void Command::request(const std::string &command)
 {
-    qDebug() << command.c_str();
     _request.set(command);
 }
 
 
 std::list<std::string> Command::poll(int msecs)
 {
-    if (_response.wait(msecs)) {
-        auto res = _response.getAll();
-        //qDebug() << "response" << maru::join(res, " / ").c_str();
-        return res;
-    }
+    int ms = msecs;
+    int64_t end = currentMSecsSinceEpoch() + msecs;
+
+    do {
+        auto res = _response.getAll(ms);
+        if (!res.empty()) {
+            return res;
+        }
+        ms = end - currentMSecsSinceEpoch();
+    } while (ms > 0);
     return std::list<std::string>();
 }
 
@@ -105,16 +116,20 @@ std::list<std::string> Command::poll(int msecs)
 bool Command::pollFor(const std::string &waitingResponse, int msecs, std::list<std::string> &response)
 {
     response.clear();
+    int ms = msecs;
+    int64_t end = currentMSecsSinceEpoch() + msecs;
 
-    while (_response.wait(msecs)) {
-        auto res = _response.get();
-        //qDebug() << "response" << res.c_str();
-        response.push_back(res);
+    do {
+        auto res = _response.get(ms);
+        if (!res.empty()) {
+            response.push_back(res);
 
-        if (res.find(waitingResponse) == 0) {
-            return true;
+            if (res.find(waitingResponse) == 0) {
+                return true;
+            }
         }
-    }
+        ms = end - currentMSecsSinceEpoch();
+    } while (ms > 0);
     return false;
 }
 
@@ -125,11 +140,11 @@ void Command::clearResponse(int msecs)
         return;
     }
 
-    int time = msecs;
-    int64_t limit = currentMSecsSinceEpoch() + msecs;
+    int ms = msecs;
+    int64_t end = currentMSecsSinceEpoch() + msecs;
+
     do {
-        _response.wait(time);
-        _response.getAll();
-        time = limit - currentMSecsSinceEpoch();
-    } while (time > 0);
+        _response.getAll(ms);
+        ms = end - currentMSecsSinceEpoch();
+    } while (ms > 0);
 }

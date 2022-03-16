@@ -10,9 +10,8 @@ class EngineProcess;
 class CBus {
 public:
     void set(const std::string &cmd);
-    std::string get();
-    std::list<std::string> getAll();
-    bool wait(int msecs) const;
+    std::string get(int msecs);
+    std::list<std::string> getAll(int msecs);
 
 private:
     std::list<std::string> _commands;

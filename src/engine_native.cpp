@@ -7,23 +7,33 @@
 
 Engine::Engine(QObject *parent) :
     QObject(parent),
-    _timer(new QTimer(this))
+    _timer(new QTimer(this)),
+    _errorTimer(new QTimer(this))
 {
+    _errorTimer->setSingleShot(true);  // シングルショット
     connect(_timer, &QTimer::timeout, this, &Engine::getResponse);
+    connect(_errorTimer, &QTimer::timeout, this, &Engine::engineError);
 }
 
 
-void Engine::openUsi(const QString &path)
+bool Engine::openContext(const QString &path)
 {
     delete _engineContext;
     auto process = new EngineProcess(path, this);
-    Command::setEngine(process);
     process->start();
-    _engineContext = process;
+
+    bool ret = process->waitForStarted(5000);
+    if (ret) {
+        Command::setEngine(process);
+        _engineContext = process;
+    } else {
+        delete process;
+    }
+    return ret;
 }
 
 
-void Engine::closeUsi()
+void Engine::closeContext()
 {
     if (_engineContext) {
         auto *process = dynamic_cast<EngineProcess *>(_engineContext);
