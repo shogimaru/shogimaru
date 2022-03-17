@@ -25,6 +25,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(_ui->deleteEngineButton, &QPushButton::clicked, this, &SettingsDialog::confirmDelete);
     connect(_ui->resetEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::resetEngineOptions);
     connect(_ui->tableEngineOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
+    connect(_ui->tableEngineOptions, &QTableWidget::currentItemChanged, this, &SettingsDialog::slotItemClicked);
 #if QT_VERSION < 0x060000
     connect(_ui->engineComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(switchEngineOptions(int)));
 #else
@@ -227,8 +228,114 @@ void SettingsDialog::deleteEngine()
 }
 
 
+static QString jpText(const QString &name)
+{
+    static QMap<QString, QString> jpTextMap = {
+        // やねうら王
+        {QLatin1String("Threads"), QString::fromUtf8(u8"スレッド数")},
+        {QLatin1String("USI_Hash"), QString::fromUtf8(u8"置換表のサイズ(MB)")},
+        {QLatin1String("USI_Ponder"), QString::fromUtf8(u8"相手番での思考")},
+        {QLatin1String("Stochastic_Ponder"), QString::fromUtf8(u8"先読み(Ponder)が有効な場合に相手局面を探索するフラグ")},
+        {QLatin1String("MultiPV"), QString::fromUtf8(u8"読み筋(PV)の数（将棋丸では5件まで表示可）")},
+        {QLatin1String("NetworkDelay"), QString::fromUtf8(u8"通信時の平均遅延時間（ミリ秒）")},
+        {QLatin1String("NetworkDelay2"), QString::fromUtf8(u8"通信時の最大置換時間（ミリ秒）")},
+        {QLatin1String("MinimumThinkingTime"), QString::fromUtf8(u8"最小思考時間（ミリ秒）")},
+        {QLatin1String("SlowMover"), QString::fromUtf8(u8"序盤重視率(%)")},
+        {QLatin1String("MaxMovesToDraw"), QString::fromUtf8(u8"終局までの手数（0なら無制限）")},
+        {QLatin1String("DepthLimit"), QString::fromUtf8(u8"探索深さの制限（0なら無制限）")},
+        {QLatin1String("NodesLimit"), QString::fromUtf8(u8"探索ノード数の制限（0なら無制限）")},
+        {QLatin1String("EvalDir"), QString::fromUtf8(u8"評価関数用ファイルがあるディレクトリ")},
+        {QLatin1String("WriteDebugLog"), QString::fromUtf8(u8"標準入出力の出力先ファイル")},
+        {QLatin1String("GenerateAllLegalMoves"), QString::fromUtf8(u8"全ての合法手を生成するフラグ")},
+        {QLatin1String("EnteringKingRule"), QString::fromUtf8(u8"入玉ルール")},
+        {QLatin1String("USI_OwnBook"), QString::fromUtf8(u8"定跡を有効にするフラグ")},
+        {QLatin1String("NarrowBook"), QString::fromUtf8(u8"出現率が低い定跡を除外するフラグ")},
+        {QLatin1String("BookMoves"), QString::fromUtf8(u8"定跡を用いる手数（0なら使用しない）")},
+        {QLatin1String("BookIgnoreRate"), QString::fromUtf8(u8"定跡を無視する確率(%)")},
+        {QLatin1String("BookFile"), QString::fromUtf8(u8"定跡ファイル")},
+        {QLatin1String("BookDir"), QString::fromUtf8(u8"定跡ファイルがあるディレクトリ")},
+        {QLatin1String("BookEvalDiff"), QString::fromUtf8(u8"定跡の第一候補手との評価値の差")},
+        {QLatin1String("BookEvalBlackLimit"), QString::fromUtf8(u8"定跡の先手の評価値下限")},
+        {QLatin1String("BookEvalWhiteLimit"), QString::fromUtf8(u8"定跡の後手の評価値下限")},
+        {QLatin1String("BookDepthLimit"), QString::fromUtf8(u8"定跡の深さ下限")},
+        {QLatin1String("BookOnTheFly"), QString::fromUtf8(u8"定跡ファイルを全てメモリに置かないフラグ")},
+        {QLatin1String("ConsiderBookMoveCount"), QString::fromUtf8(u8"定跡の指し手を定跡DBの採択率に比例させるフラグ")},
+        {QLatin1String("BookPvMoves"), QString::fromUtf8(u8"定跡にヒットしたときに表示する読み筋の手数")},
+        {QLatin1String("IgnoreBookPly"), QString::fromUtf8(u8"定跡DB上の手数を無視するフラグ")},
+        {QLatin1String("SkillLevel"), QString::fromUtf8(u8"手加減レベル（将棋丸では対局時に自動で設定される）")},
+        {QLatin1String("DrawValueBlack"), QString::fromUtf8(u8"探索開始局面が先手番で 引き分けの時のスコア")},
+        {QLatin1String("DrawValueWhite"), QString::fromUtf8(u8"探索開始局面が後手番で 引き分けの時のスコア")},
+        {QLatin1String("PvInterval"), QString::fromUtf8(u8"読み筋の出力間隔（ミリ秒, 0なら出力しない）")},
+        {QLatin1String("ResignValue"), QString::fromUtf8(u8"投了スコア")},
+        {QLatin1String("ConsiderationMode"), QString::fromUtf8(u8"中途半端な読み筋を非表示にするフラグ")},
+        {QLatin1String("OutputFailLHPV"), QString::fromUtf8(u8"fail low/highの時に読み筋を出力するフラグ")},
+        {QLatin1String("FV_SCALE"), QString::fromUtf8(u8"評価値を算出するための除数（割り算の分母）")},
+        // dlshogi
+        {QLatin1String("Best_Book_Move"), QString::fromUtf8(u8"")},
+        {QLatin1String("Book_File"), QString::fromUtf8(u8"定跡ファイル")},
+        {QLatin1String("Byoyomi_Margin"), QString::fromUtf8(u8"秒読み時の遅延時間")},
+        {QLatin1String("C_base"), QString::fromUtf8(u8"探索パラメータ")},
+        {QLatin1String("C_base_root"), QString::fromUtf8(u8"探索パラメータ")},
+        {QLatin1String("C_fpu_reduction"), QString::fromUtf8(u8"探索パラメータ")},
+        {QLatin1String("C_fpu_reduction_root"), QString::fromUtf8(u8"探索パラメータ")},
+        {QLatin1String("C_init"), QString::fromUtf8(u8"探索パラメータ")},
+        {QLatin1String("C_init_root"), QString::fromUtf8(u8"探索パラメータ")},
+        {QLatin1String("Const_Playout"), QString::fromUtf8(u8"1手あたりのプレイアウト数")},
+        {QLatin1String("DebugMessage"), QString::fromUtf8(u8"")},
+        {QLatin1String("DfPn_Hash"), QString::fromUtf8(u8"")},
+        {QLatin1String("DfPn_Min_Search_Millisecs"), QString::fromUtf8(u8"")},
+        {QLatin1String("DNN_Batch_Size"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Batch_Size2"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Batch_Size3"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Batch_Size4"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Batch_Size5"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Batch_Size6"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Batch_Size7"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Batch_Size8"), QString::fromUtf8(u8"バッチサイズ")},
+        {QLatin1String("DNN_Model"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("DNN_Model2"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("DNN_Model3"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("DNN_Model4"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("DNN_Model5"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("DNN_Model6"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("DNN_Model7"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("DNN_Model8"), QString::fromUtf8(u8"モデルファイル")},
+        {QLatin1String("Draw_Ply"), QString::fromUtf8(u8"")},
+        {QLatin1String("Draw_Value_Black"), QString::fromUtf8(u8"")},
+        {QLatin1String("Draw_Value_White"), QString::fromUtf8(u8"")},
+        {QLatin1String("Engine_Name"), QString::fromUtf8(u8"")},
+        {QLatin1String("Mate_Root_Search"), QString::fromUtf8(u8"詰み探索の深さ制限値")},
+        {QLatin1String("Min_Book_Score"), QString::fromUtf8(u8"")},
+        {QLatin1String("OwnBook"), QString::fromUtf8(u8"定跡使用フラグ")},
+        {QLatin1String("PV_Interval"), QString::fromUtf8(u8"")},
+        {QLatin1String("Resign_Threshold"), QString::fromUtf8(u8"")},
+        {QLatin1String("ReuseSubtree"), QString::fromUtf8(u8"")},
+        {QLatin1String("Softmax_Temperature"), QString::fromUtf8(u8"探索のソフトマックス温度")},
+        {QLatin1String("Time_Margin"), QString::fromUtf8(u8"")},
+        {QLatin1String("UCT_NodeLimit"), QString::fromUtf8(u8"最大探索ノード数")},
+        {QLatin1String("UCT_Threads"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        {QLatin1String("UCT_Threads2"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        {QLatin1String("UCT_Threads3"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        {QLatin1String("UCT_Threads4"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        {QLatin1String("UCT_Threads5"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        {QLatin1String("UCT_Threads6"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        {QLatin1String("UCT_Threads7"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        {QLatin1String("UCT_Threads8"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
+        // Apery
+        {QLatin1String("Book_Enable"), QString::fromUtf8(u8"定跡使用フラグ")},
+    };
+    return jpTextMap.value(name);
+}
+
+
 void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 {
+    static const bool langJa = QLocale::system().name().toLower().startsWith("ja");
+
+    if (!item) {
+        return;
+    }
+
     int index = _ui->engineComboBox->currentIndex();
     auto engineData = EngineSettings::instance().getEngine(index);
     auto *optionTableWidget = item->tableWidget();
@@ -277,10 +384,22 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 
     if (optItem) {
         auto option = _defaultOptions.value(optItem->text());
-        QString str = optItem->text() + "\n";
+        QString str = optItem->text();
+        if (langJa) {
+            QString jp = jpText(optItem->text());
+            if (!jp.isEmpty()) {
+                str = jp;
+            }
+        }
+        str += "\n";
         str += tr("Default");
         str += " ";
-        str += option.value.toString();
+        if (option.type == QMetaType::Bool) {
+            str += (option.value.toBool()) ? tr("true") : tr("false");
+        } else {
+            str += option.value.toString();
+        }
+
         if (option.type == QMetaType::LongLong) {
             str += "  ";
             str += tr("Max");

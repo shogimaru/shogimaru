@@ -10,3 +10,10 @@ src/ui_*.h
 src/shogimaru.js_plugin_import.cpp
 Makefile
 core
+engines.json
+kifu.dat
+
+**/*.dll
+**/*.ilk
+**/*.pdb
+**/*.exe
