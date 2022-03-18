@@ -523,8 +523,14 @@ void Engine::getResponse()
 
     for (auto &s : response) {
         if (s.find("readyok") == 0) {
+            // 準備完了
             usiNewGame();
         } else if (s.find("bestmove ") == 0) {
+            if (_state != Pondering && _state != Going) {
+                continue;
+            }
+
+            // 最善手
             _state = Idle;
             auto strs = maru::split(s, ' ', true);
 
@@ -553,10 +559,13 @@ void Engine::getResponse()
                 setTurn();
             }
         } else if (s.find("info ") == 0) {
-            // 先読み候補
-            PonderInfo info(QByteArray::fromStdString(s));
-            //qDebug() << "multipv" << info.multipv << "pondering score:" << info.scoreCp << "mate:" << info.mate << "mateCount:" << info.mateCount << "depth:" << info.depth << "nodes:" << info.nodes << "pv:" << info.pv;
-            emit pondering(info);
+            // 通知
+            if (_state == Pondering || _state == Going) {
+                // 先読み候補
+                PonderInfo info(QByteArray::fromStdString(s));
+                //qDebug() << "multipv" << info.multipv << "pondering score:" << info.scoreCp << "mate:" << info.mate << "mateCount:" << info.mateCount << "depth:" << info.depth << "nodes:" << info.nodes << "pv:" << info.pv;
+                emit pondering(info);
+            }
         } else {
             if (maru::toLower(s).find("error") != std::string::npos) {  // errorがある場合
                 _error = QString::fromStdString(s);

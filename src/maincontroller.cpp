@@ -1404,6 +1404,7 @@ void MainController::startAnalysis()
         return;
     }
 
+    _analysisMoves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
     _mode = Analyzing;
     updateButtonStates();
     showRemainingTime(maru::Sente, 0, 0);  // 先手残り時間
@@ -1413,14 +1414,12 @@ void MainController::startAnalysis()
 
 void MainController::startGo()
 {
-    qDebug() << "startGo()";
     if (_mode == Rating) {
         maru::Turn turn = maru::Sente;
         _clock->start(turn);
         setTurn(turn);
     } else if (_mode == Analyzing) {
         // 解析開始手数
-        _analysisMoves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
         auto sfen = _recorder->sfen(_analysisMoves);
         Engine::instance().analysis(sfen);
         setCurrentRecordRow(_analysisMoves);
@@ -1539,14 +1538,19 @@ void MainController::clear()
 void MainController::loadSfen()
 {
     clear();
+    QListWidgetItem *item = nullptr;
     Sfen sfen = _recordDialog->result();
 
     for (auto &mv : sfen.allMoves()) {
         QString kif = _recorder->record(mv.first, mv.second, false);
         int count = _ui->recordWidget->count();
         QString str = QString("%1  %2").arg(count, 3).arg(kif);
-        auto *item = new QListWidgetItem(str, _ui->recordWidget);
+        item = new QListWidgetItem(str, _ui->recordWidget);
         _ui->recordWidget->addItem(item);
+    }
+
+    if (item) {
+        // 末尾へスクロール
         _ui->recordWidget->setCurrentItem(item);
         _ui->recordWidget->scrollToItem(item);
     }
@@ -1558,4 +1562,5 @@ void MainController::loadSfen()
     auto p = sfen.players();
     setSentePlayer(Player(maru::Human, p.first));
     setGotePlayer(Player(maru::Human, p.second));
+    updateBoard();
 }

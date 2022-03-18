@@ -42,7 +42,7 @@ std::list<std::string> Command::poll(int msecs)
         do {
             auto line = Command::engineProcess->readLine().trimmed();
             if (!line.isEmpty()) {
-                //qDebug() << "response" << line;
+                //qDebug() << "poll" << line;
                 responses.push_back(line.data());
             }
         } while (Command::engineProcess->canReadLine());
