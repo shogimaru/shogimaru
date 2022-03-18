@@ -174,8 +174,6 @@ void Engine::sendOptions(const QVariantMap &options)
             value = (it.value().toBool()) ? QLatin1String("true") : QLatin1String("false");
             break;
         case QMetaType::QStringList:
-            value = it.value().toStringList().join(" ");
-            break;
         default:
             value = it.value().toString();
             break;

@@ -125,12 +125,12 @@ void SettingsDialog::showEngineOptions(int index)
 
     QStringList keys = options.keys();
     keys.sort(Qt::CaseInsensitive);  // ソート
-    int row = 0;
+    int row = -1;
     for (auto &key : keys) {
-        int col = 0;
+        row++;
         auto item = new QTableWidgetItem(key);
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
-        _ui->tableEngineOptions->setItem(row, col++, item);
+        _ui->tableEngineOptions->setItem(row, 0, item);
 
         int type = engineData.types.value(key).toInt();
         auto value = options[key].toString();
@@ -141,11 +141,21 @@ void SettingsDialog::showEngineOptions(int index)
             item->setCheckState(state);
             item->setFlags(item->flags() ^ Qt::ItemIsEditable);
             item->setText((state == Qt::Checked) ? tr("true") : tr("false"));
+        } else if (type == QMetaType::QStringList) {
+            // コンボボックス
+            delete item;
+            auto variables = _defaultOptions[key].value.toStringList();  // 選択肢
+            QComboBox *combo = new QComboBox;
+            for (auto &var : variables) {
+                combo->addItem(var);
+            }
+            combo->setCurrentText(value);
+            _ui->tableEngineOptions->setCellWidget(row, 1, combo);
+            continue;
         } else {
             item->setFlags(item->flags() | Qt::ItemIsEditable);
         }
-        _ui->tableEngineOptions->setItem(row, col++, item);
-        row++;
+        _ui->tableEngineOptions->setItem(row, 1, item);
     }
 
     // オプション情報非表示
@@ -227,33 +237,38 @@ void SettingsDialog::deleteEngine()
     }
 }
 
-
+// オプションの日本語説明
 static QString jpText(const QString &name)
 {
     static QMap<QString, QString> jpTextMap = {
         // やねうら王
         {QLatin1String("Threads"), QString::fromUtf8(u8"スレッド数")},
         {QLatin1String("USI_Hash"), QString::fromUtf8(u8"置換表のサイズ(MB)")},
-        {QLatin1String("USI_Ponder"), QString::fromUtf8(u8"相手番での思考")},
+        {QLatin1String("USI_Ponder"), QString::fromUtf8(u8"相手番の時にエンジンが思考するフラグ")},
         {QLatin1String("Stochastic_Ponder"), QString::fromUtf8(u8"先読み(Ponder)が有効な場合に相手局面を探索するフラグ")},
         {QLatin1String("MultiPV"), QString::fromUtf8(u8"読み筋(PV)の数（将棋丸では5件まで表示可）")},
         {QLatin1String("NetworkDelay"), QString::fromUtf8(u8"通信時の平均遅延時間（ミリ秒）")},
-        {QLatin1String("NetworkDelay2"), QString::fromUtf8(u8"通信時の最大置換時間（ミリ秒）")},
+        {QLatin1String("NetworkDelay2"), QString::fromUtf8(u8"通信時の最大遅延時間（ミリ秒）")},
         {QLatin1String("MinimumThinkingTime"), QString::fromUtf8(u8"最小思考時間（ミリ秒）")},
         {QLatin1String("SlowMover"), QString::fromUtf8(u8"序盤重視率(%)")},
-        {QLatin1String("MaxMovesToDraw"), QString::fromUtf8(u8"終局までの手数（0なら無制限）")},
-        {QLatin1String("DepthLimit"), QString::fromUtf8(u8"探索深さの制限（0なら無制限）")},
-        {QLatin1String("NodesLimit"), QString::fromUtf8(u8"探索ノード数の制限（0なら無制限）")},
-        {QLatin1String("EvalDir"), QString::fromUtf8(u8"評価関数用ファイルがあるディレクトリ")},
+        {QLatin1String("MaxMovesToDraw"), QString::fromUtf8(u8"終局までの手数（0は無制限）")},
+        {QLatin1String("DepthLimit"), QString::fromUtf8(u8"探索深さの制限（0は無制限）")},
+        {QLatin1String("NodesLimit"), QString::fromUtf8(u8"探索ノード数の制限（0は無制限）")},
+#ifdef Q_OS_WIN
+        {QLatin1String("EvalDir"), QString::fromUtf8(u8"評価関数用ファイルの格納フォルダ")},
+        {QLatin1String("BookDir"), QString::fromUtf8(u8"定跡ファイルの格納フォルダ")},
+#else
+        {QLatin1String("EvalDir"), QString::fromUtf8(u8"評価関数用ファイルの格納ディレクトリ")},
+        {QLatin1String("BookDir"), QString::fromUtf8(u8"定跡ファイルの格納ディレクトリ")},
+#endif
         {QLatin1String("WriteDebugLog"), QString::fromUtf8(u8"標準入出力の出力先ファイル")},
         {QLatin1String("GenerateAllLegalMoves"), QString::fromUtf8(u8"全ての合法手を生成するフラグ")},
         {QLatin1String("EnteringKingRule"), QString::fromUtf8(u8"入玉ルール")},
         {QLatin1String("USI_OwnBook"), QString::fromUtf8(u8"定跡を有効にするフラグ")},
         {QLatin1String("NarrowBook"), QString::fromUtf8(u8"出現率が低い定跡を除外するフラグ")},
-        {QLatin1String("BookMoves"), QString::fromUtf8(u8"定跡を用いる手数（0なら使用しない）")},
+        {QLatin1String("BookMoves"), QString::fromUtf8(u8"定跡を用いる手数（0は使用しない）")},
         {QLatin1String("BookIgnoreRate"), QString::fromUtf8(u8"定跡を無視する確率(%)")},
         {QLatin1String("BookFile"), QString::fromUtf8(u8"定跡ファイル")},
-        {QLatin1String("BookDir"), QString::fromUtf8(u8"定跡ファイルがあるディレクトリ")},
         {QLatin1String("BookEvalDiff"), QString::fromUtf8(u8"定跡の第一候補手との評価値の差")},
         {QLatin1String("BookEvalBlackLimit"), QString::fromUtf8(u8"定跡の先手の評価値下限")},
         {QLatin1String("BookEvalWhiteLimit"), QString::fromUtf8(u8"定跡の後手の評価値下限")},
@@ -271,7 +286,7 @@ static QString jpText(const QString &name)
         {QLatin1String("OutputFailLHPV"), QString::fromUtf8(u8"fail low/highの時に読み筋を出力するフラグ")},
         {QLatin1String("FV_SCALE"), QString::fromUtf8(u8"評価値を算出するための除数（割り算の分母）")},
         // dlshogi
-        {QLatin1String("Best_Book_Move"), QString::fromUtf8(u8"")},
+        {QLatin1String("Best_Book_Move"), QString::fromUtf8(u8"最善定跡使用フラグ")},
         {QLatin1String("Book_File"), QString::fromUtf8(u8"定跡ファイル")},
         {QLatin1String("Byoyomi_Margin"), QString::fromUtf8(u8"秒読み時の遅延時間")},
         {QLatin1String("C_base"), QString::fromUtf8(u8"探索パラメータ")},
@@ -282,8 +297,8 @@ static QString jpText(const QString &name)
         {QLatin1String("C_init_root"), QString::fromUtf8(u8"探索パラメータ")},
         {QLatin1String("Const_Playout"), QString::fromUtf8(u8"1手あたりのプレイアウト数")},
         {QLatin1String("DebugMessage"), QString::fromUtf8(u8"")},
-        {QLatin1String("DfPn_Hash"), QString::fromUtf8(u8"")},
-        {QLatin1String("DfPn_Min_Search_Millisecs"), QString::fromUtf8(u8"")},
+        {QLatin1String("DfPn_Hash"), QString::fromUtf8(u8"df-pn置換表のサイズ")},
+        {QLatin1String("DfPn_Min_Search_Millisecs"), QString::fromUtf8(u8"df-pn最小探索時間（ミリ秒）")},
         {QLatin1String("DNN_Batch_Size"), QString::fromUtf8(u8"バッチサイズ")},
         {QLatin1String("DNN_Batch_Size2"), QString::fromUtf8(u8"バッチサイズ")},
         {QLatin1String("DNN_Batch_Size3"), QString::fromUtf8(u8"バッチサイズ")},
@@ -303,15 +318,15 @@ static QString jpText(const QString &name)
         {QLatin1String("Draw_Ply"), QString::fromUtf8(u8"")},
         {QLatin1String("Draw_Value_Black"), QString::fromUtf8(u8"")},
         {QLatin1String("Draw_Value_White"), QString::fromUtf8(u8"")},
-        {QLatin1String("Engine_Name"), QString::fromUtf8(u8"")},
+        {QLatin1String("Engine_Name"), QString::fromUtf8(u8"エンジン名")},
         {QLatin1String("Mate_Root_Search"), QString::fromUtf8(u8"詰み探索の深さ制限値")},
         {QLatin1String("Min_Book_Score"), QString::fromUtf8(u8"")},
         {QLatin1String("OwnBook"), QString::fromUtf8(u8"定跡使用フラグ")},
-        {QLatin1String("PV_Interval"), QString::fromUtf8(u8"")},
-        {QLatin1String("Resign_Threshold"), QString::fromUtf8(u8"")},
+        {QLatin1String("PV_Interval"), QString::fromUtf8(u8"読み筋の出力間隔（ミリ秒, 0なら出力しない）")},
+        {QLatin1String("Resign_Threshold"), QString::fromUtf8(u8"投了する勝率の閾値")},
         {QLatin1String("ReuseSubtree"), QString::fromUtf8(u8"")},
         {QLatin1String("Softmax_Temperature"), QString::fromUtf8(u8"探索のソフトマックス温度")},
-        {QLatin1String("Time_Margin"), QString::fromUtf8(u8"")},
+        {QLatin1String("Time_Margin"), QString::fromUtf8(u8"遅延時間")},
         {QLatin1String("UCT_NodeLimit"), QString::fromUtf8(u8"最大探索ノード数")},
         {QLatin1String("UCT_Threads"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
         {QLatin1String("UCT_Threads2"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
@@ -323,6 +338,13 @@ static QString jpText(const QString &name)
         {QLatin1String("UCT_Threads8"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
         // Apery
         {QLatin1String("Book_Enable"), QString::fromUtf8(u8"定跡使用フラグ")},
+#ifdef Q_OS_WIN
+        {QLatin1String("Eval_Dir"), QString::fromUtf8(u8"評価関数用ファイルの格納フォルダ")},
+#else
+        {QLatin1String("Eval_Dir"), QString::fromUtf8(u8"評価関数用ファイルの格納ディレクトリ")},
+#endif
+        {QLatin1String("Eval_Hash"), QString::fromUtf8(u8"評価用置換表のサイズ(MB)")},
+        {QLatin1String("Slow_Mover"), QString::fromUtf8(u8"序盤重視率(%)")},
     };
     return jpTextMap.value(name);
 }
@@ -396,6 +418,8 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
         str += " ";
         if (option.type == QMetaType::Bool) {
             str += (option.value.toBool()) ? tr("true") : tr("false");
+        } else if (option.type == QMetaType::QStringList) {
+            str += option.value.toStringList().value(0);
         } else {
             str += option.value.toString();
         }
@@ -422,9 +446,17 @@ void SettingsDialog::resetEngineOptions()
         auto engineData = EngineSettings::instance().getEngine(index);
         engineData.options.clear();
         for (auto it = _defaultOptions.begin(); it != _defaultOptions.end(); ++it) {
-            engineData.options.insert(it.key(), it.value().value);
-            qDebug() << it.key() << it.value().value;
+            if (it.value().type == QMetaType::QStringList) {
+                // コンボボックス
+                QString def = it.value().value.toStringList().value(0);
+                engineData.options.insert(it.key(), def);
+                qDebug() << it.key() << def;
+            } else {
+                engineData.options.insert(it.key(), it.value().value);
+                qDebug() << it.key() << it.value().value;
+            }
         }
+        EngineSettings::setCustomOptions(engineData.options);
         EngineSettings::instance().updateEngine(index, engineData);
         showEngineOptions(index);
     });
@@ -438,12 +470,23 @@ void SettingsDialog::updateEngineOptions(int index)
         for (int i = 0; i < _ui->tableEngineOptions->rowCount(); i++) {
             auto *optItem = _ui->tableEngineOptions->item(i, 0);
             auto *valItem = _ui->tableEngineOptions->item(i, 1);
-            if (optItem && !optItem->text().isEmpty() && valItem && !valItem->text().isEmpty()) {
+            if (!optItem || optItem->text().isEmpty()) {
+                continue;
+            }
+
+            if (valItem && !valItem->text().isEmpty()) {
                 if (valItem->type() == QMetaType::Bool) {
                     bool check = (valItem->checkState() == Qt::Checked);
                     options.insert(optItem->text(), check);  // boolean
                 } else {
                     options.insert(optItem->text(), valItem->text());
+                }
+            } else {
+                // コンボボックス
+                auto *widget = _ui->tableEngineOptions->cellWidget(i, 1);
+                auto *combo = dynamic_cast<QComboBox *>(widget);
+                if (combo) {
+                    options.insert(optItem->text(), combo->currentText());
                 }
             }
         }
