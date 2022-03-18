@@ -758,16 +758,21 @@ void MainController::move()
 {
     Sound::playSnap();  // 駒音
 
-    // 棋譜UIへ追加
-    record(_board->lastMovedPiece(), _board->isCheck());  // 指し手記録
+    if (_mode == Rating) {
+        // 棋譜UIへ追加
+        record(_board->lastMovedPiece(), _board->isCheck());  // 指し手記録
 
-    // 禁じ手確認
-    if (isIllegalMove()) {
-        return;
+        // 禁じ手確認
+        if (isIllegalMove()) {
+            return;
+        }
+
+        // 手番変更
+        changeTurn();
+
+    } else if (_mode == Analyzing) {
+        nextAnalysis();
     }
-
-    // 手番変更
-    changeTurn();
 }
 
 
@@ -998,10 +1003,8 @@ void MainController::pondered(const PonderInfo &info)
         // 最新の先読み情報
         _lastPonder = pi;
 
-        if (pi.mate) {
-            // 詰みありになるとエンジンは読み筋を返さなくなる場合あり
-            _ponderTimer.start(5000);  // restart
-        }
+        // 詰みありになるとエンジンは読み筋を返さなくなる場合あり
+        _ponderTimer.start(10000);  // restart
 
         User &user = User::load();
         if (pi.pv.value(0) == "resign"
@@ -1095,10 +1098,8 @@ void MainController::nextAnalysis()
 
 void MainController::slotAnalysisTimeout()
 {
-    // 解析無通信タイムアウト
-    if (_lastPonder.mate && _lastPonder.mateCount > 0) {
-        nextAnalysis();
-    }
+    qDebug() << "Detected non-communication for analysis";
+    nextAnalysis();
 }
 
 
