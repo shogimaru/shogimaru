@@ -244,14 +244,19 @@ void MainController::createInfoBox()
     _infoBox->setTextFormat(Qt::RichText);
     _infoBox->setStyleSheet("QLabel{min-width: 360px;}");
 
-    QString text = QString("<h3>") + tr("Shogimaru") + "</h3><br><table><tbody>";
-    text += QString("<tr><td>") + tr("Version") + "</td><td>" + SHOGIMARU_VERSION_STR + "</td>";
+    QString text = QString("<h3>") + tr("Shogimaru") + "</h3>";
+    text += "<p><a href='https://shogimaru.com' style='color: #0066cc; text-decoration: none;'>https://shogimaru.com</a></p>";
+    text += QString("<p>") + tr("It's open source!") + " &nbsp; &nbsp; ";
+    text += "<a href='https://github.com/shogimaru/shogimaru' style='color: #0066cc; text-decoration: none;'>GitHub</a></p>";
+
+    text += QString("<table style='margin-top: 24px;'><tbody>");
+    text += QString("<tr><td>") + tr("Version") + " : </td><td>" + SHOGIMARU_VERSION_STR + "</td></tr>";
 #ifdef Q_OS_WASM
-    text += QString("<tr><td>") + tr("YaneuraOu") + "</td><td>" + "7.00" + "</td>";
+    text += QString("<tr><td>") + tr("YaneuraOu") + " : </td><td>" + "7.00" + "</td></tr>";
 #endif
-    text += QString("<tr><td>Qt</td><td>") + QT_VERSION_STR + "</td>";
-    text += QString("<tr><td>") + tr("Platform") + "</td><td>" + QSysInfo::prettyProductName() + "</td>";
-    text += QString("</tbody></table>");
+    text += QString("<tr><td>Qt : </td><td>") + QT_VERSION_STR + "</td></tr>";
+    text += QString("<tr><td>") + tr("Platform") + " : </td><td>" + QSysInfo::prettyProductName() + "</td></tr>";
+    text += "</tbody></table>";
 
     _infoBox->setText(text);
     _infoBox->setStandardButtons(QMessageBox::Ok);
