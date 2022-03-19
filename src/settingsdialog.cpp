@@ -368,11 +368,14 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
         // クリックされた項目によってファイル選択ダイアログを表示
         if (optItem) {
             auto engineDir = QFileInfo(engineData.path).dir().absolutePath();
-            QFileInfo fi(engineDir + QDir::separator() + item->text());
             QRegularExpression re("[a-z_]+Dir$");
             auto matchd = re.match(optItem->text());  // オプション名
+            QFileInfo fi(item->text());
 
             if (matchd.hasMatch()) {
+                if (!fi.isDir() || !fi.exists()) {
+                    fi.setFile(engineDir, item->text());
+                }
                 QString path = (fi.isDir() && fi.exists()) ? fi.absoluteFilePath() : engineDir;
                 QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Select Directory"), path);
                 if (!dir.isEmpty()) {
@@ -385,6 +388,10 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 
                 if (type == QMetaType::QUrl || matchf.hasMatch()) {
                     // ファイル読込
+                    if (!fi.isFile() || !fi.exists()) {
+                        fi.setFile(engineDir, item->text());
+                    }
+
                     QString path = fi.dir().exists() ? fi.dir().absolutePath() : engineDir;
                     QString fileName = QFileDialog::getOpenFileName(this, tr("Select File"), path, "*");
                     if (!fileName.isEmpty()) {
@@ -450,10 +457,10 @@ void SettingsDialog::resetEngineOptions()
                 // コンボボックス
                 QString def = it.value().value.toStringList().value(0);
                 engineData.options.insert(it.key(), def);
-                qDebug() << it.key() << def;
+                //qDebug() << it.key() << def;
             } else {
                 engineData.options.insert(it.key(), it.value().value);
-                qDebug() << it.key() << it.value().value;
+                //qDebug() << it.key() << it.value().value;
             }
         }
         EngineSettings::setCustomOptions(engineData.options);

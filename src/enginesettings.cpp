@@ -136,7 +136,7 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
 
     // エンジンスレッド数
     int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-    int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+    int threads = std::max((int)std::round(con * 0.8), 1);  // 80%
     options["Threads"].setValue(threads);
 
     options["BookDir"].setValue(QString("assets/YaneuraOu"));
@@ -155,7 +155,7 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
     // エンジンスレッド数
     if (options.contains("Threads")) {
         int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-        int threads = std::max((int)std::round(con * 0.8), 2);  // 80%
+        int threads = std::max((int)std::round(con * 0.8), 1);  // 80%
         options["Threads"].setValue(threads);
     }
 }
