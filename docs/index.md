@@ -10,9 +10,9 @@
 
 ## ダウンロード
 
-- Windows 向けデスクトップ版のダウンロードは [こちら](https://github.com/shogimaru/shogimaru/releases)
+- Windows 向けデスクトップ版は [こちら](https://github.com/shogimaru/shogimaru/releases) でダウンロードできます。
 
-- WebAssembly 版： https://shogimaru.com/
+- WebAssembly 版： [https://shogimaru.com](https://shogimaru.com)
 
 ## 実行
 
@@ -64,4 +64,4 @@
 ### Twitter
 
 時々つぶやくかも
-https://twitter.com/shogimaru
+[@shogimaru](https://twitter.com/shogimaru)
