@@ -1,5 +1,8 @@
 #include "global.h"
+#include <QApplication>
+#include <QLabel>
 #include <QMap>
+#include <QWidget>
 #include <random>
 
 namespace maru {
@@ -39,6 +42,14 @@ bool is_space(char c)
     return (c == '\r' || c == '\n' || c == ' ' || c == '\t');
 }
 
+
+std::string toLower(const std::string &str)
+{
+    std::string ret = str;
+    std::transform(ret.begin(), ret.end(), ret.begin(), [](unsigned char c) { return std::tolower(c); });
+    return ret;
+}
+
 /*!
   先頭・末尾から空白文字を削除
 */
@@ -46,14 +57,14 @@ std::string trim(const std::string &input)
 {
     std::string str = input;
     int pos = 0;
-    int len = str.length();
+    int len = (int)str.length();
 
     while (pos < len && is_space(str[pos])) {
         pos++;
     }
     if (pos > 0) {
         str = str.substr(pos);
-        len = str.length();
+        len = (int)str.length();
     }
 
     while (len > 0 && is_space(str[len - 1])) {
@@ -73,6 +84,20 @@ bool contains(const std::list<std::string> &stringlist, const std::string &str)
         }
     }
     return false;
+}
+
+
+std::string join(const std::list<std::string> &stringlist, const std::string &separator)
+{
+    std::string ret;
+    for (auto &str : stringlist) {
+        ret += str;
+        ret += separator;
+    }
+    if (ret.size() > 0) {
+        ret.resize(ret.size() - separator.size());
+    }
+    return ret;
 }
 
 
@@ -103,6 +128,32 @@ int random(int min, int max)
 {
     std::uniform_int_distribution<int> uniform(min, max);  // 乱数
     return uniform(randeng);
+}
+
+
+QString elideText(const QString &text, int width, const QFont &font)
+{
+    return QFontMetrics(font).elidedText(text, Qt::ElideRight, width);
+};
+
+
+QString elideText(const QString &text, const QLabel *label)
+{
+    return QFontMetrics(label->font()).elidedText(text, Qt::ElideRight, label->width());
+}
+
+QWidget *mainWindow()
+{
+    static QWidget *widget = []() {
+        for (auto *w : QApplication::topLevelWidgets()) {
+            if (w->objectName() == "MainWindow") {
+                return w;
+            }
+        }
+        std::abort();
+        return (QWidget *)nullptr;
+    }();
+    return widget;
 }
 
 }

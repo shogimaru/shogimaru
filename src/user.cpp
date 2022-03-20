@@ -11,13 +11,16 @@ const QLatin1String Rating("rating");
 const QLatin1String Wins("wins");
 const QLatin1String Losses("losses");
 const QLatin1String Draws("draws");
-const QLatin1String Fouls("fouls");
+const QLatin1String Illegal("illegal");
 const QLatin1String Scale("scale");
 const QLatin1String Byoyomi("byoyomi");
 const QLatin1String BasicTime("basicTime");
 const QLatin1String AnalysisTimeSeconds("analysisTimeSeconds");
 const QLatin1String AnalysisNodes("analysisNodes");
 const QLatin1String AnalysisDepth("analysisDepth");
+const QLatin1String SoundEnable("soundEnable");
+const QLatin1String PieceType("pieceType");
+
 
 bool User::save()
 {
@@ -28,13 +31,15 @@ bool User::save()
     json[Wins] = wins();
     json[Losses] = losses();
     json[Draws] = draws();
-    json[Fouls] = fouls();
+    json[Illegal] = illegal();
     json[Scale] = scale();
     json[Byoyomi] = byoyomi();
     json[BasicTime] = basicTime();
     json[AnalysisTimeSeconds] = analysisTimeSeconds();
     json[AnalysisNodes] = analysisNodes();
     json[AnalysisDepth] = analysisDepth();
+    json[SoundEnable] = soundEnable();
+    json[PieceType] = pieceType();
 
     File file(jsonPath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -92,8 +97,8 @@ User &User::load()
         user._draws = json[Draws].toInt();
     }
 
-    if (json.contains(Fouls)) {
-        user._fouls = json[Fouls].toInt();
+    if (json.contains(Illegal)) {
+        user._illegal = json[Illegal].toInt();
     }
 
     if (json.contains(Scale)) {
@@ -113,11 +118,23 @@ User &User::load()
     }
 
     if (json.contains(AnalysisNodes)) {
-        user._analysisNodes = json[AnalysisNodes].toInt();
+#if QT_VERSION < 0x060000
+        user._analysisNodes = json[AnalysisNodes].toVariant().toLongLong();
+#else
+        user._analysisNodes = json[AnalysisNodes].toInteger();
+#endif
     }
 
     if (json.contains(AnalysisDepth)) {
         user._analysisDepth = json[AnalysisDepth].toInt();
+    }
+
+    if (json.contains(SoundEnable)) {
+        user._soundEnable = json[SoundEnable].toBool();
+    }
+
+    if (json.contains(PieceType)) {
+        user._pieceType = json[PieceType].toInt();
     }
 
     return user;

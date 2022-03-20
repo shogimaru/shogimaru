@@ -1,12 +1,11 @@
 #pragma once
-
-#include <QString>
 #include <QDateTime>
+#include <QString>
 
 
 class User {
 public:
-    ~User() {}
+    ~User() { }
 
     QString nickname() const { return _nickname; }
     void setNickname(const QString &name) { _nickname = name; }
@@ -18,8 +17,8 @@ public:
     void setLosses(int losses) { _losses = losses; }
     int draws() const { return _draws; }
     void setDraws(int draws) { _draws = draws; }
-    int fouls() const { return _fouls; }
-    void setFouls(int fouls) { _fouls = fouls; }
+    int illegal() const { return _illegal; }
+    void setIllegal(int illegal) { _illegal = illegal; }
     int scale() const { return _scale; }
     void setScale(int scale) { _scale = scale; }
     int byoyomi() const { return _byoyomi; }
@@ -30,8 +29,12 @@ public:
     void setAnalysisTimeSeconds(int seconds) { _analysisTimeSeconds = seconds; }
     qint64 analysisNodes() const { return _analysisNodes; }
     void setAnalysisNodes(qint64 nodes) { _analysisNodes = nodes; }
-    int analysisDepth() const { return _analysisDepth;}
+    int analysisDepth() const { return _analysisDepth; }
     void setAnalysisDepth(int depth) { _analysisDepth = depth; }
+    bool soundEnable() const { return _soundEnable; }
+    void setSoundEnable(bool enable) { _soundEnable = enable; }
+    int pieceType() const { return _pieceType; }
+    void setPieceType(int type) { _pieceType = type; }
     int version() const { return _version; }
     void setVersion(int version) { _version = version; }
 
@@ -40,19 +43,23 @@ public:
     static User &load();
 
 private:
-    User() {}
+    User() { }
+    User(const User &) = delete;
+    User &operator=(const User &) = delete;
 
     QString _nickname;
     int _rating {0};
     int _wins {0};
     int _losses {0};
     int _draws {0};
-    int _fouls {0};
-    int _scale {80};  // 将棋盤拡縮値
-    int _byoyomi {0};
+    int _illegal {0};
+    int _scale {80};  // 将棋盤拡縮値(%)
+    int _byoyomi {0};  // 秒読み
     int _basicTime {0};  // 持ち時間(分)
     int _analysisTimeSeconds {-10};  // 解析時間(秒/手)
-    qint64 _analysisNodes {-100000000};    // 解析ノード
-    int _analysisDepth {-23};    // 解析深度
+    qint64 _analysisNodes {-1000000000};  // 解析ノード
+    int _analysisDepth {-23};  // 解析深度
+    bool _soundEnable {true};  // サウンド有効
+    int _pieceType {1};  // 駒種類
     int _version {1};
 };

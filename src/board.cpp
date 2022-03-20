@@ -1,16 +1,16 @@
 #include "board.h"
-#include "shogirecord.h"
 #include "badge.h"
 #include "promotiondialog.h"
 #include "sfen.h"
-#include <QPainter>
-#include <QRect>
+#include "shogirecord.h"
+#include <QDebug>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
-#include <QPointF>
-#include <QThread>
 #include <QMessageBox>
-#include <QDebug>
+#include <QPainter>
+#include <QPointF>
+#include <QRect>
+#include <QThread>
 
 constexpr int NUM_ROWS = 9;
 
@@ -19,7 +19,7 @@ Board::Board(QObject *parent) :
     QGraphicsScene(parent),
     _lastMovedSquare(new Square)
 {
-    parse("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1");
+    parse(Sfen::defaultPostion());
     addItem(_lastMovedSquare);
 }
 
@@ -57,7 +57,7 @@ bool Board::parse(const QByteArray &sfen)
 bool Board::startGame(const QByteArray &sfen)
 {
     _current = nullptr;
-    _lastMove = QPair<Piece*, QString>(nullptr, QString());
+    _lastMove = QPair<Piece *, QString>(nullptr, QString());
     return parse(sfen);
 }
 
@@ -88,32 +88,40 @@ bool Board::createPiece(int coord, Piece::Name name, maru::Turn owner)
 
 void Board::updatePos()
 {
-    static QMap<Piece::Name, int> minWidthMap = []() {
-        QMap<Piece::Name, int> map;
-        map.insert(Piece::KingOu,    54);
-        map.insert(Piece::KingGyoku, 54);
-        map.insert(Piece::Rook,      54);
-        map.insert(Piece::Bishop,    54);
-        map.insert(Piece::Gold,      52);
-        map.insert(Piece::Silver,    50);
-        map.insert(Piece::Knight,    48);
-        map.insert(Piece::Lance,     45);
-        map.insert(Piece::Pawn,      41);
-        return map;
-    }();
+    static QMap<Piece::Name, int> minWidthMap {
+        {Piece::KingOu, 54},
+        {Piece::KingGyoku, 54},
+        {Piece::Rook, 54},
+        {Piece::Bishop, 54},
+        {Piece::Gold, 52},
+        {Piece::Silver, 50},
+        {Piece::Knight, 48},
+        {Piece::Lance, 45},
+        {Piece::Pawn, 41},
+    };
 
     auto priority = [](Piece::Name name) {
         switch (name) {
-        case Piece::KingOu:    return 9;
-        case Piece::KingGyoku: return 8;
-        case Piece::Rook:      return 7;
-        case Piece::Bishop:    return 6;
-        case Piece::Gold:      return 5;
-        case Piece::Silver:    return 4;
-        case Piece::Knight:    return 3;
-        case Piece::Lance:     return 2;
-        case Piece::Pawn:      return 1;
-        default:               return 0;
+        case Piece::KingOu:
+            return 9;
+        case Piece::KingGyoku:
+            return 8;
+        case Piece::Rook:
+            return 7;
+        case Piece::Bishop:
+            return 6;
+        case Piece::Gold:
+            return 5;
+        case Piece::Silver:
+            return 4;
+        case Piece::Knight:
+            return 3;
+        case Piece::Lance:
+            return 2;
+        case Piece::Pawn:
+            return 1;
+        default:
+            return 0;
         }
     };
 
@@ -121,11 +129,11 @@ void Board::updatePos()
         return priority(p1->name()) > priority(p2->name());
     };
 
-    QList<Piece*> piecesSenteInHand;
-    QList<Piece*> piecesGoteInHand;
+    QList<Piece *> piecesSenteInHand;
+    QList<Piece *> piecesGoteInHand;
 
     for (auto *piece : items()) {
-        Piece *p = dynamic_cast<Piece*>(piece);
+        Piece *p = dynamic_cast<Piece *>(piece);
         if (p) {
             int crd = p->data(maru::Coord).toInt();
             if (crd >= 11 && crd <= 99) {
@@ -146,7 +154,7 @@ void Board::updatePos()
     }
 
     // バッジ表示ラムダ
-    auto displayBadge = [=](QList<Piece*> &pieces, int y, int diff) {
+    auto displayBadge = [=](QList<Piece *> &pieces, int y, int diff) {
         QMap<Piece::Name, int> counts;
         for (const auto &p : pieces) {
             counts[p->name()]++;
@@ -185,7 +193,7 @@ void Board::updatePos()
         } while (!sceneRect().contains(piece->sceneBoundingRect()));
     };
 
-    auto display = [=](QList<Piece*> &pieces, int x, int y, int diff) {
+    auto display = [=](QList<Piece *> &pieces, int x, int y, int diff) {
         if (pieces.isEmpty()) {
             return;
         }
@@ -227,11 +235,11 @@ void Board::clear()
 {
     auto itemList = items();  // copy
     for (auto piece : itemList) {
-        delete dynamic_cast<Piece*>(piece);
+        delete dynamic_cast<Piece *>(piece);
     }
 
     _current = nullptr;
-    _lastMove = QPair<Piece*, QString>(nullptr, QString());
+    _lastMove = QPair<Piece *, QString>(nullptr, QString());
     update();
 }
 
@@ -245,10 +253,10 @@ QPixmap Board::board()
         QPixmap stand("assets/images/shogistand.jpg");
 
         QPainter painter(&pixmap);
-        painter.drawPixmap(0,   0, stand, 0, 0, stand.width(), stand.height());
+        painter.drawPixmap(0, 0, stand, 0, 0, stand.width(), stand.height());
         painter.drawPixmap(0, 710, stand, 0, 0, stand.width(), stand.height());
-        painter.drawPixmap(0,  70, board, 0, 0, board.width(), board.height());
-        painter.drawPixmap(0,  70, line,  0, 0, line.width(), line.height());
+        painter.drawPixmap(0, 70, board, 0, 0, board.width(), board.height());
+        painter.drawPixmap(0, 70, line, 0, 0, line.width(), line.height());
         return pixmap;
     }();
     return boardPixmap;
@@ -261,7 +269,7 @@ void Board::act()
         return;
     }
 
-    Piece *dst = dynamic_cast<Piece*>(sender());
+    Piece *dst = dynamic_cast<Piece *>(sender());
 
     if (!dst) {
         return;
@@ -291,7 +299,7 @@ void Board::act()
         return;
     }
 
-/*
+    /*
     // 玉は相手の駒が利いているマスには移動しない
     if (_current->name() == Piece::KingOu || _current->name() == Piece::KingGyoku) {
         auto opponent = (_currentTurn == maru::Sente) ? maru::Gote : maru::Sente;
@@ -349,10 +357,9 @@ void Board::act()
         break;
     }
 
-    if ((_current->owner() == maru::Sente && (currentRow < 4 || dstRow < 4)) ||
-        (_current->owner() == maru::Gote && (currentRow > 6 || dstRow > 6))) {
+    if ((_current->owner() == maru::Sente && (currentRow < 4 || dstRow < 4)) || (_current->owner() == maru::Gote && (currentRow > 6 || dstRow > 6))) {
         // 成りor成らずダイアログ
-        PromotionDialog::question(_current, dst, this, SLOT(slotPromotionDialog(QAbstractButton*)));
+        PromotionDialog::question(_current, dst, this, SLOT(slotPromotionDialog(QAbstractButton *)));
         return;
     }
 
@@ -362,12 +369,12 @@ void Board::act()
 
 
 // 指定マスへ移動できる駒を探索
-QList<Piece*> Board::searchMovablePeace(maru::Turn turn, int coord) const
+QList<Piece *> Board::searchMovablePeace(maru::Turn turn, int coord) const
 {
-    QList<Piece*> ret;
+    QList<Piece *> ret;
 
     for (QGraphicsItem *item : items()) {
-        Piece *piece = dynamic_cast<Piece*>(item);
+        Piece *piece = dynamic_cast<Piece *>(item);
         if (piece && piece->name() != Piece::None) {
             int crd = piece->data(maru::Coord).toInt();
             if (crd >= 11 && crd <= 99 && piece->owner() == turn) {
@@ -383,7 +390,7 @@ QList<Piece*> Board::searchMovablePeace(maru::Turn turn, int coord) const
 
 void Board::slotPromotionDialog(QAbstractButton *button)
 {
-    auto *dialog = dynamic_cast<PromotionDialog*>(sender());
+    auto *dialog = dynamic_cast<PromotionDialog *>(sender());
     if (dialog) {
         bool promote = (dialog->buttonRole(button) == QMessageBox::YesRole);
         move(dialog->src(), dialog->dst(), promote);
@@ -422,10 +429,9 @@ void Board::movePieceByUsi(const QByteArray &coord, maru::Turn turn, bool update
 }
 
 
-static auto search_piece = [](const QList<QGraphicsItem*> &items, int coord) -> Piece*
-{
+static auto search_piece = [](const QList<QGraphicsItem *> &items, int coord) -> Piece * {
     for (auto *item : items) {
-        Piece* p = dynamic_cast<Piece*>(item);
+        Piece *p = dynamic_cast<Piece *>(item);
         if (p) {
             if (p->data(maru::Coord).toInt() == coord) {
                 return p;
@@ -448,16 +454,16 @@ Piece *Board::piece(int coord)
 }
 
 
-QList<Piece*> Board::pieces(maru::Turn owner, Piece::Name name) const
+QList<Piece *> Board::pieces(maru::Turn owner, Piece::Name name) const
 {
-    QList<Piece*> pieces;
+    QList<Piece *> pieces;
 
     for (auto *piece : items()) {
-        Piece* p = dynamic_cast<Piece*>(piece);
+        Piece *p = dynamic_cast<Piece *>(piece);
         if (p) {
             int crd = p->data(maru::Coord).toInt();
             if (p->name() == name && p->owner() == owner && crd >= 11 && crd <= 99) {
-                pieces << (Piece*)p;
+                pieces << (Piece *)p;
             }
         }
     }
@@ -476,15 +482,15 @@ Piece *Board::pieceInHand(maru::Turn owner, Piece::Name name) const
 }
 
 
-QList<Piece*> Board::piecesInHand(maru::Turn owner) const
+QList<Piece *> Board::piecesInHand(maru::Turn owner) const
 {
-    QList<Piece*> pieces;
+    QList<Piece *> pieces;
 
     for (auto *p : items()) {
-        p = dynamic_cast<Piece*>(p);
+        p = dynamic_cast<Piece *>(p);
         if (p) {
             if (p->data(maru::Coord).toInt() == owner) {
-                pieces << (Piece*)p;
+                pieces << (Piece *)p;
             }
         }
     }
@@ -494,7 +500,7 @@ QList<Piece*> Board::piecesInHand(maru::Turn owner) const
 
 int Board::kingCoord(maru::Turn owner) const
 {
-    QList<Piece*> plist;
+    QList<Piece *> plist;
     plist << pieces(owner, Piece::KingOu);
     plist << pieces(owner, Piece::KingGyoku);
     const Piece *piece = plist.first();
@@ -589,40 +595,44 @@ public:
         QMap<int, MovableCoords>()
     {
         //     手番          駒,                             移動可能マス(1マス),  長距離移動可能方向,  打てるマス
-        insert(maru::Sente | Piece::KingOu,    MovableCoords{Coords{-11, -10, -9, -1, 1, 9, 10, 11}, Coords{}, Coords{}});
-        insert(maru::Sente | Piece::KingGyoku, MovableCoords{Coords{-11, -10, -9, -1, 1, 9, 10, 11}, Coords{}, Coords{}});
-        insert(maru::Sente | Piece::Rook,      MovableCoords{Coords{}, Coords{-10, -1, 1, 10}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Sente | Piece::Bishop,    MovableCoords{Coords{}, Coords{-11, -9, 9, 11}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Sente | Piece::Gold,      MovableCoords{Coords{-11, -10, -1, 1, 9, 10}, Coords{}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Sente | Piece::Silver,    MovableCoords{Coords{-11, -9, -1, 9, 11}, Coords{}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Sente | Piece::Knight,    MovableCoords{Coords{-12, 8}, Coords{}, Coords{3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Sente | Piece::Lance,     MovableCoords{Coords{}, Coords{-1}, Coords{2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Sente | Piece::Pawn,      MovableCoords{Coords{-1}, Coords{}, Coords{2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Sente | Piece::PromotedRook,   MovableCoords{Coords{-11, -9, 9, 11}, Coords{-10, -1, 1, 10}, Coords{}});
-        insert(maru::Sente | Piece::PromotedBishop, MovableCoords{Coords{-10, -1, 1, 10}, Coords{-11, -9, 9, 11}, Coords{}});
-        insert(maru::Sente | Piece::PromotedSilver, MovableCoords{Coords{-11, -10, -1, 1, 9, 10}, Coords{}, Coords{}});
-        insert(maru::Sente | Piece::PromotedKnight, MovableCoords{Coords{-11, -10, -1, 1, 9, 10}, Coords{}, Coords{}});
-        insert(maru::Sente | Piece::PromotedLance,  MovableCoords{Coords{-11, -10, -1, 1, 9, 10}, Coords{}, Coords{}});
-        insert(maru::Sente | Piece::PromotedPawn,   MovableCoords{Coords{-11, -10, -1, 1, 9, 10}, Coords{}, Coords{}});
+        insert(maru::Sente | Piece::KingOu, MovableCoords {Coords {-11, -10, -9, -1, 1, 9, 10, 11}, Coords {}, Coords {}});
+        insert(maru::Sente | Piece::KingGyoku, MovableCoords {Coords {-11, -10, -9, -1, 1, 9, 10, 11}, Coords {}, Coords {}});
+        insert(maru::Sente | Piece::Rook, MovableCoords {Coords {}, Coords {-10, -1, 1, 10}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Sente | Piece::Bishop, MovableCoords {Coords {}, Coords {-11, -9, 9, 11}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Sente | Piece::Gold, MovableCoords {Coords {-11, -10, -1, 1, 9, 10}, Coords {}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Sente | Piece::Silver, MovableCoords {Coords {-11, -9, -1, 9, 11}, Coords {}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Sente | Piece::Knight, MovableCoords {Coords {-12, 8}, Coords {}, Coords {3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Sente | Piece::Lance, MovableCoords {Coords {}, Coords {-1}, Coords {2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Sente | Piece::Pawn, MovableCoords {Coords {-1}, Coords {}, Coords {2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Sente | Piece::PromotedRook, MovableCoords {Coords {-11, -9, 9, 11}, Coords {-10, -1, 1, 10}, Coords {}});
+        insert(maru::Sente | Piece::PromotedBishop, MovableCoords {Coords {-10, -1, 1, 10}, Coords {-11, -9, 9, 11}, Coords {}});
+        insert(maru::Sente | Piece::PromotedSilver, MovableCoords {Coords {-11, -10, -1, 1, 9, 10}, Coords {}, Coords {}});
+        insert(maru::Sente | Piece::PromotedKnight, MovableCoords {Coords {-11, -10, -1, 1, 9, 10}, Coords {}, Coords {}});
+        insert(maru::Sente | Piece::PromotedLance, MovableCoords {Coords {-11, -10, -1, 1, 9, 10}, Coords {}, Coords {}});
+        insert(maru::Sente | Piece::PromotedPawn, MovableCoords {Coords {-11, -10, -1, 1, 9, 10}, Coords {}, Coords {}});
 
-        insert(maru::Gote | Piece::KingOu,     MovableCoords{Coords{-11, -10, -9, -1, 1, 9, 10, 11}, Coords{}, Coords{}});
-        insert(maru::Gote | Piece::KingGyoku,  MovableCoords{Coords{-11, -10, -9, -1, 1, 9, 10, 11}, Coords{}, Coords{}});
-        insert(maru::Gote | Piece::Rook,       MovableCoords{Coords{}, Coords{-10, -1, 1, 10}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Gote | Piece::Bishop,     MovableCoords{Coords{}, Coords{-11, -9, 9, 11}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Gote | Piece::Gold,       MovableCoords{Coords{-10, -9, -1, 1, 10, 11}, Coords{}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Gote | Piece::Silver,     MovableCoords{Coords{-11, -9, 1, 9, 11}, Coords{}, Coords{1, 2, 3, 4, 5, 6, 7, 8, 9}});
-        insert(maru::Gote | Piece::Knight,     MovableCoords{Coords{-8, 12}, Coords{}, Coords{1, 2, 3, 4, 5, 6, 7}});
-        insert(maru::Gote | Piece::Lance,      MovableCoords{Coords{}, Coords{1}, Coords{1, 2, 3, 4, 5, 6, 7, 8}});
-        insert(maru::Gote | Piece::Pawn,       MovableCoords{Coords{1}, Coords{}, Coords{1, 2, 3, 4, 5, 6, 7, 8}});
-        insert(maru::Gote | Piece::PromotedRook,   MovableCoords{Coords{-11, -9, 9, 11}, Coords{-10, -1, 1, 10}, Coords{}});
-        insert(maru::Gote | Piece::PromotedBishop, MovableCoords{Coords{-10, -1, 1, 10}, Coords{-11, -9, 9, 11}, Coords{}});
-        insert(maru::Gote | Piece::PromotedSilver, MovableCoords{Coords{-10, -9, -1, 1, 10, 11}, Coords{}, Coords{}});
-        insert(maru::Gote | Piece::PromotedKnight, MovableCoords{Coords{-10, -9, -1, 1, 10, 11}, Coords{}, Coords{}});
-        insert(maru::Gote | Piece::PromotedLance,  MovableCoords{Coords{-10, -9, -1, 1, 10, 11}, Coords{}, Coords{}});
-        insert(maru::Gote | Piece::PromotedPawn,   MovableCoords{Coords{-10, -9, -1, 1, 10, 11}, Coords{}, Coords{}});
+        insert(maru::Gote | Piece::KingOu, MovableCoords {Coords {-11, -10, -9, -1, 1, 9, 10, 11}, Coords {}, Coords {}});
+        insert(maru::Gote | Piece::KingGyoku, MovableCoords {Coords {-11, -10, -9, -1, 1, 9, 10, 11}, Coords {}, Coords {}});
+        insert(maru::Gote | Piece::Rook, MovableCoords {Coords {}, Coords {-10, -1, 1, 10}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Gote | Piece::Bishop, MovableCoords {Coords {}, Coords {-11, -9, 9, 11}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Gote | Piece::Gold, MovableCoords {Coords {-10, -9, -1, 1, 10, 11}, Coords {}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Gote | Piece::Silver, MovableCoords {Coords {-11, -9, 1, 9, 11}, Coords {}, Coords {1, 2, 3, 4, 5, 6, 7, 8, 9}});
+        insert(maru::Gote | Piece::Knight, MovableCoords {Coords {-8, 12}, Coords {}, Coords {1, 2, 3, 4, 5, 6, 7}});
+        insert(maru::Gote | Piece::Lance, MovableCoords {Coords {}, Coords {1}, Coords {1, 2, 3, 4, 5, 6, 7, 8}});
+        insert(maru::Gote | Piece::Pawn, MovableCoords {Coords {1}, Coords {}, Coords {1, 2, 3, 4, 5, 6, 7, 8}});
+        insert(maru::Gote | Piece::PromotedRook, MovableCoords {Coords {-11, -9, 9, 11}, Coords {-10, -1, 1, 10}, Coords {}});
+        insert(maru::Gote | Piece::PromotedBishop, MovableCoords {Coords {-10, -1, 1, 10}, Coords {-11, -9, 9, 11}, Coords {}});
+        insert(maru::Gote | Piece::PromotedSilver, MovableCoords {Coords {-10, -9, -1, 1, 10, 11}, Coords {}, Coords {}});
+        insert(maru::Gote | Piece::PromotedKnight, MovableCoords {Coords {-10, -9, -1, 1, 10, 11}, Coords {}, Coords {}});
+        insert(maru::Gote | Piece::PromotedLance, MovableCoords {Coords {-10, -9, -1, 1, 10, 11}, Coords {}, Coords {}});
+        insert(maru::Gote | Piece::PromotedPawn, MovableCoords {Coords {-10, -9, -1, 1, 10, 11}, Coords {}, Coords {}});
     }
 };
-Q_GLOBAL_STATIC(MovableCoordsMap, movableCoordsMap)
+static const MovableCoordsMap &movableCoordsMap()
+{
+    static MovableCoordsMap map;
+    return map;
+}
 
 
 // 駒として移動できるマスか／駒が打てるかの判定
@@ -634,7 +644,7 @@ bool Board::canMove(const Piece *piece, int coord) const
         return ret;
     }
 
-    MovableCoords crds = movableCoordsMap()->value(piece->owner() | piece->name());
+    MovableCoords crds = movableCoordsMap().value(piece->owner() | piece->name());
     const int currentCrd = piece->data(maru::Coord).toInt();
 
     if (currentCrd < 11 || currentCrd > 99) {  // 駒打ち
@@ -683,93 +693,9 @@ bool Board::isCheck() const
     return false;
 }
 
-#if 0
-QByteArray Board::toStaticSfen(int moveNumber) const
-{
-    return toStaticSfen(_currentTurn, moveNumber);
-}
-
-// 現局面をSFEN表現（指し手無し）  moveNumber: 開始局面は1、1手指した直後は2
-QByteArray Board::toStaticSfen(maru::Turn turn, int moveNumber) const
-{
-    QByteArray sfen;
-    sfen.reserve(128);
-
-    // 駒の配置
-    for (int i = 1; i < 10; i++) {
-        int s = 0;
-        for (int j = 9; j > 0; j--) {
-            int crd =  i + j * 10;
-            auto p = piece(crd)->sfen();
-            if (p.isEmpty()) {
-                s++;
-            } else {
-                if (s > 0) {
-                    sfen += QByteArray::number(s);
-                    s = 0;
-                }
-                sfen += p;
-            }
-        }
-
-        if (s > 0) {
-            sfen += QByteArray::number(s);
-        }
-        sfen += "/";
-    }
-    sfen[sfen.length() - 1] = ' ';
-
-    // 手番
-    sfen += (turn == maru::Sente) ? "b " : "w ";
-
-    // 持ち駒カウント
-    auto counts = [](const QList<Piece*> pieces) {
-        QByteArray str;
-        str.reserve(pieces.count() + 1);
-        for (const auto *p : pieces) {
-            str += p->sfen();
-        }
-
-        QByteArray names = "rbgsnlp";
-        if (str.isUpper()) {
-            names = names.toUpper();
-        }
-
-        QByteArray ret;
-        ret.reserve(pieces.count() + 1);
-        for (auto c : names) {
-            int cnt = str.count(c);
-            if (cnt == 0) {
-                continue;
-            }
-
-            if (cnt > 1) {
-                ret += QByteArray::number(cnt);
-            }
-            ret += str[str.indexOf(c, 0)];
-        }
-        return ret;
-    };
-
-    // 持ち駒
-    QByteArray str = counts(piecesInHand(maru::Sente));
-    str += counts(piecesInHand(maru::Gote));
-    if (str.isEmpty()) {
-        sfen += "-";  // 無し
-    } else {
-        sfen += str;
-    }
-
-    // 手数
-    sfen += ' ';
-    sfen += QByteArray::number(moveNumber);
-    return sfen;
-}
-#endif
 
 void Board::setSfen(const QByteArray &sfen, bool movable, const QByteArray &lastMove)
 {
-    qDebug() << "setSfen" << sfen;
     parse(sfen);
     setTurn(_currentTurn, movable);
 

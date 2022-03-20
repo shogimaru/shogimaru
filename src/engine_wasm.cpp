@@ -1,29 +1,43 @@
 #include "engine.h"
 #include "enginethread.h"
+#include <QDebug>
+
+QMap<QString, Engine::Option> Engine::_defaultOptions;
 
 
 Engine::Engine(QObject *parent) :
     QObject(parent),
     _timer(new QTimer(this)),
-    _engineThread(new EngineThread(this))
+    _errorTimer(new QTimer(this))
 {
+    _errorTimer->setSingleShot(true);  // シングルショット
     connect(_timer, &QTimer::timeout, this, &Engine::getResponse);
-    connect(_engineThread, &QThread::finished, _engineThread, &QObject::deleteLater);
-    init();
+    connect(_errorTimer, &QTimer::timeout, this, &Engine::engineError);
 }
 
 
-Engine::~Engine()
+bool Engine::openContext(const QString &)
 {
-    _engineThread->terminate();
-    _engineThread->wait();
-}
-
-
-void Engine::start()
-{
-    _engineThread->start();
-    while (!_engineThread->isRunning()) {
+    delete _engineContext;
+    auto *thread = new EngineThread(this);
+    thread->start();
+    while (!thread->isRunning()) {
         QThread::msleep(10);
     }
+    _engineContext = thread;
+    return true;
+}
+
+
+void Engine::closeContext()
+{
+    if (_engineContext) {
+        auto *thread = dynamic_cast<EngineThread *>(_engineContext);
+        if (thread->isRunning()) {
+            quit();
+            thread->wait();
+            thread->deleteLater();
+        }
+    }
+    _engineContext = nullptr;
 }

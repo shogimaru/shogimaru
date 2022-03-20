@@ -1,20 +1,34 @@
 #include "engineprocess.h"
 #include <QDebug>
+#include <QDir>
+#include <QFileInfo>
 
-constexpr auto ENGINE_PATH = "./engines/YaneuraOu/YaneuraOu-by-gcc";
 
-
-EngineProcess::EngineProcess() :
-    QProcess()
+EngineProcess::EngineProcess(const QString &program, QObject *parent) :
+    QProcess(parent)
 {
-    setProgram(ENGINE_PATH);
+    setProgram(program);
+    setWorkingDirectory(QFileInfo(program).dir().absolutePath());
 }
 
 
-void EngineProcess::start(QIODevice::OpenMode mode)
+void EngineProcess::start()
 {
+    // auto data = EngineSettings::instance().currentEngine();
+    // if (data.path.isEmpty()) {
+    //     qCritical() << "No shogi engine";
+    //     return;
+    // }
+
+    // if (QFileInfo(data.path).exists()) {
+    //     setProgram(data.path);
+    // } else {
+    //     qCritical() << "Not found such shogi engine:" << data.path;
+    //     return;
+    // }
+
     if (state() == QProcess::NotRunning) {
-        QProcess::start(mode);
+        QProcess::start(QIODevice::ReadWrite);
         waitForStarted();
     }
 }
@@ -32,8 +46,8 @@ void EngineProcess::terminate()
 }
 
 
-EngineProcess *EngineProcess::instance()
-{
-    static EngineProcess engineProcess;
-    return &engineProcess;
-}
+// EngineProcess *EngineProcess::instance()
+// {
+//     static EngineProcess engineProcess;
+//     return &engineProcess;
+// }

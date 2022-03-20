@@ -1,46 +1,30 @@
 #include "sfen.h"
 #include "shogirecord.h"
+#include <QDebug>
 #include <QMap>
 #include <QRegularExpression>
-#include <QDebug>
 
 static const QByteArray DefaultSfen("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1");
 static const QByteArrayList sentePieces = {"K", "R", "B", "G", "S", "N", "L", "P", "+R", "+B", "+S", "+N", "+L", "+P"};
 static const QByteArrayList gotePieces = {"k", "r", "b", "g", "s", "n", "l", "p", "+r", "+b", "+s", "+n", "+l", "+p"};
 
-class KanjiNameMap : public QMap<QString, QString> {
-public:
-    KanjiNameMap() :
-        QMap<QString, QString>()
-    {
-        insert(QLatin1String("k"),  QString::fromUtf8("玉"));
-        insert(QLatin1String("r"),  QString::fromUtf8("飛"));
-        insert(QLatin1String("b"),  QString::fromUtf8("角"));
-        insert(QLatin1String("g"),  QString::fromUtf8("金"));
-        insert(QLatin1String("s"),  QString::fromUtf8("銀"));
-        insert(QLatin1String("n"),  QString::fromUtf8("桂"));
-        insert(QLatin1String("l"),  QString::fromUtf8("香"));
-        insert(QLatin1String("p"),  QString::fromUtf8("歩"));
-        insert(QLatin1String("+r"), QString::fromUtf8("龍"));
-        insert(QLatin1String("+b"), QString::fromUtf8("馬"));
-        insert(QLatin1String("+s"), QString::fromUtf8("成銀"));
-        insert(QLatin1String("+n"), QString::fromUtf8("成桂"));
-        insert(QLatin1String("+l"), QString::fromUtf8("成香"));
-        insert(QLatin1String("+p"), QString::fromUtf8("と"));
-    }
-};
-Q_GLOBAL_STATIC(KanjiNameMap, kanjiNameMap)
-
-
-Sfen::Sfen()
-{
-    parse(DefaultSfen);
-}
-
 
 Sfen::Sfen(const QByteArray &sfen)
 {
     parse(sfen);
+}
+
+
+void Sfen::clear()
+{
+    _position.clear();
+    _inHand.clear();
+    _turn = maru::Sente;
+    _moves.clear();
+    _counter = 1;
+    _players.first.clear();
+    _players.second.clear();
+    _gameResult = 0;
 }
 
 
@@ -50,8 +34,7 @@ bool Sfen::parse(const QByteArray &s)
         return false;
     }
 
-    _position.clear();
-    _inHand.clear();
+    clear();
 
     QByteArrayList items = s.split(' ');
     QByteArray sfen = items.first();
@@ -174,11 +157,15 @@ bool Sfen::parse(const QByteArray &s)
     return true;
 
 error:
-    _position.clear();
-    _inHand.clear();
-    _counter = 1;
+    clear();
     qCritical() << "SFEN parse error";
     return false;
+}
+
+
+bool Sfen::isEmpty() const
+{
+    return _position.isEmpty() && _inHand.isEmpty();
 }
 
 
@@ -190,8 +177,9 @@ QByteArray Sfen::name(int coord) const
 
 QString Sfen::kanjiName(int coord) const
 {
+    //static KanjiNameMap kanjiNameMap;
     QString s = name(coord);
-    return (s.isEmpty()) ? s : kanjiNameMap()->value(s);
+    return (s.isEmpty()) ? s : ShogiRecord::kanjiName(s);
 }
 
 // SFEN（指し手なし）
@@ -199,6 +187,10 @@ QByteArray Sfen::toSfen() const
 {
     QByteArray sfen;
     sfen.reserve(80);
+
+    if (isEmpty()) {
+        return sfen;
+    }
 
     // 駒の配置
     for (int i = 1; i < 10; i++) {
@@ -257,6 +249,22 @@ QByteArray Sfen::toSfen() const
     sfen += " ";
     sfen += QByteArray::number(_counter);
     return sfen;
+}
+
+
+QByteArray Sfen::toUsi() const  // 指し手あり
+{
+    QByteArray usi = defaultPostion();
+
+    if (!_moves.isEmpty()) {
+        usi += " moves ";
+        for (auto &mv : _moves) {
+            usi += mv.second;
+            usi += " ";
+        }
+        usi.chop(1);
+    }
+    return usi;
 }
 
 
@@ -347,6 +355,7 @@ QByteArray Sfen::move(const QByteArray &usi)
         _inHand += (_turn == maru::Sente) ? dst.toUpper() : dst.toLower();
     }
 
+    _moves << qMakePair(piece, usi);
     _counter++;
     _position[crd] = piece;
     _turn = (_turn == maru::Sente) ? maru::Gote : maru::Sente;
@@ -361,43 +370,9 @@ QPair<QString, int> Sfen::move(const QByteArray &usi, int prevCoord, bool compac
     maru::Turn turn = _turn;
     auto piece = move(usi);
 
-#if 1
     QString kif = ShogiRecord::kifString(turn, usi, piece, prevCoord, compact);
     int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
     return qMakePair(kif, crd);
-#else
-    // 駒名称
-    QString kif = ShogiRecord::kanjiName(piece);
-    if (kif.isEmpty()) {
-        return qMakePair(QString(), 0);
-    }
-
-    if (usi.length() == 5 && usi[4] == QLatin1Char('+')) {
-        kif = ShogiRecord::kanjiName(piece.mid(1, 1));  // 元の駒
-        kif += QString::fromUtf8("成");
-        piece.prepend('+');  // 成駒
-    } else if (std::isalpha(usi[0])) {
-        kif += QString::fromUtf8("打");
-    }
-
-    int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
-    if (crd == prevCoord) {
-        if (compact) {
-            kif.prepend(QString::fromUtf8("同"));
-        } else {
-            kif.prepend(QString::fromUtf8("同　"));
-        }
-    } else {
-        kif.prepend(ShogiRecord::kanji(crd));
-    }
-
-    if (turn == maru::Sente) {
-        kif.prepend(QString::fromUtf8("▲"));
-    } else {
-        kif.prepend(QString::fromUtf8("△"));
-    }
-    return qMakePair(kif, crd);
-#endif
 }
 
 
@@ -410,16 +385,34 @@ Sfen Sfen::move(const QByteArrayList &usiList)
 }
 
 
-QByteArray Sfen::csaToSfen(const QByteArray &csa)
+void Sfen::setPlayers(const QString &sente, const QString &gote)
 {
-    static const QMap<QByteArray, QByteArray> convert = {
-        {"FU", "p"}, {"KY","l"}, {"KE", "n"}, {"GI","s"},
-        {"KI", "g"}, {"KA","b"}, {"HI", "r"}, {"OU", "k"}
-    };
-    static const QByteArrayList promoted = {"TO","NY", "NK", "NG", "UM", "RY"};
+    _players.first = sente;
+    _players.second = gote;
+}
 
-    Sfen sfen;
-    QByteArray movestr;
+
+QByteArray Sfen::defaultPostion()
+{
+    return DefaultSfen;
+}
+
+
+Sfen Sfen::fromCsa(const QString &csa, bool *ok)
+{
+    static const QMap<QString, QString> convert = {
+        {"FU", "p"}, {"KY", "l"}, {"KE", "n"}, {"GI", "s"},
+        {"KI", "g"}, {"KA", "b"}, {"HI", "r"}, {"OU", "k"}};
+    static const QStringList promoted = {"TO", "NY", "NK", "NG", "UM", "RY"};
+
+    Sfen sfen(DefaultSfen);  // TODO 駒落ちに未対応
+    QString senteName;
+    QString goteName;
+    maru::Turn turn = maru::Sente;
+
+    if (ok) {
+        *ok = false;
+    }
 
     for (const auto &str : csa.split('\n')) {
         auto line = str.trimmed();
@@ -428,15 +421,24 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
         }
 
         if (line.startsWith('+') || line.startsWith('-')) {
+            if (line == "+") {
+                turn = maru::Sente;  // 先手番
+                continue;
+            }
+            if (line == "-") {
+                turn = maru::Gote;  // 後手番
+                continue;
+            }
+
             // 指し手
             auto l12 = line.mid(1, 2);
             QByteArray move = ShogiRecord::coordToUsi(l12.toInt());
-            QByteArray koma = line.mid(5, 2);
+            QString koma = line.mid(5, 2);
 
             if (move.isEmpty() && l12 == "00") {
                 // 打つ
                 auto p = convert.value(koma).toUpper();
-                move += p;
+                move += p.toLatin1();
                 move += '*';
             }
 
@@ -450,15 +452,18 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
             if (promoted.contains(koma)) {
                 // 成りチェック
                 auto p = sfen._position.value(l12.toInt());
-                if (!p.startsWith('+')) { // 成り駒でないなら
+                if (!p.startsWith('+')) {  // 成り駒でないなら
                     move += '+';
                 }
             }
 
             if (move.length() == 4 || move.length() == 5) {
-                movestr += move;
-                movestr += ' ';
                 sfen.move(move);
+                turn = (line.startsWith('+')) ? maru::Gote : maru::Sente;  // 次の手番
+            } else {
+                // Error
+                qCritical() << "Error notation:" << move;
+                return sfen;
             }
             continue;
         }
@@ -468,6 +473,13 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
         }
         if (line.startsWith('N')) {
             // player
+            if (line.startsWith("N+")) {
+                senteName = line.mid(2);
+            } else if (line.startsWith("N-")) {
+                goteName = line.mid(2);
+            } else {
+                //
+            }
             continue;
         }
         if (line.startsWith('$')) {
@@ -480,7 +492,69 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
         }
         if (line.startsWith('%')) {
             // 特殊な指し手／終局状況
+            // %TORYO 投了
+            // %CHUDAN 中断
+            // %SENNICHITE 千日手
+            // %TIME_UP 手番側が時間切れで負け
+            // %ILLEGAL_MOVE 手番側の反則負け
+            // %+ILLEGAL_ACTION 先手(下手)の反則行為により、後手(上手)の勝ち
+            // %-ILLEGAL_ACTION 後手(上手)の反則行為により、先手(下手)の勝ち
+            // %JISHOGI 持将棋
+            // %KACHI (入玉で)勝ちの宣言
+            // %HIKIWAKE (入玉で)引き分けの宣言
+            // %MATTA 待った
+            // %TSUMI 詰み
+            // %FUZUMI 不詰
+            // %ERROR エラー
+            maru::GameResult result;
+            maru::ResultDetail detail;
+
+            if (line == "%TORYO" || line == "%TSUMI") {
+                result = maru::Loss;
+                detail = maru::Loss_Resign;
+            } else if (line == "%CHUDAN") {
+                result = maru::Abort;
+                detail = maru::Abort_GameAborted;
+            } else if (line == "%SENNICHITE") {
+                result = maru::Draw;
+                detail = maru::Draw_Repetition;
+            } else if (line == "%TIME_UP") {
+                result = maru::Illegal;
+                detail = maru::Illegal_OutOfTime;
+            } else if (line == "%ILLEGAL_MOVE") {
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%+ILLEGAL_ACTION") {
+                turn = maru::Sente;
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%-ILLEGAL_ACTION") {
+                turn = maru::Gote;
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%JISHOGI" || line == "%HIKIWAKE") {
+                result = maru::Draw;
+                detail = maru::Draw_Impasse;
+            } else if (line == "%KACHI") {
+                result = maru::Win;
+                detail = maru::Win_Declare;
+            } else if (line == "%MATTA") {
+                result = maru::Illegal;
+                detail = maru::Illegal_Other;
+            } else if (line == "%ERROR" || line == "%FUZUMI") {
+                result = maru::Abort;
+                detail = maru::Abort_GameAborted;
+            } else {
+                result = maru::Abort;
+                detail = maru::Abort_GameAborted;
+            }
+
+            sfen.setGameResult(turn, result, detail);
             break;
+        }
+        if (line.startsWith('T')) {
+            // 消費時間
+            continue;
         }
         if (line.startsWith('\'')) {
             // comment line
@@ -488,32 +562,146 @@ QByteArray Sfen::csaToSfen(const QByteArray &csa)
         }
 
         qWarning() << "Unknown CSA commend:" << line;
+        return sfen;
     }
 
-    QByteArray sfenstr = DefaultSfen;
-    sfenstr += " moves ";
-    sfenstr += movestr.trimmed();
-    return sfenstr;
+    // 対局者
+    sfen.setPlayers(senteName, goteName);
+
+    if (ok) {
+        *ok = true;
+    }
+    return sfen;
 }
 
 
-Sfen Sfen::fromCsa(const QByteArray &csa, bool *ok)
+QString Sfen::toCsa() const
 {
-    Sfen sf;
-    bool res = sf.parse(csaToSfen(csa));
-    if (ok) {
-        *ok = res;
+    static const QMap<QString, QString> convert = {
+        {"p", "FU"}, {"l", "KY"}, {"n", "KE"}, {"s", "GI"},
+        {"g", "KI"}, {"b", "KA"}, {"r", "HI"}, {"k", "OU"},
+        {"+p", "TO"}, {"+l", "NY"}, {"+n", "NK"}, {"+s", "NG"},
+        {"+b", "UM"}, {"+r", "RY"}};
+
+    QString csa;
+
+    csa.reserve(1024);
+    csa += "V2.2\n";
+    csa += "N+";
+    csa += _players.first;
+    csa += '\n';
+    csa += "N-";
+    csa += _players.second;
+    csa += '\n';
+    // 開始局面
+    csa += "P1-KY-KE-GI-KI-OU-KI-GI-KE-KY\n";
+    csa += "P2 * -HI *  *  *  *  * -KA * \n";
+    csa += "P3-FU-FU-FU-FU-FU-FU-FU-FU-FU\n";
+    csa += "P4 *  *  *  *  *  *  *  *  * \n";
+    csa += "P5 *  *  *  *  *  *  *  *  * \n";
+    csa += "P6 *  *  *  *  *  *  *  *  * \n";
+    csa += "P7+FU+FU+FU+FU+FU+FU+FU+FU+FU\n";
+    csa += "P8 * +KA *  *  *  *  * +HI * \n";
+    csa += "P9+KY+KE+GI+KI+OU+KI+GI+KE+KY\n";
+    csa += "+\n";  // 手番表記
+    bool senteTurn = true;
+    for (auto &mv : _moves) {
+        csa += (senteTurn) ? "+" : "-";  // 指し手手番
+        senteTurn = !senteTurn;
+        if (mv.second.mid(0, 1).isUpper()) {
+            csa += "00";
+        } else {
+            csa += QString::number(ShogiRecord::usiToCoord(mv.second.mid(0, 2)));  // 移動前
+        }
+        csa += QString::number(ShogiRecord::usiToCoord(mv.second.mid(2, 2)));  // 移動後
+
+        // 駒名
+        csa += convert.value(mv.first.toLower());  // 移動後の駒
+        csa += "\n";
     }
-    return sf;
+    // 終局
+    csa += gemeResultCsa();
+    csa += "\n";
+    return csa;
 }
 
 
 Sfen Sfen::fromSfen(const QByteArray &sfen, bool *ok)
 {
     Sfen sf;
-    bool res = sf.parse(sfen);
+
+    auto sfstr = sfen.split(' ');
+    if (sfstr.value(0).toLower() == "position") {
+        sfstr.takeFirst();
+    }
+
+    if (sfstr.value(0).toLower() == "startpos") {
+        sfstr[0] = Sfen::defaultPostion();
+    }
+
+    bool res = sf.parse(sfstr.join(' '));
     if (ok) {
         *ok = res;
     }
     return sf;
+}
+
+
+QPair<maru::GameResult, maru::ResultDetail> Sfen::gameResult() const
+{
+    int res = _gameResult & maru::ResultMask;
+    int detail = _gameResult & maru::DetailMask;
+    return qMakePair((maru::GameResult)res, (maru::ResultDetail)detail);
+}
+
+
+void Sfen::setGameResult(maru::GameResult result, maru::ResultDetail detail)
+{
+    _gameResult = _turn | result | detail;
+}
+
+
+void Sfen::setGameResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail)
+{
+    _gameResult = turn | result | detail;
+}
+
+
+QString Sfen::gemeResultCsa() const
+{
+    /*
+    %TORYO 投了
+    %CHUDAN 中断
+    %SENNICHITE 千日手
+    %TIME_UP 手番側が時間切れで負け
+    %ILLEGAL_MOVE 手番側の反則負け、反則の内容はコメントで記録する
+    %+ILLEGAL_ACTION 先手(下手)の反則行為により、後手(上手)の勝ち
+    %-ILLEGAL_ACTION 後手(上手)の反則行為により、先手(下手)の勝ち
+    %JISHOGI 持将棋
+    %KACHI (入玉で)勝ちの宣言
+    */
+    int turn = _gameResult & maru::TurnMask;
+    int detail = _gameResult & maru::DetailMask;
+
+    switch (detail) {
+    case maru::Win_Declare:
+        return QLatin1String("%KACHI");
+    case maru::Loss_Resign:
+        return QLatin1String("%TORYO");
+    case maru::Draw_Repetition:
+        return QLatin1String("%SENNICHITE");
+    case maru::Draw_Impasse:
+        return QLatin1String("%JISHOGI");
+    case maru::Illegal_OutOfTime:
+        return QLatin1String("%TIME_UP");
+    case maru::Illegal_TwoPawns:  // 二歩
+    case maru::Illegal_DropPawnMate:  // 打ち歩詰め
+    case maru::Illegal_OverlookedCheck:  // 王手放置
+    case maru::Illegal_PerpetualCheck:  // 連続王手の千日手
+        return (turn == maru::Sente) ? QLatin1String("+ILLEGAL_ACTION") : QLatin1String("%-ILLEGAL_ACTION");
+    case maru::Abort_GameAborted:
+        return QLatin1String("%CHUDAN");
+    default:
+        return QLatin1String("%CHUDAN");
+    }
 }

@@ -1,16 +1,20 @@
 #pragma once
 #include <QString>
+#include <functional>
+#include <list>
 #include <string>
 #include <vector>
-#include <list>
-#include <functional>
 
+class QWidget;
+class QLabel;
+class QFont;
 
 namespace maru {
 
 enum Turn : int {
     Sente = 0x1000,
-    Gote  = 0x2000,
+    Gote = 0x2000,
+    TurnMask = 0xF000,
 };
 
 // プレイヤ
@@ -20,26 +24,29 @@ enum PlayerType : int {
 };
 
 // 試合結果
-enum GameResult: int {
-    None = 0,
-    Win,   // 勝利
+enum GameResult : int {
+    Win = 1,  // 勝利
     Loss,  // 敗北
-    Foul,  // 反則負け
     Draw,  // 引き分け
+    Illegal,  // 反則（負け）
+    Abort,  // 中断
+    ResultMask = 0xF,
 };
 
 // 結果詳細
 enum ResultDetail : int {
-    Abort = 0x10,    // 中断
-    Win_Declare,     // 入玉勝ち宣言
-    Loss_Resign,     // 投了
-    Foul_OutOfTime,  // 時間切れ
-    Foul_TwoPawns,   // 二歩
-    Foul_DropPawnMate, // 打ち歩詰め
-    Foul_OverlookedCheck,  // 王手放置
-    Foul_PerpetualCheck,  // 連続王手の千日手
-    Draw_Repetition,  // 千日手
-    Draw_Impasse,     // 持将棋（双方入玉）
+    Win_Declare = 1 << 4,  // 入玉勝ち宣言
+    Loss_Resign = 2 << 4,  // 投了
+    Draw_Repetition = 3 << 4,  // 千日手
+    Draw_Impasse = 4 << 4,  // 持将棋（双方入玉）
+    Illegal_OutOfTime = 5 << 4,  // 時間切れ
+    Illegal_TwoPawns = 6 << 4,  // 二歩
+    Illegal_DropPawnMate = 7 << 4,  // 打ち歩詰め
+    Illegal_OverlookedCheck = 8 << 4,  // 王手放置
+    Illegal_PerpetualCheck = 9 << 4,  // 連続王手の千日手
+    Illegal_Other = 10 << 4,  // 反則その他
+    Abort_GameAborted = 11 << 4,  // 中断
+    DetailMask = 0xF0,
 };
 
 // COMレベル
@@ -72,9 +79,14 @@ void setGlobalIntParameter(ParameterName name, int64_t value);
 QString globalStringParameter(ParameterName name);
 void setGlobalStringParameter(ParameterName name, const QString &value);
 
+std::string toLower(const std::string &str);
 std::string trim(const std::string &input);
 bool contains(const std::list<std::string> &stringlist, const std::string &str);
+std::string join(const std::list<std::string> &stringlist, const std::string &separator);
 std::vector<std::string> split(const std::string &str, char sep, bool skipEmptyParts = false);
 int random(int min, int max);
+QString elideText(const QString &text, int width, const QFont &font);
+QString elideText(const QString &text, const QLabel *label);
+QWidget *mainWindow();
 
 }

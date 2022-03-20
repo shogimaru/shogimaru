@@ -1,6 +1,6 @@
 TARGET   = shogimaru
 TEMPLATE = app
-QT      += core gui widgets
+QT      += core gui widgets network
 CONFIG  += c++17
 CODECFORTR = UTF-8
 MOC_DIR  = .obj/
@@ -10,20 +10,31 @@ DEFINES += QT_DEPRECATED_WARNINGS
 wasm {
   CONFIG +=
   LIBS = ../engines/YaneuraOu/source/YaneuraOu.wasm
+  SOURCES += maincontroller_wasm.cpp
   SOURCES += file_wasm.cpp
   SOURCES += engine_wasm.cpp
   SOURCES += command_wasm.cpp
+  SOURCES += sound_sdl.cpp
   HEADERS += enginethread.h
   SOURCES += enginethread.cpp
   DESTDIR  = ../html/
 } else {
-  LIBS = -lSDL -lSDL_mixer
+  QT      += multimedia
+  !lessThan(QT_MAJOR_VERSION, 6) {
+    QT    += core5compat
+  }
+  SOURCES += maincontroller_native.cpp
   SOURCES += file.cpp
   SOURCES += engine_native.cpp
   SOURCES += command_native.cpp
+  SOURCES += sound_native.cpp
   HEADERS += engineprocess.h
   SOURCES += engineprocess.cpp
   DESTDIR  = ../
+}
+
+msvc {
+  QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus /utf-8
 }
 
 SOURCES += \
@@ -46,11 +57,13 @@ SOURCES += \
         promotiondialog.cpp \
         nicknamedialog.cpp \
         analysisdialog.cpp \
-#        startdialog.cpp \
+        recorddialog.cpp \
+        settingsdialog.cpp \
+        enginesettings.cpp \
+        westerntabstyle.cpp \
         startdialog2.cpp \
         mypage.cpp \
         messagebox.cpp \
-        sound.cpp \
         evaluationgraph.cpp \
         maincontroller.cpp
 
@@ -73,7 +86,10 @@ HEADERS += \
         promotiondialog.h \
         nicknamedialog.h \
         analysisdialog.h \
-#        startdialog.h \
+        recorddialog.h \
+        settingsdialog.h \
+        enginesettings.h \
+        westerntabstyle.h \
         startdialog2.h \
         mypage.h \
         messagebox.h \
@@ -87,7 +103,9 @@ FORMS += \
         ../forms/mypage.ui \
         ../forms/nicknamedialog.ui \
         ../forms/analysisdialog.ui \
-        ../forms/startdialog.ui \
+        ../forms/recorddialog.ui \
+        ../forms/settingsdialog.ui \
+#        ../forms/startdialog.ui \
         ../forms/startdialog2.ui
 
 TRANSLATIONS += \

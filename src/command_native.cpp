@@ -4,14 +4,14 @@
 #include <QDebug>
 
 
-std::string CBus::get()
+std::string CBus::get(int)
 {
     // do nothing
     return std::string();
 }
 
 
-std::list<std::string> CBus::getAll()
+std::list<std::string> CBus::getAll(int)
 {
     // do nothing
     return std::list<std::string>();
@@ -23,23 +23,13 @@ void CBus::set(const std::string &)
     // do nothing
 }
 
-/*!
-  コマンド待機
-  msecs:ミリ秒  -1:無期限待機  0:ノンブロック
-*/
-bool CBus::wait(int) const
-{
-    // do nothing
-    return true;
-}
-
 
 void Command::request(const std::string &command)
 {
     //qDebug() << "request" << command.c_str();
-    EngineProcess::instance()->write(command.c_str(), command.length());
-    EngineProcess::instance()->write("\n");
-    EngineProcess::instance()->waitForBytesWritten(1000);
+    Command::engineProcess->write(command.c_str(), command.length());
+    Command::engineProcess->write("\n");
+    Command::engineProcess->waitForBytesWritten(1000);
 }
 
 
@@ -47,39 +37,42 @@ std::list<std::string> Command::poll(int msecs)
 {
     std::list<std::string> responses;
 
-    if (EngineProcess::instance()->canReadLine()
-        || (EngineProcess::instance()->waitForReadyRead(msecs) && EngineProcess::instance()->canReadLine())) {
+    if (Command::engineProcess->canReadLine()
+        || (Command::engineProcess->waitForReadyRead(msecs) && Command::engineProcess->canReadLine())) {
         do {
-            auto line = EngineProcess::instance()->readLine().trimmed();
+            auto line = Command::engineProcess->readLine().trimmed();
             if (!line.isEmpty()) {
+                //qDebug() << "poll" << line;
                 responses.push_back(line.data());
             }
-        } while (EngineProcess::instance()->canReadLine());
+        } while (Command::engineProcess->canReadLine());
     }
     return responses;
 }
 
 
-bool Command::pollFor(const std::string &response, int msecs)
+bool Command::pollFor(const std::string &waitingResponse, int msecs, std::list<std::string> &response)
 {
-    bool ret = false;
+    response.clear();
 
-    while (EngineProcess::instance()->canReadLine()
-        || (EngineProcess::instance()->waitForReadyRead(msecs) && EngineProcess::instance()->canReadLine())) {
-        auto line = EngineProcess::instance()->readLine().trimmed();
+    while (Command::engineProcess->canReadLine()
+        || (Command::engineProcess->waitForReadyRead(msecs) && Command::engineProcess->canReadLine())) {
+        auto line = Command::engineProcess->readLine().trimmed();
         //qDebug() << "pollFor" << line;
-        if (line.startsWith(response.c_str())) {
-            break;
+        response.push_back(line.toStdString());
+
+        if (line.startsWith(waitingResponse.c_str())) {
+            return true;
         }
     }
-    return ret;
+    return false;
 }
 
 
 void Command::clearResponse(int msecs)
 {
-    if (EngineProcess::instance()->waitForReadyRead(msecs)) {
-        EngineProcess::instance()->readAll();
+    if (Command::engineProcess->waitForReadyRead(msecs)) {
+        Command::engineProcess->readAll();
     }
 }
 

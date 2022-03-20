@@ -1,0 +1,11 @@
+{
+  "availableEngines": [
+    {
+      "name": "YaneuraOu NNUE KP256",
+      "options": {},
+      "defaultOptions": {},
+      "path": ""
+    }
+  ],
+  "selectedEngineIndex": 0
+}
