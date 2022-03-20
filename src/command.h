@@ -1,8 +1,8 @@
 #pragma once
-#include <ostream>
-#include <list>
 #include <condition_variable>
+#include <list>
 #include <mutex>
+#include <ostream>
 
 class EngineProcess;
 
@@ -18,7 +18,9 @@ private:
     mutable std::mutex _mutex;
     mutable std::condition_variable _cond;
 
-    CBus() {}
+    CBus() { }
+    CBus(const CBus &) = delete;
+    CBus &operator=(const CBus &) = delete;
     friend class Command;
 };
 
@@ -43,5 +45,8 @@ private:
 
     CBus _request;
     CBus _response;
-    Command() {}
+
+    Command() { }
+    Command(const Command &) = delete;
+    Command &operator=(const Command &) = delete;
 };

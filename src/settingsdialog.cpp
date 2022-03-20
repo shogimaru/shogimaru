@@ -7,7 +7,6 @@
 #include "westerntabstyle.h"
 #include <QFileDialog>
 #include <QTabBar>
-#include <QAction>
 #include <QtCore>
 
 static WesternTabStyle westernTabStyle;
@@ -87,7 +86,7 @@ void SettingsDialog::loadSettings(int engineIndex)
         _ui->engineComboBox->setCurrentIndex(engineIndex);
     }
 
-    auto user = User::load();
+    auto &user = User::load();
     _ui->soundOnOffButton->setChecked(user.soundEnable());  // サウンド
     auto *button = _ui->buttonGroup->button(user.pieceType());
     if (button) {
@@ -533,7 +532,7 @@ void SettingsDialog::save()
     EngineSettings::instance().setCurrentIndex(index);
     EngineSettings::instance().save();
 
-    auto user = User::load();
+    auto &user = User::load();
     user.setSoundEnable(_ui->soundOnOffButton->isChecked());  // サウンド
     user.setPieceType(_ui->buttonGroup->checkedId());  // 駒種類
     user.save();

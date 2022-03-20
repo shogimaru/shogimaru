@@ -127,7 +127,7 @@ MainController::MainController(QWidget *parent) :
 
     connect(_ui->newAction, &QAction::triggered, _startDialog, &QDialog::open);
     connect(_ui->settingsAction, &QAction::triggered, this, &MainController::slotSettingsAction);
-    connect(_settingsDialog, &SettingsDialog::finished, this, &MainController::updateButtonStates);
+    connect(_settingsDialog, &SettingsDialog::finished, this, &MainController::updateMainWindow);
     connect(_ui->analysisAction, &QAction::triggered, this, &MainController::slotAnalysisAction);
     connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
@@ -180,9 +180,7 @@ MainController::MainController(QWidget *parent) :
         }
     }
 
-
-    updateButtonStates();
-    updateBoard();
+    updateMainWindow();
 }
 
 
@@ -1185,6 +1183,13 @@ void MainController::updateResize(int resizeMainWindow)
 }
 
 
+void MainController::updateMainWindow()
+{
+    updateButtonStates();
+    updateBoard();
+}
+
+
 void MainController::updateBoard()
 {
     _ui->boardView->resetTransform();
@@ -1264,8 +1269,7 @@ void MainController::slotRecordItemSelected()
     auto sfenstr = _recorder->sfen(idx);
 
     _board->setSfen(sfenstr, false, _recorder->move(idx));
-    updateButtonStates();
-    updateBoard();
+    updateMainWindow();
 
     if (_mode == Watch) {
         auto item = _recorder->scores(idx)[0];
@@ -1537,7 +1541,7 @@ void MainController::clear()
     _ui->messageTableWidget->clear();
     _graph->clear();  // グラフクリア
 
-    updateBoard();
+    updateMainWindow();
 }
 
 

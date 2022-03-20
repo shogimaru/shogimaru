@@ -13,7 +13,7 @@ public:
         QVariantMap options;  // <QString, QVariant>
         QVariantMap types;  // type of option <QString, QMetaType::Type>
 
-        EngineData() {}
+        EngineData() { }
         EngineData(const EngineData &) = default;
         EngineData &operator=(const EngineData &) = default;
         QJsonObject toJsonObject() const;
@@ -35,7 +35,12 @@ public:
     static void setCustomOptions(QVariantMap &options);
 
 private:
-    EngineSettings() {}
+    EngineSettings() { }
+    EngineSettings(const EngineSettings &) = delete;
+    EngineSettings &operator=(const EngineSettings &) = delete;
+    EngineSettings(EngineSettings &&) = default;
+    EngineSettings &operator=(EngineSettings &&) = default;
+
     static EngineSettings load();
     static EngineSettings loadJson(const QString &path);
 

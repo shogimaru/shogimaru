@@ -98,6 +98,8 @@ private:
     };
 
     Engine(QObject *parent = nullptr);
+    Engine(const Engine &) = delete;
+    Engine &operator=(const Engine &) = delete;
 
     QString _enginePath;
     QString _name;

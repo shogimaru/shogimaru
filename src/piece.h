@@ -69,7 +69,6 @@ signals:
 protected:
     void reload();
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    //void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:

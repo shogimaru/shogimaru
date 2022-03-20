@@ -44,6 +44,8 @@ public:
 
 private:
     User() { }
+    User(const User &) = delete;
+    User &operator=(const User &) = delete;
 
     QString _nickname;
     int _rating {0};
