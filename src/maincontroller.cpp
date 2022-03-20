@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <cmath>
 
-constexpr auto SHOGIMARU_VERSION_STR = "1.1";
+constexpr auto SHOGIMARU_VERSION_STR = "1.2";
 const QSize BaseMainWindowSize(960, 820);
 const QList<int> RatingList = {maru::R1000, maru::R1200, maru::R1400, maru::R1600, maru::R1800, maru::R2000, maru::R2200, maru::R2400, maru::R2600, maru::R2800, maru::R3000};
 
