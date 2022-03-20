@@ -100,10 +100,8 @@ void Recorder::recordPonderingScore(int index, int multipv, const ScoreItem &ite
         scrlist.resize(multipv + 1);
     }
 
-    // より多くの局面で評価していた場合に更新
-    if (item.nodes >= scrlist[multipv].nodes) {
-        scrlist[multipv] = item;
-    }
+    // 新しい情報で更新
+    scrlist[multipv] = item;
 }
 
 

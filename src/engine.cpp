@@ -182,7 +182,7 @@ void Engine::sendOptions(const QVariantMap &options)
 
         if (!value.isEmpty() && opt.value.toString() != value) {  // デフォルトと違う場合に実行
             auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
-            qDebug() << "sendOptions:" << bytes;
+            //qDebug() << "sendOptions:" << bytes;
             Command::instance().request(bytes.toStdString());
         }
     }
