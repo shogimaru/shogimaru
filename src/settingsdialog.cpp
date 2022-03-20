@@ -44,8 +44,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     // 個別オプション
     _ui->tableEngineOptions->verticalHeader()->hide();
-    _ui->tableEngineOptions->setStyleSheet("QTableWidget::item {border: solid #ddd;}"
-                                           "QHeaderView::section {border: solid #ddd;}");
+    _ui->tableEngineOptions->setStyleSheet("QHeaderView::section {border-style: solid; border-width: 0 1px 1px 0; border-color: #ddd;}");
     _ui->tableEngineOptions->setColumnCount(2);
     _ui->tableEngineOptions->setHorizontalHeaderItem(0, new QTableWidgetItem(QObject::tr("Option")));
     _ui->tableEngineOptions->setHorizontalHeaderItem(1, new QTableWidgetItem(QObject::tr("Value")));
