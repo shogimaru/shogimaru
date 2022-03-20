@@ -307,7 +307,7 @@ static QString jpText(const QString &name)
         // dlshogi
         {QLatin1String("Best_Book_Move"), QString::fromUtf8(u8"最善定跡使用フラグ")},
         {QLatin1String("Book_File"), QString::fromUtf8(u8"定跡ファイル")},
-        {QLatin1String("Byoyomi_Margin"), QString::fromUtf8(u8"秒読み時の遅延時間")},
+        {QLatin1String("Byoyomi_Margin"), QString::fromUtf8(u8"秒読み時の遅延時間（ミリ秒）")},
         {QLatin1String("C_base"), QString::fromUtf8(u8"探索パラメータ")},
         {QLatin1String("C_base_root"), QString::fromUtf8(u8"探索パラメータ")},
         {QLatin1String("C_fpu_reduction"), QString::fromUtf8(u8"探索パラメータ")},
@@ -345,7 +345,7 @@ static QString jpText(const QString &name)
         {QLatin1String("Resign_Threshold"), QString::fromUtf8(u8"投了する勝率の閾値")},
         {QLatin1String("ReuseSubtree"), QString::fromUtf8(u8"")},
         {QLatin1String("Softmax_Temperature"), QString::fromUtf8(u8"探索のソフトマックス温度")},
-        {QLatin1String("Time_Margin"), QString::fromUtf8(u8"遅延時間")},
+        {QLatin1String("Time_Margin"), QString::fromUtf8(u8"遅延時間（ミリ秒）")},
         {QLatin1String("UCT_NodeLimit"), QString::fromUtf8(u8"最大探索ノード数")},
         {QLatin1String("UCT_Threads"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},
         {QLatin1String("UCT_Threads2"), QString::fromUtf8(u8"GPU1枚あたりの探索のスレッド数")},

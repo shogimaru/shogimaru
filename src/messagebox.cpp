@@ -7,10 +7,14 @@ static QMessageBox *qbox = nullptr;
 
 void MessageBox::information(const QString &title, const QString &text, QObject *receiver, const char *member)
 {
-    delete qbox;
+    if (qbox) {
+        qbox->deleteLater();
+    }
     qbox = nullptr;
 
-    delete ibox;
+    if (ibox) {
+        ibox->deleteLater();
+    }
     ibox = new QMessageBox(QMessageBox::Information, title, text, QMessageBox::Ok
 #ifndef Q_OS_WASM
         ,
@@ -31,10 +35,14 @@ void MessageBox::information(const QString &title, const QString &text, QObject 
 
 void MessageBox::question(const QString &title, const QString &text, QObject *receiver, const char *member)
 {
-    delete ibox;
+    if (ibox) {
+        ibox->deleteLater();
+    }
     ibox = nullptr;
 
-    delete qbox;
+    if (qbox) {
+        qbox->deleteLater();
+    }
     qbox = new QMessageBox(QMessageBox::Question, title, text, QMessageBox::Ok | QMessageBox::Cancel
 #ifndef Q_OS_WASM
         ,
