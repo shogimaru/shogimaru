@@ -1,6 +1,7 @@
 #include "sound.h"
-#include <QMediaPlayer>
+#include "user.h"
 #include <QAudioOutput>
+#include <QMediaPlayer>
 
 
 void Sound::playBleep()
@@ -14,8 +15,11 @@ void Sound::playBleep()
         player->setSource(QUrl::fromLocalFile("assets/sounds/bleep.wav"));
         return player;
     }();
-    player->stop();
-    player->play();
+
+    if (User::load().soundEnable()) {
+        player->stop();
+        player->play();
+    }
 #endif
 }
 
@@ -31,7 +35,10 @@ void Sound::playSnap()
         player->setSource(QUrl::fromLocalFile("assets/sounds/snap.wav"));
         return player;
     }();
-    player->stop();
-    player->play();
+
+    if (User::load().soundEnable()) {
+        player->stop();
+        player->play();
+    }
 #endif
 }

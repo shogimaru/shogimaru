@@ -18,6 +18,9 @@ const QLatin1String BasicTime("basicTime");
 const QLatin1String AnalysisTimeSeconds("analysisTimeSeconds");
 const QLatin1String AnalysisNodes("analysisNodes");
 const QLatin1String AnalysisDepth("analysisDepth");
+const QLatin1String SoundEnable("soundEnable");
+const QLatin1String PieceType("pieceType");
+
 
 bool User::save()
 {
@@ -35,6 +38,8 @@ bool User::save()
     json[AnalysisTimeSeconds] = analysisTimeSeconds();
     json[AnalysisNodes] = analysisNodes();
     json[AnalysisDepth] = analysisDepth();
+    json[SoundEnable] = soundEnable();
+    json[PieceType] = pieceType();
 
     File file(jsonPath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -122,6 +127,14 @@ User &User::load()
 
     if (json.contains(AnalysisDepth)) {
         user._analysisDepth = json[AnalysisDepth].toInt();
+    }
+
+    if (json.contains(SoundEnable)) {
+        user._soundEnable = json[SoundEnable].toBool();
+    }
+
+    if (json.contains(PieceType)) {
+        user._pieceType = json[PieceType].toInt();
     }
 
     return user;

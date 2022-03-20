@@ -3,9 +3,11 @@
 #include "enginesettings.h"
 #include "messagebox.h"
 #include "ui_settingsdialog.h"
+#include "user.h"
 #include "westerntabstyle.h"
 #include <QFileDialog>
 #include <QTabBar>
+#include <QAction>
 #include <QtCore>
 
 static WesternTabStyle westernTabStyle;
@@ -31,6 +33,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 #else
     connect(_ui->engineComboBox, &QComboBox::currentIndexChanged, this, &SettingsDialog::switchEngineOptions);
 #endif
+    connect(_ui->soundOnOffButton, &QToolButton::toggled, [this](bool checked) {
+        auto text = (checked) ? tr("ON") : tr("OFF");
+        _ui->soundOnOffButton->setText(text);
+    });
 
 #ifdef Q_OS_WASM
     _ui->newEngineButton->hide();
@@ -44,6 +50,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     _ui->tableEngineOptions->setWordWrap(false);
     _ui->tableEngineOptions->setColumnWidth(0, 200);  // 1列目の幅
     _ui->tableEngineOptions->horizontalHeader()->setStretchLastSection(true);
+
+    // 駒種類選択ラジオボタン
+    _ui->buttonGroup->setId(_ui->radioPiece1, 1);
+    _ui->buttonGroup->setId(_ui->radioPiece2, 2);
 }
 
 
@@ -54,7 +64,7 @@ void SettingsDialog::open()
 }
 
 
-void SettingsDialog::loadSettings(int currentIndex)
+void SettingsDialog::loadSettings(int engineIndex)
 {
     // エンジン設定読込
     const auto &availableEngines = EngineSettings::instance().availableEngines();
@@ -73,8 +83,15 @@ void SettingsDialog::loadSettings(int currentIndex)
     _ui->engineComboBox->blockSignals(false);  // シグナル有効化
 
     // 現在インデックスの設定
-    if (currentIndex >= 0 && currentIndex < _ui->engineComboBox->count()) {
-        _ui->engineComboBox->setCurrentIndex(currentIndex);
+    if (engineIndex >= 0 && engineIndex < _ui->engineComboBox->count()) {
+        _ui->engineComboBox->setCurrentIndex(engineIndex);
+    }
+
+    auto user = User::load();
+    _ui->soundOnOffButton->setChecked(user.soundEnable());  // サウンド
+    auto *button = _ui->buttonGroup->button(user.pieceType());
+    if (button) {
+        button->setChecked(true);  // 駒種類
     }
 }
 
@@ -515,4 +532,9 @@ void SettingsDialog::save()
     updateEngineOptions(index);
     EngineSettings::instance().setCurrentIndex(index);
     EngineSettings::instance().save();
+
+    auto user = User::load();
+    user.setSoundEnable(_ui->soundOnOffButton->isChecked());  // サウンド
+    user.setPieceType(_ui->buttonGroup->checkedId());  // 駒種類
+    user.save();
 }

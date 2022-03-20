@@ -29,7 +29,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tabEngine">
     <attribute name="title">
@@ -197,7 +197,10 @@
       </rect>
      </property>
      <property name="text">
-      <string>ON</string>
+      <string>OFF</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QRadioButton" name="radioPiece1">

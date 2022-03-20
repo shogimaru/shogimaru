@@ -1,5 +1,6 @@
 #include "piece.h"
 #include "badge.h"
+#include "user.h"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QGraphicsScene>
@@ -79,7 +80,7 @@ public:
 };
 
 
-static QPixmap piecePixmap(int piece)
+static QPixmap piecePixmap(int piece, int type)
 {
     static QMap<int, QPixmap> pixmapMap;
     static ImageFileMap imageFileMap;
@@ -88,11 +89,12 @@ static QPixmap piecePixmap(int piece)
         return QPixmap();
     }
 
-    QPixmap pix = pixmapMap.value(piece);
+    int key = (type << 24) | piece;
+    QPixmap pix = pixmapMap.value(key);
     if (pix.isNull()) {
         auto img = imageFileMap.value(piece);
         if (!img.isEmpty()) {
-            const QString dir = QLatin1String("assets/images/");
+            const QString dir = QLatin1String("assets/images/") + QString::number(type) + "/";
             pix = QPixmap(dir + img);
             if (piece & Piece::Rotated) {
                 // 180度回転
@@ -101,9 +103,9 @@ static QPixmap piecePixmap(int piece)
                 transform.rotate(180);
                 pix = pix.transformed(transform);
             }
-            pixmapMap.insert(piece, pix);
+            pixmapMap.insert(key, pix);
         } else {
-            qDebug() << piece;
+            qDebug() << "piece:" << piece << "type:" << type;
         }
     }
     return pix;
@@ -173,7 +175,7 @@ QByteArray Piece::sfen() const
 // 再描画
 void Piece::reload()
 {
-    auto pix = piecePixmap(_name | _orient | (showRotated ? Rotated : 0));
+    auto pix = piecePixmap(_name | _orient | (showRotated ? Rotated : 0), User::load().pieceType());
     if (!pix.isNull()) {
         setPixmap(pix);
         setFlags(QGraphicsItem::ItemIsSelectable);

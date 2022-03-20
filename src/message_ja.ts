@@ -853,32 +853,32 @@
         <translation type="unfinished">持将棋</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="42"/>
+        <location filename="settingsdialog.cpp" line="48"/>
         <source>Option</source>
         <translation type="unfinished">オプション</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="43"/>
+        <location filename="settingsdialog.cpp" line="49"/>
         <source>Value</source>
         <translation type="unfinished">値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="176"/>
+        <location filename="settingsdialog.cpp" line="193"/>
         <source>Executable (*.exe)</source>
         <translation type="unfinished">実行ファイル (*.exe)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="178"/>
+        <location filename="settingsdialog.cpp" line="195"/>
         <source>Executable (*)</source>
         <translation type="unfinished">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="181"/>
+        <location filename="settingsdialog.cpp" line="198"/>
         <source>Select Engine</source>
         <translation type="unfinished">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="377"/>
+        <location filename="settingsdialog.cpp" line="397"/>
         <source>Select Directory</source>
         <translation type="unfinished">ディレクトリ選択</translation>
     </message>
@@ -1029,6 +1029,12 @@
         <translation type="unfinished">削除</translation>
     </message>
     <message>
+        <location filename="../forms/settingsdialog.ui" line="200"/>
+        <location filename="settingsdialog.cpp" line="37"/>
+        <source>OFF</source>
+        <translation type="unfinished">オフ</translation>
+    </message>
+    <message>
         <source>Special options</source>
         <translation type="obsolete">個別エンジンオプション</translation>
     </message>
@@ -1071,22 +1077,22 @@
         <translation type="unfinished">駒の種類</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="200"/>
+        <location filename="settingsdialog.cpp" line="37"/>
         <source>ON</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="213"/>
+        <location filename="../forms/settingsdialog.ui" line="216"/>
         <source>Piece1</source>
         <translation type="unfinished">駒１</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="229"/>
+        <location filename="../forms/settingsdialog.ui" line="232"/>
         <source>Piece2</source>
         <translation type="unfinished">駒２</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="247"/>
+        <location filename="../forms/settingsdialog.ui" line="250"/>
         <source>Close</source>
         <translation type="unfinished">閉じる</translation>
     </message>
@@ -1103,58 +1109,58 @@
         <translation type="obsolete">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="189"/>
+        <location filename="settingsdialog.cpp" line="206"/>
         <source>Invalid file</source>
         <translation type="unfinished">ファイル不正</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="189"/>
+        <location filename="settingsdialog.cpp" line="206"/>
         <source>File not executable</source>
         <translation type="unfinished">実行可能なファイルではありません</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="215"/>
+        <location filename="settingsdialog.cpp" line="232"/>
         <source>Delete %1.
 Are you sure?</source>
         <translation type="unfinished">%1 を削除します。
 よろしいですか。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="216"/>
+        <location filename="settingsdialog.cpp" line="233"/>
         <source>Delete engine</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="389"/>
+        <location filename="settingsdialog.cpp" line="413"/>
         <source>Select File</source>
         <translation type="unfinished">ファイル選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="417"/>
+        <location filename="settingsdialog.cpp" line="441"/>
         <source>Default</source>
         <translation type="unfinished">初期値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="429"/>
+        <location filename="settingsdialog.cpp" line="453"/>
         <source>Max</source>
         <translation type="unfinished">最大</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="433"/>
+        <location filename="settingsdialog.cpp" line="457"/>
         <source>Min</source>
         <translation type="unfinished">最小</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="143"/>
-        <location filename="settingsdialog.cpp" line="401"/>
-        <location filename="settingsdialog.cpp" line="420"/>
+        <location filename="settingsdialog.cpp" line="160"/>
+        <location filename="settingsdialog.cpp" line="425"/>
+        <location filename="settingsdialog.cpp" line="444"/>
         <source>true</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="143"/>
-        <location filename="settingsdialog.cpp" line="401"/>
-        <location filename="settingsdialog.cpp" line="420"/>
+        <location filename="settingsdialog.cpp" line="160"/>
+        <location filename="settingsdialog.cpp" line="425"/>
+        <location filename="settingsdialog.cpp" line="444"/>
         <source>false</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1163,12 +1169,12 @@ Are you sure?</source>
         <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="444"/>
+        <location filename="settingsdialog.cpp" line="468"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="444"/>
+        <location filename="settingsdialog.cpp" line="468"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。

@@ -1,6 +1,7 @@
 #include "sound.h"
-#include <QString>
+#include "user.h"
 #include <QDebug>
+#include <QString>
 #include <SDL/SDL_mixer.h>
 #include <mutex>
 
@@ -64,12 +65,16 @@ void Audio::stop()
 void Sound::playBleep()
 {
     static Audio bleep("assets/sounds/bleep.wav", 0);
-    bleep.play();
+    if (User::load().soundEnable()) {
+        bleep.play();
+    }
 }
 
 
 void Sound::playSnap()
 {
     static Audio bleep("assets/sounds/snap.wav", 1);
-    bleep.play();
+    if (User::load().soundEnable()) {
+        bleep.play();
+    }
 }

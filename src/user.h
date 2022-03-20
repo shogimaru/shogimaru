@@ -31,6 +31,10 @@ public:
     void setAnalysisNodes(qint64 nodes) { _analysisNodes = nodes; }
     int analysisDepth() const { return _analysisDepth; }
     void setAnalysisDepth(int depth) { _analysisDepth = depth; }
+    bool soundEnable() const { return _soundEnable; }
+    void setSoundEnable(bool enable) { _soundEnable = enable; }
+    int pieceType() const { return _pieceType; }
+    void setPieceType(int type) { _pieceType = type; }
     int version() const { return _version; }
     void setVersion(int version) { _version = version; }
 
@@ -47,11 +51,13 @@ private:
     int _losses {0};
     int _draws {0};
     int _illegal {0};
-    int _scale {80};  // 将棋盤拡縮値
-    int _byoyomi {0};
+    int _scale {80};  // 将棋盤拡縮値(%)
+    int _byoyomi {0};  // 秒読み
     int _basicTime {0};  // 持ち時間(分)
     int _analysisTimeSeconds {-10};  // 解析時間(秒/手)
     qint64 _analysisNodes {-1000000000};  // 解析ノード
     int _analysisDepth {-23};  // 解析深度
+    bool _soundEnable {true};  // サウンド有効
+    int _pieceType {1};  // 駒種類
     int _version {1};
 };
