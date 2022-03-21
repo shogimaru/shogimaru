@@ -4,9 +4,14 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/shogimaru/shogimaru.svg)](https://github.com/shogimaru/shogimaru/releases)
 
-ブラウザでも本格的な将棋が指せることを目指して、オープンソースの将棋 GUI を作っています。
-将棋思考エンジンにはやねうら王、UI には Qt/WebAssembly を使用しています。  
-棋譜の解析モードも実装されています。
+将棋丸はオープンソースの将棋 GUI です。
+次のような特徴があります。
+
+- クロスプラットフォーム - Windows, macOS, Linux, WebAssembly
+- 多くの将棋思考エンジンに対応
+- MultiPV 対応
+- 棋譜の解析モード
+- 棋譜読込・保存
 
 ## ダウンロード
 
@@ -59,9 +64,8 @@
 
 ## 開発
 
-将棋丸はオープンソースであり、[GitHub](https://github.com/shogimaru/shogimaru) で公開されています。
+将棋丸はオープンソースであり [GitHub](https://github.com/shogimaru/shogimaru) で公開されています。
 
 ### Twitter
 
-時々つぶやくかも
-[@shogimaru](https://twitter.com/shogimaru)
+時々つぶやくかも [@shogimaru](https://twitter.com/shogimaru)
