@@ -140,6 +140,7 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
     options["Threads"].setValue(threads);
 
     options["BookDir"].setValue(QString("assets/YaneuraOu"));
+    options["BookFile"].setValue(QString("user_book1.db"));
     options["EvalDir"].setValue(QString("assets/YaneuraOu/nnue-kp256"));
 }
 

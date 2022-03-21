@@ -268,7 +268,7 @@ static QString jpText(const QString &name)
         {QLatin1String("NetworkDelay"), QString::fromUtf8(u8"通信時の平均遅延時間（ミリ秒）")},
         {QLatin1String("NetworkDelay2"), QString::fromUtf8(u8"通信時の最大遅延時間（ミリ秒）")},
         {QLatin1String("MinimumThinkingTime"), QString::fromUtf8(u8"最小思考時間（ミリ秒）")},
-        {QLatin1String("SlowMover"), QString::fromUtf8(u8"序盤重視率(%)")},
+        {QLatin1String("SlowMover"), QString::fromUtf8(u8"序盤重視率(%) （対局では自動的に値が設定される）")},
         {QLatin1String("MaxMovesToDraw"), QString::fromUtf8(u8"終局までの手数（0は無制限）")},
         {QLatin1String("DepthLimit"), QString::fromUtf8(u8"探索深さの制限（0は無制限）")},
         {QLatin1String("NodesLimit"), QString::fromUtf8(u8"探索ノード数の制限（0は無制限）")},
@@ -370,8 +370,6 @@ static QString jpText(const QString &name)
 
 void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 {
-    static const bool langJa = QLocale::system().name().toLower().startsWith("ja");
-
     if (!item) {
         return;
     }
@@ -432,7 +430,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
     if (optItem) {
         auto option = _defaultOptions.value(optItem->text());
         QString str = optItem->text();
-        if (langJa) {
+        if (maru::isLocaleLangJapanese()) {
             QString jp = jpText(optItem->text());
             if (!jp.isEmpty()) {
                 str = jp;

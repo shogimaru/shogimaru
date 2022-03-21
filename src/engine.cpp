@@ -162,6 +162,7 @@ void Engine::setStartPosition(const QByteArray &sfen)
 void Engine::sendOptions(const QVariantMap &options)
 {
     QString value;
+
     for (auto it = options.begin(); it != options.end(); ++it) {
         auto opt = _defaultOptions.value(it.key());
 #if QT_VERSION < 0x060000
@@ -180,7 +181,8 @@ void Engine::sendOptions(const QVariantMap &options)
         }
         value = value.trimmed();
 
-        if (!value.isEmpty() && opt.value.toString() != value) {  // デフォルトと違う場合に実行
+        // 設定が変更されていようがいまいが全て送る
+        if (!it.key().isEmpty() && !value.isEmpty()) {
             auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
             //qDebug() << "sendOptions:" << bytes;
             Command::instance().request(bytes.toStdString());
@@ -212,33 +214,18 @@ bool Engine::newGame(int slowMover)
     }
 
     Command::instance().clearResponse();
-#if 0
-    Command::instance().request("setoption name MultiPV value 1");
-    Command::instance().request("setoption name BookFile value user_book1.db");  // 定跡ファイル:100テラショック定跡
-    Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
-    Command::instance().request("setoption name BookMoves value 256");
-    Command::instance().request("setoption name BookEvalDiff value 30");  // 最善手のみを採用するなら0に。ソフトが指す定跡に幅を持たせたいなら、10〜50ぐらいの大きめの値に。
-    //Command::instance().request("setoption name BookFile value no_book");  // 定跡を使わない
-    Command::instance().request("setoption name SlowMover value " + std::to_string(slowMover));  // 序盤重視率[%]
-    //qDebug() << "序盤重視率(SlowMover):" << slowMover;
-    std::string cmd = std::string("setoption name SkillLevel value ") + std::to_string(_level);
-    Command::instance().request(cmd);
-#else
+
     QVariantMap opts = _options;
-    auto def = _defaultOptions.value("MultiPV");  // 対局では1
-    if (!def.value.isNull()) {
+    if (opts.contains("MultiPV")) {  // 対局では1
         opts.insert("MultiPV", 1);
     }
-    def = _defaultOptions.value("SlowMover");  // 序盤重視率[%]
-    if (!def.value.isNull()) {
+    if (opts.contains("SlowMover")) {  // 序盤重視率[%]
         opts.insert("SlowMover", slowMover);
     }
-    def = _defaultOptions.value("SkillLevel");
-    if (!def.value.isNull()) {
+    if (opts.contains("SkillLevel")) {
         opts.insert("SkillLevel", _level);
     }
     sendOptions(opts);
-#endif
 
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
@@ -269,25 +256,8 @@ bool Engine::startAnalysis()
     }
 
     Command::instance().clearResponse();
-#if 0
-    Command::instance().request("setoption name MultiPV value 5");
-    Command::instance().request("setoption name BookDepthLimit value 0");  // やねうら王用の定跡専用オプション
-    Command::instance().request("setoption name BookMoves value 0");  // 定跡を用いる手数
-    Command::instance().request("setoption name BookEvalDiff value 0");  // 最善手のみを採用するなら0に。ソフトが指す定跡に幅を持たせたいなら、10〜50ぐらいの大きめの値に。
-    Command::instance().request("setoption name SlowMover value 100");  // 序盤重視率[%]
-    Command::instance().request("setoption name SkillLevel value 20");  // MAX値
-#else
-    QVariantMap opts = _options;
-    auto def = _defaultOptions.value("SlowMover");
-    if (!def.value.isNull()) {
-        opts.insert("SlowMover", def.value);
-    }
-    def = _defaultOptions.value("SkillLevel");
-    if (!def.value.isNull()) {
-        opts.insert("SkillLevel", def.value);
-    }
-    sendOptions(opts);
-#endif
+    //qDebug() << _options;
+    sendOptions(_options);
 
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始

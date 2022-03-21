@@ -156,4 +156,10 @@ QWidget *mainWindow()
     return widget;
 }
 
+bool isLocaleLangJapanese()
+{
+    static const bool langJa = QLocale::system().name().toLower().startsWith("ja");
+    return langJa;
+}
+
 }

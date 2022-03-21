@@ -1059,7 +1059,7 @@
     <message>
         <location filename="../forms/settingsdialog.ui" line="107"/>
         <source>Engine options</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">エンジンオプション</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="162"/>

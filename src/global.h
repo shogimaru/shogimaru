@@ -79,14 +79,17 @@ void setGlobalIntParameter(ParameterName name, int64_t value);
 QString globalStringParameter(ParameterName name);
 void setGlobalStringParameter(ParameterName name, const QString &value);
 
+// std::string用
 std::string toLower(const std::string &str);
 std::string trim(const std::string &input);
 bool contains(const std::list<std::string> &stringlist, const std::string &str);
 std::string join(const std::list<std::string> &stringlist, const std::string &separator);
 std::vector<std::string> split(const std::string &str, char sep, bool skipEmptyParts = false);
+
 int random(int min, int max);
 QString elideText(const QString &text, int width, const QFont &font);
 QString elideText(const QString &text, const QLabel *label);
 QWidget *mainWindow();
+bool isLocaleLangJapanese();
 
 }

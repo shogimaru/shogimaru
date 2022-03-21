@@ -84,8 +84,6 @@ QString ShogiRecord::kanjiName(const QString &piece)
 //
 QString ShogiRecord::kifString(maru::Turn turn, const QByteArray &usi, const QByteArray &piece, int prevCoord, bool compact)
 {
-    static const bool langJa = QLocale::system().name().toLower().startsWith("ja");
-
     QString kifFormat = QObject::tr("%1%2%3%4%5");
     // 先手／後手
     QString bw = (turn == maru::Sente) ? QString::fromUtf8(u8"▲") : QString::fromUtf8(u8"△");
@@ -94,7 +92,7 @@ QString ShogiRecord::kifString(maru::Turn turn, const QByteArray &usi, const QBy
     QString coord;
     int crd = ShogiRecord::usiToCoord(usi.mid(2, 2));
     if (crd == prevCoord) {
-        if (langJa) {
+        if (maru::isLocaleLangJapanese()) {
             coord = (compact) ? QString::fromUtf8(u8"同") : QString::fromUtf8(u8"同  ");
         } else {
             coord  = "x";

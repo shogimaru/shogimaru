@@ -1,8 +1,9 @@
 #include "user.h"
 #include "file.h"
-#include <QString>
+#include "global.h"
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QString>
 
 const QLatin1String jsonPath("user.json");
 const QLatin1String Version("version");
@@ -20,6 +21,14 @@ const QLatin1String AnalysisNodes("analysisNodes");
 const QLatin1String AnalysisDepth("analysisDepth");
 const QLatin1String SoundEnable("soundEnable");
 const QLatin1String PieceType("pieceType");
+
+
+User::User()
+{
+    if (!maru::isLocaleLangJapanese()) {
+        _pieceType = 2;  // 英語圏のデフォルト駒：一字彫駒
+    }
+}
 
 
 bool User::save()

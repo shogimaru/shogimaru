@@ -43,7 +43,7 @@ public:
     static User &load();
 
 private:
-    User() { }
+    User();
     User(const User &) = delete;
     User &operator=(const User &) = delete;
 
