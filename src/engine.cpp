@@ -229,7 +229,7 @@ bool Engine::newGame(int slowMover)
 
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
-    _errorTimer->start(3000);  // エラータイマー開始
+    _errorTimer->start(12000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
     return true;
 }
 
