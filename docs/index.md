@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/shogimaru/shogimaru.svg)](https://github.com/shogimaru/shogimaru/releases)
 
-将棋丸はオープンソースの将棋 GUI です。
+将棋丸はオープンソースの将棋 GUI です。将棋を指すには将棋思考エンジンが別途必要です。将棋思考エンジンのリンクは下記参照。
 次のような特徴があります。
 
 - クロスプラットフォーム - Windows, macOS, Linux, WebAssembly
@@ -62,10 +62,25 @@
 勝ったらプラス(+1〜+31)
 負けたらマイナス(-31〜-1)
 
-## 開発
+### 開発
 
 将棋丸はオープンソースであり [GitHub](https://github.com/shogimaru/shogimaru) で公開されています。
 
 ### Twitter
 
 時々つぶやくかも [@shogimaru](https://twitter.com/shogimaru)
+
+### 将棋思考エンジン
+
+将棋思考エンジンのダウンロードリンクを集めてみました（順不同）
+| エンジン名 | ダウンロード | 備考 |
+|-----------|---------|------|
+| [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠 | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases) | 実行ファイル詰め合わせ EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
+| [Apery](https://hiraokatakuya.github.io/apery/) | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)|  |
+| [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html) | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する |
+| [dlshogi](https://github.com/TadaoYamaoka/DeepLearningShogi) | [リリースページ](https://github.com/TadaoYamaoka/DeepLearningShogi/releases) | ディープラーニング系 |
+| [技巧](https://github.com/gikou-official/Gikou) | [リリースページ](https://github.com/gikou-official/Gikou/releases) |
+| [芝浦将棋Softmax](https://github.com/tanuki12hiromasa/ShogiStudyThird) | [リリースページ](https://github.com/tanuki12hiromasa/ShogiStudyThird/releases/tag/210331) | 他にもファイルを置かないといけないみたい |
+| [白ビール](https://github.com/Tama4649/Kristallweizen) | | 評価関数ファイルをやねうら王に設定する |
+| [たぬきち](https://github.com/nodchip/tanuki-) | [リリースページ](https://github.com/nodchip/tanuki-/releases) | やねうら王ベース
+| [GPS 将棋](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/) | [ダウンロードページ](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/index.php?%A5%C0%A5%A6%A5%F3%A5%ED%A1%BC%A5%C9) | もう更新されていない？ |
