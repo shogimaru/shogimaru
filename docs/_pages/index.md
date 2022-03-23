@@ -43,19 +43,19 @@ toc: true
 
 将棋思考エンジンに SkillLevel オプションがある場合（やねうら王など）、次のとおり自動的に値が設定されます。
 
-| SkillLevel | Rating |
-| ---------- | -------- |
-| 20 | 3000 最強（手加減なし） |
-| 18 | 2800 |
-| 16 | 2600 |
-| 14 | 2400 |
-| 12 | 2200 |
-| 10 | 2000 |
-| 8 | 1800 |
-| 6 | 1600 |
-| 4 | 1400 |
-| 2 | 1200 |
-| 0 | 1000 最弱 |
+| SkillLevel | Rating                  |
+| ---------- | ----------------------- |
+| 20         | 3000 最強（手加減なし） |
+| 18         | 2800                    |
+| 16         | 2600                    |
+| 14         | 2400                    |
+| 12         | 2200                    |
+| 10         | 2000                    |
+| 8          | 1800                    |
+| 6          | 1600                    |
+| 4          | 1400                    |
+| 2          | 1200                    |
+| 0          | 1000 最弱               |
 
 #### 対局終了後のレーティング計算
 
@@ -71,17 +71,13 @@ toc: true
 
 将棋丸はオープンソースであり [GitHub](https://github.com/shogimaru/shogimaru) で公開されています。
 
-### Twitter
-
-時々つぶやくかも [@shogimaru](https://twitter.com/shogimaru)
-
 ### 将棋思考エンジン
 
 将棋思考エンジンのダウンロードリンクを集めてみました（順不同）
 
 | エンジン名                                                              | ダウンロード                                                                                                             | 備考                                                                         |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| [やねうら王](https://yaneuraou.yaneu.com/) ふかうら王 水匠              | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
+| [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠              | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
 | [Apery](https://hiraokatakuya.github.io/apery/)                         | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)                                                        |                                                                              |
 | [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html)           | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する                         |
 | [dlshogi](https://github.com/TadaoYamaoka/DeepLearningShogi)            | [リリースページ](https://github.com/TadaoYamaoka/DeepLearningShogi/releases)                                             | ディープラーニング系                                                         |
