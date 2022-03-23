@@ -12,6 +12,7 @@ Makefile
 core
 engines.json
 kifu.dat
+Gemfile.lock
 
 **/*.dll
 **/*.ilk

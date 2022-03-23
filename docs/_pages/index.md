@@ -11,7 +11,7 @@ toc: true
 [![Release](https://img.shields.io/github/v/release/shogimaru/shogimaru.svg)](https://github.com/shogimaru/shogimaru/releases)
 
 将棋丸はオープンソースの将棋 GUI です。  
-将棋を指すには将棋思考エンジンが別途必要です。将棋思考エンジンのリンクは下記参照。次のような特徴があります。
+次のような特徴があります。
 
 - クロスプラットフォーム - Windows, macOS, Linux, WebAssembly
 - 多くの将棋思考エンジンに対応
@@ -21,6 +21,9 @@ toc: true
 
 [ダウンロード]({{ "https://github.com/shogimaru/shogimaru/releases" }}){: .btn .btn--success .btn--medium}
 [将棋丸ブラウザ版]({{ "https://shogimaru.com" }}){: .btn .btn--info .btn--medium}
+
+**※** 将棋を指すには **[将棋思考エンジン](#将棋思考エンジン)** が別途必要です。
+{: .notice--warning}
 
 ## 実行
 
@@ -73,11 +76,15 @@ toc: true
 
 ### 将棋思考エンジン
 
+将棋ソフトの開発者にとって「いかにソフトを強くするか」が重要であり、駒移動や盤面表示などの GUI は本質的な部分ではありません。強さを追求したい開発者にとって、GUI も作成するのはかなり面倒なことので、将棋ソフトは思考エンジン（アルゴリズム）と GUI の２つのプログラムに分離されました。
+
+この２つのプログラムは USI プロトコル（Universal Shogi Interface）という通信規約でやりとりすることになっており、この規約が実装されている思考エンジンとGUIとを組み合わせることで将棋ソフトとして使用することができます。
+
 将棋思考エンジンのダウンロードリンクを集めてみました（順不同）
 
 | エンジン名                                                              | ダウンロード                                                                                                             | 備考                                                                         |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠              | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
+| [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠            | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
 | [Apery](https://hiraokatakuya.github.io/apery/)                         | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)                                                        |                                                                              |
 | [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html)           | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する                         |
 | [dlshogi](https://github.com/TadaoYamaoka/DeepLearningShogi)            | [リリースページ](https://github.com/TadaoYamaoka/DeepLearningShogi/releases)                                             | ディープラーニング系                                                         |
