@@ -17,3 +17,6 @@ kifu.dat
 **/*.ilk
 **/*.pdb
 **/*.exe
+
+.jekyll-cache/
+docs/_site/
