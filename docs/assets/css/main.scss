@@ -1,0 +1,12 @@
+---
+---
+
+@charset "utf-8";
+@import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
+@import "minimal-mistakes"; // main partials
+
+body {
+  font-family: "ヒラギノ角ゴ Pro", "Hiragino Kaku Gothic Pro", "メイリオ",
+    "Meiryo,Osaka", "ＭＳ Ｐゴシック", "MS PGothic", "sans-serif";
+    font-size: 0.85em;
+}
