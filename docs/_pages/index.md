@@ -18,19 +18,19 @@ toc: true
 - 棋譜の解析モード
 - 棋譜読込・保存
 
-[ダウンロード]({{ "https://github.com/shogimaru/shogimaru/releases" }}){: .btn .btn--success .btn--medium}
-[将棋丸ブラウザ版]({{ "https://shogimaru.com" }}){: .btn .btn--info .btn--medium}
+[<i class="fas fa-cloud-download-alt"></i> ダウンロード]({{ "https://github.com/shogimaru/shogimaru/releases" }}){: .btn .btn--success .btn--medium}
+[将棋丸ブラウザ版 <i class="fas fa-arrow-right"></i>]({{ "https://shogimaru.com" }}){: .btn .btn--info .btn--medium}
 
 デスクトップ版では **[将棋思考エンジン](#将棋思考エンジン)** が別途必要です。
 {: .notice--warning}
 
-ブラウザ版（WebAssembly）はスマートフォンでは動作しません（2022 年 1 月時点）。  
+ブラウザ版は PC のブラウザ（Chrome や Firefox など）で動作します。2022 年 1 月時点でスマートフォンでは動作しません。
 今後対応予定です。
 {: .notice--info}
 
-## 実行
+## <i class="far fa-paper-plane"></i> 実行
 
-### ブラウザ版（WebAssembly）
+### <i class="fab fa-mixcloud"></i> ブラウザ版（WebAssembly）
 
 セットアップが不要で、ネットにさえつながれば手軽に遊べます。
 
@@ -39,12 +39,9 @@ toc: true
 
 計算処理スピードはデスクトップ版に劣りますが十分に強いです:laughing:
 
-### デスクトップ版
+### <i class="fas fa-desktop"></i> デスクトップ版
 
-CPU/GPU をフルに活用し処理スピードを高めるためにはデスクトップ版を使います。
-
-デスクトップ版では将棋思考エンジンを手動で設定する必要があります。将棋思考エンジンを 2 つ以上設定し、適宜切り替えて対局や棋譜解析することができます。
-
+CPU/GPU をフルに活用し計算スピードを高めるためにはデスクトップ版を使います。  
 将棋思考エンジンを設定するために、次の手順でセットアップします。
 
 1.  あらかじめ将棋思考エンジンをダウンロードし、フォルダへ展開しておきます。
@@ -53,6 +50,8 @@ CPU/GPU をフルに活用し処理スピードを高めるためにはデスク
 4.  `追加`ボタンをクリックし、1.で展開した将棋思考エンジンの実行ファイル(exe)を選択します。
 5.  設定可能なオプションの一覧が表示されるので、必要に応じてオプションの値を変更します。初期値のままで動作することがありますが、エラーになる場合は定跡ファイルの格納ディレクトリ（BookDir）や評価関数用ファイルの格納ディレクトリ（EvalDir）などを正しく設定します。
 6.  設定画面を閉じた後、`対局`ボタンをクリックして対局を開始します。
+
+将棋思考エンジンは 2 つ以上登録でき、適宜切り替えて対局や棋譜解析することができます。
 
 ### レーティング戦
 
@@ -82,32 +81,45 @@ CPU/GPU をフルに活用し処理スピードを高めるためにはデスク
 通常式: `新R = 旧R + ((相手R - 旧R) ± 400) / 25`  
  N: 通算対局数
 
-25 局目以降
+25 局目以降:  
+勝ったらプラス(+1〜+31)  
+負けたらマイナス(-31〜-1)
 
-- 勝ったらプラス(+1〜+31)
-- 負けたらマイナス(-31〜-1)
-
-## 開発
+## <i class="fas fa-laptop-code"></i> 開発
 
 将棋丸はオープンソースであり [GitHub](https://github.com/shogimaru/shogimaru) で公開されています。  
 要望やバグ報告などお待ちしています。
 
-## 将棋思考エンジン
+## <i class="fas fa-brain"></i> 将棋思考エンジン
 
-将棋ソフトの開発者にとって「いかにソフトを強くするか」が重要であり、駒移動や盤面表示などの GUI はあまり本質的な部分ではありません。強さを追求したい開発者にとって、GUI も作成するのはかなり面倒なことなので、将棋ソフトは思考エンジン（アルゴリズム）と GUI の２つのプログラムに分離されました。
+将棋ソフトの開発者にとって「いかにソフトを強くするか」に興味があり、駒移動や盤面表示などの GUI はあまり本質的な部分とは考えられていません。強さを追究したい開発者にとって、GUI も作成するのはかなり面倒なことなので、将棋ソフトは思考エンジン（アルゴリズム）と GUI の２つのプログラムに分離されました。
 
 この２つのプログラムは USI プロトコル（Universal Shogi Interface）という通信規約でやりとりすることになっており、この規約が実装されている思考エンジンと GUI とを組み合わせることにより将棋ソフトとして使用することができます。
 
-将棋思考エンジンのダウンロードリンクを集めてみました（順不同）
+思考エンジンにとって 、局面を評価し数値化する「評価関数」が強さに直結するものであり、この部分（評価関数ファイルと呼ぶ）を差し替えるができるものがあります。
 
-| エンジン名                                                              | ダウンロード                                                                                                             | 備考                                                                         |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠            | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
-| [Apery](https://hiraokatakuya.github.io/apery/)                         | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)                                                        |                                                                              |
-| [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html)           | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する                         |
-| [dlshogi](https://github.com/TadaoYamaoka/DeepLearningShogi)            | [リリースページ](https://github.com/TadaoYamaoka/DeepLearningShogi/releases)                                             | ディープラーニング系                                                         |
+思考エンジンのダウンロードリンクを集めてみました（順不同）
+
+| 思考エンジン                                                            | ダウンロード                                                                                                             | 備考                                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠            | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ。EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
+| [Apery](https://hiraokatakuya.github.io/apery/)                         | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)                                                        |                                                                               |
+| [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html)           | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する                          |
+| [dlshogi](https://github.com/TadaoYamaoka/DeepLearningShogi)            | [リリースページ](https://github.com/TadaoYamaoka/DeepLearningShogi/releases)                                             | ディープラーニング系                                                          |
 | [技巧](https://github.com/gikou-official/Gikou)                         | [リリースページ](https://github.com/gikou-official/Gikou/releases)                                                       |
-| [芝浦将棋 Softmax](https://github.com/tanuki12hiromasa/ShogiStudyThird) | [リリースページ](https://github.com/tanuki12hiromasa/ShogiStudyThird/releases/tag/210331)                                | 他にもファイルを置かないといけないみたい                                     |
-| [白ビール](https://github.com/Tama4649/Kristallweizen)                  |                                                                                                                          | 評価関数ファイルをやねうら王に設定する                                       |
-| [たぬきち](https://github.com/nodchip/tanuki-)                          | [リリースページ](https://github.com/nodchip/tanuki-/releases)                                                            | やねうら王ベース                                                             |
-| [GPS 将棋](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/)              | [ダウンロードページ](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/index.php?%A5%C0%A5%A6%A5%F3%A5%ED%A1%BC%A5%C9)       | もう更新されていない？                                                       |
+| [芝浦将棋 Softmax](https://github.com/tanuki12hiromasa/ShogiStudyThird) | [リリースページ](https://github.com/tanuki12hiromasa/ShogiStudyThird/releases/tag/210331)                                | 他にも評価関数ファイルを置かないといけないみたい                              |
+| [白ビール](https://github.com/Tama4649/Kristallweizen)                  |                                                                                                                          | 評価関数ファイルをやねうら王に設定する                                        |
+| [たぬきち](https://github.com/nodchip/tanuki-)                          | [リリースページ](https://github.com/nodchip/tanuki-/releases)                                                            | やねうら王ベース                                                              |
+| [GPS 将棋](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/)              | [ダウンロードページ](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/index.php?%A5%C0%A5%A6%A5%F3%A5%ED%A1%BC%A5%C9)       | もう更新されていない？                                                        |
+
+## <i class="fas fa-mouse"></i> 将棋 GUI
+
+USI の実装している GUI ソフトです。
+
+| GUI                                       | 備考                 |
+| ----------------------------------------- | -------------------- |
+| [将棋所](http://shogidokoro.starfree.jp/) | 最も有名な GUI       |
+| [ShogiGUI](http://shogigui.siganus.com/)  | 棋譜解析にとても便利 |
+| [WhaleWatcher](http://garnet-alice.net/programs/whalewatcher/) | クジラちゃんに癒やされながら指せます |
+
+将棋丸はこれらのソフトを参考にしています。
