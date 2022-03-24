@@ -6,7 +6,7 @@ minimal_mistakes_skin    : "default" # "air", "aqua", "contrast", "dark", "dirt"
 # Site Settings
 locale                   : "ja-JP"  # 日本語を扱うなら変更しておく
 title                    : "将棋丸"
-name                     : "Shorimaru Project"
+name                     : "Shogimaru Project"
 description              :
 url                      : "https://shogimaru.github.io"  # スキーム (http/https) およびホスト名を指定する
 repository               : "shogimaru/shogimaru.github.io"  # GitHub 上のリポジトリを指定する
