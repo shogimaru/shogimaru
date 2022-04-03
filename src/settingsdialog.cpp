@@ -6,6 +6,7 @@
 #include "user.h"
 #include "westerntabstyle.h"
 #include <QFileDialog>
+#include <QKeyEvent>
 #include <QTabBar>
 #include <QtCore>
 
@@ -55,6 +56,31 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     // 駒種類選択ラジオボタン
     _ui->buttonGroup->setId(_ui->radioPiece1, 1);
     _ui->buttonGroup->setId(_ui->radioPiece2, 2);
+
+    // コンボボックスイベントフィルター
+    class ComboBoxEventFileter : public QWidget {
+    public:
+        ComboBoxEventFileter(QWidget *parent = nullptr) :
+            QWidget(parent) { }
+        bool eventFilter(QObject *obj, QEvent *event) override
+        {
+            // エンターキーでフォーカスを外す
+            switch (event->type()) {
+            case QEvent::KeyRelease: {
+                int key = dynamic_cast<QKeyEvent *>(event)->key();
+                if (key == Qt::Key_Return || key == Qt::Key_Enter) {
+                    dynamic_cast<QWidget *>(obj)->clearFocus();
+                    return true;
+                }
+                break;
+            }
+            default:
+                break;
+            }
+            return QWidget::eventFilter(obj, event);
+        }
+    };
+    _ui->engineComboBox->installEventFilter(new ComboBoxEventFileter(_ui->engineComboBox));
 }
 
 
@@ -71,13 +97,9 @@ void SettingsDialog::loadSettings(int engineIndex)
     const auto &availableEngines = EngineSettings::instance().availableEngines();
     _ui->engineComboBox->blockSignals(true);  // シグナル無効化
     _ui->engineComboBox->clear();
+    _ui->engineComboBox->setEditable(false);
     for (const auto &engine : availableEngines) {
         QString name = engine.name;
-        if (!engine.author.isEmpty()) {
-            name += " (";
-            name += engine.author;
-            name += ")";
-        }
         _ui->engineComboBox->addItem(name);
     }
     _ui->engineComboBox->setCurrentIndex(-1);  // 次のsetCurrentIndexでシグナルが飛ぶように
@@ -86,6 +108,7 @@ void SettingsDialog::loadSettings(int engineIndex)
     // 現在インデックスの設定
     if (engineIndex >= 0 && engineIndex < _ui->engineComboBox->count()) {
         _ui->engineComboBox->setCurrentIndex(engineIndex);
+        _ui->engineComboBox->setEditable(true);
     }
 
     auto &user = User::load();
@@ -112,7 +135,6 @@ void SettingsDialog::switchEngineOptions(int index)
 {
     const auto &availableEngines = EngineSettings::instance().availableEngines();
     if (index < 0 || index >= availableEngines.count()) {
-        _ui->tableEngineOptions->clearContents();
         return;
     }
     // 切り替える前のエンジンオプションを反映させる
@@ -163,7 +185,21 @@ void SettingsDialog::showEngineOptions(int index)
             // コンボボックス
             delete item;
             auto variables = _defaultOptions[key].value.toStringList();  // 選択肢
-            QComboBox *combo = new QComboBox;
+
+            class ComboBox : public QComboBox {
+            public:
+                ComboBox(QWidget *parent = nullptr) :
+                    QComboBox(parent) { }
+
+            protected:
+                void wheelEvent(QWheelEvent *e) override
+                {
+                    // マウスWheelイベント無視
+                    e->ignore();
+                }
+            };
+
+            auto *combo = new ComboBox;
             for (auto &var : variables) {
                 combo->addItem(var);
             }
@@ -212,6 +248,11 @@ void SettingsDialog::getEnginePath()
     auto info = Engine::getEngineInfo(path);
     EngineSettings::EngineData newEngine;
     newEngine.name = info.name;
+    if (!info.author.isEmpty()) {
+        newEngine.name += " (";
+        newEngine.name += info.author;
+        newEngine.name += ")";
+    }
     newEngine.author = info.author;
     newEngine.path = path;
     for (auto it = info.options.begin(); it != info.options.end(); ++it) {
@@ -250,8 +291,12 @@ void SettingsDialog::deleteEngine()
 
         // 次のエンジン選択
         idx = std::min(idx, EngineSettings::instance().availableEngineCount() - 1);
-        _ui->engineComboBox->setCurrentIndex(-1);  // シグナルを飛ばすため
-        _ui->engineComboBox->setCurrentIndex(idx);
+        if (idx < 0) {
+            _ui->engineComboBox->setEditable(false);
+        } else {
+            _ui->engineComboBox->setCurrentIndex(-1);  // シグナルを飛ばすため
+            _ui->engineComboBox->setCurrentIndex(idx);
+        }
     }
 }
 
@@ -517,6 +562,12 @@ void SettingsDialog::updateEngineOptions(int index)
         // 設定に反映
         if (options.count() > 0) {
             auto engine = EngineSettings::instance().getEngine(index);
+
+            QString name = _ui->engineComboBox->itemText(index);
+            if (!name.isEmpty()) {
+                engine.name = name;
+            }
+
             engine.options = options;
             EngineSettings::instance().updateEngine(index, engine);
         }

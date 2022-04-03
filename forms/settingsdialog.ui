@@ -29,7 +29,7 @@
     <enum>QTabWidget::Rounded</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tabEngine">
     <attribute name="title">
@@ -44,6 +44,9 @@
        <height>31</height>
       </rect>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="text">
       <string>New</string>
      </property>
@@ -57,6 +60,9 @@
        <height>31</height>
       </rect>
      </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
      <property name="text">
       <string>Delete</string>
      </property>
@@ -69,6 +75,9 @@
        <width>431</width>
        <height>31</height>
       </rect>
+     </property>
+     <property name="insertPolicy">
+      <enum>QComboBox::InsertAtCurrent</enum>
      </property>
     </widget>
     <widget class="Line" name="line">
@@ -115,6 +124,9 @@
        <width>80</width>
        <height>31</height>
       </rect>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
      </property>
      <property name="text">
       <string>Reset</string>
@@ -246,11 +258,23 @@
      <height>31</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
    <property name="text">
     <string>Close</string>
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>engineComboBox</tabstop>
+  <tabstop>labelComplement</tabstop>
+  <tabstop>tableEngineOptions</tabstop>
+  <tabstop>radioPiece1</tabstop>
+  <tabstop>radioPiece2</tabstop>
+  <tabstop>soundOnOffButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
  <buttongroups>
