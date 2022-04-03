@@ -108,7 +108,9 @@ void SettingsDialog::loadSettings(int engineIndex)
     // 現在インデックスの設定
     if (engineIndex >= 0 && engineIndex < _ui->engineComboBox->count()) {
         _ui->engineComboBox->setCurrentIndex(engineIndex);
+#ifndef Q_OS_WASM
         _ui->engineComboBox->setEditable(true);
+#endif
     }
 
     auto &user = User::load();
