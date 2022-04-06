@@ -13,8 +13,9 @@ class Engine : public QObject {
     Q_OBJECT
 public:
     struct Option {
-        QVariant value;
         QMetaType::Type type {QMetaType::Void};
+        QVariant defaultValue;  // 初期値
+        QVariant value;  // 現在値
         qint64 max {0};
         qint64 min {0};
     };
@@ -106,9 +107,9 @@ private:
     QString _author;
     QVariantMap _options;  // カスタムオプション
 #ifdef Q_OS_WASM
-    static QMap<QString, Option> _defaultOptions;  // WASMでは初回1回のみ正しい
+    static QMap<QString, Option> _currentOptions;  // WASMでは初回1回のみ正しい
 #else
-    QMap<QString, Option> _defaultOptions;  // デフォルトオプション
+    QMap<QString, Option> _currentOptions;  // デフォルトオプション
 #endif
     int _level {20};
     State _state {NotRunning};

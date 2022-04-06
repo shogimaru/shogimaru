@@ -186,7 +186,7 @@ void SettingsDialog::showEngineOptions(int index)
         } else if (type == QMetaType::QStringList) {
             // コンボボックス
             delete item;
-            auto variables = _defaultOptions[key].value.toStringList();  // 選択肢
+            auto variables = _defaultOptions[key].defaultValue.toStringList();  // 選択肢
 
             class ComboBox : public QComboBox {
             public:
@@ -258,7 +258,7 @@ void SettingsDialog::getEnginePath()
     newEngine.author = info.author;
     newEngine.path = path;
     for (auto it = info.options.begin(); it != info.options.end(); ++it) {
-        newEngine.options.insert(it.key(), it.value().value);
+        newEngine.options.insert(it.key(), it.value().defaultValue);
         newEngine.types.insert(it.key(), QVariant((int)it.value().type));
     }
 
@@ -487,11 +487,11 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
         str += tr("Default");
         str += " ";
         if (option.type == QMetaType::Bool) {
-            str += (option.value.toBool()) ? tr("true") : tr("false");
+            str += (option.defaultValue.toBool()) ? tr("true") : tr("false");
         } else if (option.type == QMetaType::QStringList) {
-            str += option.value.toStringList().value(0);
+            str += option.defaultValue.toStringList().value(0);
         } else {
-            str += option.value.toString();
+            str += option.defaultValue.toString();
         }
 
         if (option.type == QMetaType::LongLong) {
@@ -518,11 +518,11 @@ void SettingsDialog::resetEngineOptions()
         for (auto it = _defaultOptions.begin(); it != _defaultOptions.end(); ++it) {
             if (it.value().type == QMetaType::QStringList) {
                 // コンボボックス
-                QString def = it.value().value.toStringList().value(0);
+                QString def = it.value().defaultValue.toStringList().value(0);
                 engineData.options.insert(it.key(), def);
                 //qDebug() << it.key() << def;
             } else {
-                engineData.options.insert(it.key(), it.value().value);
+                engineData.options.insert(it.key(), it.value().defaultValue);
                 //qDebug() << it.key() << it.value().value;
             }
         }

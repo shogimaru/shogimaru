@@ -2,7 +2,7 @@
 #include "enginethread.h"
 #include <QDebug>
 
-QMap<QString, Engine::Option> Engine::_defaultOptions;
+QMap<QString, Engine::Option> Engine::_currentOptions;
 
 
 Engine::Engine(QObject *parent) :

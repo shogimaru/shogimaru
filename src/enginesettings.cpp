@@ -57,7 +57,7 @@ EngineSettings EngineSettings::load()
         QVariantMap options;
         auto info = Engine::getEngineInfo(QString());
         for (auto it = info.options.begin(); it != info.options.end(); ++it) {
-            options.insert(it.key(), it.value().value);
+            options.insert(it.key(), it.value().defaultValue);
             //qDebug() << it.key() << it.value().value;
         }
         setCustomOptions(options);  // カスタムオプション

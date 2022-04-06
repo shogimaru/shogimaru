@@ -83,30 +83,30 @@ bool Engine::open(const QString &path)
 
                         switch (option.type) {
                         case QMetaType::Bool:
-                            option.value.setValue(nextWord(items, "default") == "true");  // true or false
+                            option.defaultValue.setValue(nextWord(items, "default") == "true");  // true or false
                             break;
                         case QMetaType::LongLong:
-                            option.value.setValue(nextWord(items, "default").toLongLong());
+                            option.defaultValue.setValue(nextWord(items, "default").toLongLong());
                             break;
                         case QMetaType::QUrl:
                         case QMetaType::QString:
-                            option.value.setValue(nextWord(items, "default"));
+                            option.defaultValue.setValue(nextWord(items, "default"));
                             break;
                         case QMetaType::QStringList: {
                             int idx = items.indexOf("default");
                             auto strs = (idx >= 0) ? items.mid(idx + 1) : QStringList();
                             strs.removeAll("var");
-                            option.value.setValue(strs);
+                            option.defaultValue.setValue(strs);
                             break;
                         }
-
                         default:
                             continue;
                         }
+                        option.value = option.defaultValue;  // 最初は現在値と初期値は同じ
                         option.max = nextWord(items, "max").toLongLong();
                         option.min = nextWord(items, "min").toLongLong();
-                        _defaultOptions.insert(items[0], option);
-                        //qDebug() << "insert:" << option.value;
+                        _currentOptions.insert(items[0], option);
+                        //qDebug() << "insert:" << option.defaultValue;
                     }
                 }
             }
@@ -114,7 +114,7 @@ bool Engine::open(const QString &path)
         return false;
     };
 
-    if (_defaultOptions.isEmpty()) {
+    if (_currentOptions.isEmpty()) {
         if (!parseUsi()) {
             qCritical() << "Error response";
             emit errorOccurred();
@@ -138,7 +138,7 @@ void Engine::close()
 {
     closeContext();
 #ifndef Q_OS_WASM
-    _defaultOptions.clear();
+    _currentOptions.clear();
     _options.clear();
 #endif
     _state = NotRunning;
@@ -164,7 +164,7 @@ void Engine::sendOptions(const QVariantMap &options)
     QString value;
 
     for (auto it = options.begin(); it != options.end(); ++it) {
-        auto opt = _defaultOptions.value(it.key());
+        auto &opt = _currentOptions[it.key()];
 #if QT_VERSION < 0x060000
         int type = it.value().type();
 #else
@@ -181,11 +181,14 @@ void Engine::sendOptions(const QVariantMap &options)
         }
         value = value.trimmed();
 
-        // 設定が変更されていようがいまいが全て送る
         if (!it.key().isEmpty() && !value.isEmpty()) {
-            auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
-            //qDebug() << "sendOptions:" << bytes;
-            Command::instance().request(bytes.toStdString());
+            if (it.value() != opt.value) {
+                // 現在値と違うオプションを送る
+                auto bytes = QString("setoption name %1 value %2").arg(it.key()).arg(value);
+                //qDebug() << "sendOptions:" << bytes;
+                Command::instance().request(bytes.toStdString());
+                opt.value.setValue(it.value());  // 現在値にセット
+            }
         }
     }
 
@@ -557,7 +560,7 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
         info.name = engine->name();
         info.path = path;
         info.author = engine->author();
-        info.options = engine->_defaultOptions;
+        info.options = engine->_currentOptions;
     }
     engine->close();
     delete engine;
@@ -567,12 +570,12 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path)
 
 bool Engine::hasSkillLevelOption() const
 {
-    return !_defaultOptions.value("SkillLevel").value.isNull();
+    return !_currentOptions.value("SkillLevel").defaultValue.isNull();
 }
 
 // Type of the option
 QMetaType::Type Engine::type(const QString &option) const
 {
-    auto optionData = _defaultOptions.value(option);
+    auto optionData = _currentOptions.value(option);
     return optionData.type;
 }
