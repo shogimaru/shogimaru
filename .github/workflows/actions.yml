@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@main
       - name: Homebrew
-        run: brew install qt6
+        run: brew install qt6 libiconv
       - name: build
         run: |
           qmake CONFIG+=release

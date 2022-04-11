@@ -175,7 +175,7 @@ QString fromShiftJis(const QByteArray &sjis)
     auto *psjis = sjis.data();
     char *pbuf = buf.data();
 
-    iconv_t ic = iconv_open("UTF-8", "SJIS");
+    iconv_t ic = iconv_open("UTF-8", "SHIFT_JIS");
     if (ic) {
         auto res = iconv(ic, (char **)&psjis, &sjislen, &pbuf, &buflen);
         if (res != (size_t)-1) {
