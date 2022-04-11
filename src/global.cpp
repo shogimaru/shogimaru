@@ -4,7 +4,9 @@
 #include <QMap>
 #include <QWidget>
 #include <random>
+#ifndef Q_OS_WIN
 #include <iconv.h>
+#endif
 
 namespace maru {
 
@@ -166,6 +168,9 @@ bool isLocaleLangJapanese()
 
 QString fromShiftJis(const QByteArray &sjis)
 {
+#ifdef Q_OS_WIN
+    return QString::fromLocal8Bit(sjis);
+#else
     QString str;
     QByteArray buf;
     size_t sjislen = sjis.length();
@@ -185,6 +190,7 @@ QString fromShiftJis(const QByteArray &sjis)
         iconv_close(ic);
     }
     return str;
+#endif
 }
 
 }
