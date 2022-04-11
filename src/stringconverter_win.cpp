@@ -1,5 +1,6 @@
 #include "stringconverter.h"
 #include <locale.h>
+#include <vector>
 #include <windows.h>
 
 namespace maru {
