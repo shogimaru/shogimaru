@@ -91,6 +91,5 @@ QString elideText(const QString &text, int width, const QFont &font);
 QString elideText(const QString &text, const QLabel *label);
 QWidget *mainWindow();
 bool isLocaleLangJapanese();
-QString fromShiftJis(const QByteArray &sjis);
 
 }

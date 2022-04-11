@@ -15,6 +15,8 @@ wasm {
   SOURCES += engine_wasm.cpp
   SOURCES += command_wasm.cpp
   SOURCES += sound_sdl.cpp
+  HEADERS += stringconverter.h
+  SOURCES += stringconverter_iconv.cpp
   HEADERS += enginethread.h
   SOURCES += enginethread.cpp
   DESTDIR  = ../html/
@@ -28,6 +30,13 @@ wasm {
   HEADERS += engineprocess.h
   SOURCES += engineprocess.cpp
   DESTDIR  = ../
+
+  HEADERS += stringconverter.h
+  msvc {
+    SOURCES += stringconverter_win.cpp
+  } else {
+    SOURCES += stringconverter_iconv.cpp
+  }
 }
 
 msvc {

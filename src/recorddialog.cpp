@@ -1,5 +1,6 @@
 #include "recorddialog.h"
 #include "messagebox.h"
+#include "stringconverter.h"
 #include "ui_recorddialog.h"
 #include "westerntabstyle.h"
 #include <QDebug>
