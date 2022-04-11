@@ -11,7 +11,6 @@
 #include <QMetaMethod>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QTextCodec>
 #include <QUrl>
 
 static WesternTabStyle westernTabStyle;
@@ -74,12 +73,12 @@ void RecordDialog::openFile()
                     return false;
                 }
             }
-            return true;
+            return !str.isEmpty();
         };
 
         if (!fileContent.isEmpty()) {
             // SJISでトライ
-            QString str = QTextCodec::codecForName("Shift-JIS")->toUnicode(fileContent);
+            QString str = maru::fromShiftJis(fileContent);
             if (!isReadable(str)) {  // 文字化けならUTF-8で読み込む
                 str = QString::fromUtf8(fileContent);
             }

@@ -228,12 +228,7 @@ void SettingsDialog::accept()
 
 void SettingsDialog::getEnginePath()
 {
-#ifdef Q_OS_WIN
-    QString filter = QObject::tr("Executable (*.exe)");
-#else
     QString filter = QObject::tr("Executable (*)");
-#endif
-
     QString path = QFileDialog::getOpenFileName(this, QObject::tr("Select Engine"), QString(), filter);
 
     if (path.trimmed().isEmpty()) {
