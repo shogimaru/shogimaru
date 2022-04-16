@@ -1,7 +1,7 @@
 ---
 permalink: /
 title: "将棋丸"
-excerpt: "将棋丸はオープンソースの将棋GUIです。WebAssemblyで実装されたWeb版もあります。"
+excerpt: "将棋丸はオープンソースの将棋GUIです。WebAssemblyで実装されたブラウザ版もあります。"
 last_modified_at: 2022-03-23
 toc: true
 ---
@@ -114,7 +114,7 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 
 ## <i class="fas fa-mouse"></i> 将棋 GUI
 
-サイトを検索して見つけられた、将棋丸と同じ将棋 GUI のサイトをまとめました。
+検索して見つけられた、将棋丸と同じ USI 対応の将棋 GUI のサイトをまとめました。
 
 | GUI                                                            | 備考                                 |
 | -------------------------------------------------------------- | ------------------------------------ |
@@ -124,3 +124,17 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 | [ShogiDroid](http://shogidroid.siganus.com/)                   | Android 用                           |
 
 将棋丸はこれらのソフトを参考にしています。
+
+## <i class="fab fa-chrome"></i> ブラウザ将棋
+
+ブラウザがあれば将棋が指せるサイトです。  
+初心者向けが多い印象ですね。ブラウザ将棋の中では、最新の思考エンジンを実装されている[将棋丸](https://shogimaru.com/index.en.html)が最強かも？
+
+| サイト                                      | 備考                                 |
+| ------------------------------------------- | ------------------------------------ |
+| [ぴよ将棋 w](https://www.studiok-i.net/ps/) | 思考エンジンはサーバサイドにあります |
+| [きのあ将棋](https://syougi.qinoa.com/ja/game/) | 個性豊かなキャラクタと対局できるブラウザ将棋  |
+| [つぼ将棋](https://www.afsgames.com/shogi.htm) | オンライン対戦もできる初心者向けのブラウザ将棋 |
+| [将皇ブラウザ版](https://ken1shogi.sakura.ne.jp/shogiwebgl/) | 将皇がWebAssemblyで実装されているもよう |
+| [Webブラウザ将棋](https://www.programmingmat.jp/webgame_lib/sg99a.html) | JavaScriptによるブラウザ将棋 |
+| [こまお](http://usapyon.game.coocan.jp/komao/) | 初心者用ブラウザ将棋  |
