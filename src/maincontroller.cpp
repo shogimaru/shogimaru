@@ -1417,6 +1417,8 @@ void MainController::startAnalysis()
         return;
     }
 
+    showSpinner();  // スピナー表示
+
     // エンジン解析開始
     if (!Engine::instance().startAnalysis()) {
         MessageBox::information(tr("Engine error"), Engine::instance().error());
@@ -1433,8 +1435,9 @@ void MainController::startAnalysis()
 
 void MainController::startGo()
 {
+    hideSpinner();  // スピナー非表示
+
     if (_mode == Rating) {
-        hideSpinner();  // スピナー非表示
         maru::Turn turn = maru::Sente;
         _clock->start(turn);
         setTurn(turn);
