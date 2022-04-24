@@ -232,7 +232,7 @@ bool Engine::newGame(int slowMover)
 
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
-    _errorTimer->start(12000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
+    _errorTimer->start(20000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
     return true;
 }
 
@@ -264,7 +264,7 @@ bool Engine::startAnalysis()
 
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
-    _errorTimer->start(12000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
+    _errorTimer->start(20000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
     return true;
 }
 
@@ -306,27 +306,27 @@ void Engine::setTurn()
 }
 
 // 思考開始
-bool Engine::go(const QByteArrayList &moves, int senteTime, int goteTime, int byoyomi)
+bool Engine::go(const QByteArrayList &moves, int senteTime, int goteTime, int byoyomi, int incTime)
 {
     _allMoves = moves;
     setTurn();
-    return go(moves, false, senteTime, goteTime, byoyomi);
+    return go(moves, false, senteTime, goteTime, byoyomi, incTime);
 }
 
 // 先読み開始
-bool Engine::ponder(int senteTime, int goteTime, int byoyomi)
+bool Engine::ponder(int senteTime, int goteTime, int byoyomi, int incTime)
 {
     if (!_lastPondered.isEmpty()) {
         auto pos = _allMoves;
         pos << _lastPondered;
         //qDebug() << "先読み: " << qPrintable(pos.join(" "));
-        return go(pos, true, senteTime, goteTime, byoyomi);
+        return go(pos, true, senteTime, goteTime, byoyomi, incTime);
     }
     return false;
 }
 
 
-bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int goteTime, int byoyomi)
+bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int goteTime, int byoyomi, int incTime)
 {
     if (_state == Pondering) {
         if (ponder) {
@@ -380,8 +380,14 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
     if (byoyomi > 0) {
         cmd += " byoyomi ";
         cmd += QByteArray::number(byoyomi);
+    } else if (incTime > 0) {
+        cmd += " binc ";
+        cmd += QByteArray::number(incTime);
+        cmd += " winc ";
+        cmd += QByteArray::number(incTime);
     }
 
+    qDebug() << cmd;
     Command::instance().request(cmd.toStdString());
     return true;
 }

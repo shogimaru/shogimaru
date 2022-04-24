@@ -86,6 +86,8 @@ public slots:
     void saveFile(const QString &filePath);
     void slotAnalysisTimeout();
     void engineError();
+    void showSpinner();
+    void hideSpinner();
 
 protected:
     void recordResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail);
@@ -130,4 +132,5 @@ private:
     QTimer _ponderTimer;
     PonderInfo _lastPonder;
     qint64 _lastPvShownTime {0};
+    QLabel *_spinner {nullptr};
 };

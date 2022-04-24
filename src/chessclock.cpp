@@ -1,23 +1,34 @@
 #include "chessclock.h"
 #include "sound.h"
-#include <QTimerEvent>
 #include <QDebug>
+#include <QTimerEvent>
 using namespace maru;
 
 
 ChessClock::ChessClock(QObject *parent) :
     QObject(parent)
-{}
-
-// ミリ秒
-void ChessClock::setTime(int basicTime, int byoyomi)
 {
-    _senteTime = basicTime + byoyomi;
-    _goteTime = basicTime + byoyomi;
-    _byoyomi = byoyomi;
 }
 
+// ミリ秒
+void ChessClock::setTime(maru::TimeMethod method, int basicTime, int byo)
+{
+    _method = method;
 
+    if (method == maru::Byoyomi) {
+        _senteTime = basicTime + byo;
+        _goteTime = basicTime + byo;
+        _byoyomi = byo;
+        _incTime = 0;
+    } else {
+        _senteTime = basicTime;
+        _goteTime = basicTime;
+        _byoyomi = 0;
+        _incTime = byo;
+    }
+}
+
+// 残り考慮時間（秒読み分を含まず）
 int ChessClock::remainingTime(Turn player)
 {
     int elapsed = (player == _currentTurn) ? _elapsedTimer.elapsed() : 0;
@@ -25,7 +36,7 @@ int ChessClock::remainingTime(Turn player)
     return qMax(time - _byoyomi - elapsed, 0);
 }
 
-
+// 残り時間（秒読み分のみ）
 int ChessClock::remainingSeconds(maru::Turn player)
 {
     int elapsed = (player == _currentTurn) ? _elapsedTimer.elapsed() : 0;
@@ -75,11 +86,11 @@ maru::Turn ChessClock::changeTurn()
     int elapsed = _elapsedTimer.restart();
 
     if (_currentTurn == Sente) {
-        _senteTime -= elapsed;
+        _senteTime += _incTime - elapsed;
         _senteTime = qMax(_senteTime, _byoyomi);
         _currentTurn = Gote;
     } else {
-        _goteTime -= elapsed;
+        _goteTime += _incTime - elapsed;
         _goteTime = qMax(_goteTime, _byoyomi);
         _currentTurn = Sente;
     }
@@ -99,7 +110,7 @@ void ChessClock::timerEvent(QTimerEvent *event)
 
         if (_elapsedTemp != remain / 1000) {
             _elapsedTemp = remain / 1000;
-            emit secondElapsed();   // per 1 sec
+            emit secondElapsed();  // per 1 sec
         }
 
         if (remain == 0) {
@@ -111,7 +122,7 @@ void ChessClock::timerEvent(QTimerEvent *event)
         if (_bleepEnable) {
             for (int d : bleepTimes) {
                 d += offset;
-                if (_time > d &&  d >= remain) {
+                if (_time > d && d >= remain) {
                     Sound::playBleep();
                     break;
                 }

@@ -128,11 +128,11 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 ## <i class="fab fa-chrome"></i> ブラウザ将棋
 
 ブラウザがあれば将棋が指せるサイトです。  
-初心者向けが多い印象ですね。ブラウザ将棋の中では、最新の思考エンジンを実装されている[将棋丸](https://shogimaru.com/index.en.html)が最強かも？
+初心者向けが多い印象ですね。ブラウザ将棋の中では、最新の思考エンジンが実装されている[将棋丸](https://shogimaru.com/index.en.html)が最強か？
 
 | サイト                                      | 備考                                 |
 | ------------------------------------------- | ------------------------------------ |
-| [ぴよ将棋 w](https://www.studiok-i.net/ps/) | 思考エンジンはサーバサイドにあります |
+| [ぴよ将棋 w](https://www.studiok-i.net/ps/) | ぴよ将棋のブラウザ版で思考エンジンはサーバサイドにあります |
 | [きのあ将棋](https://syougi.qinoa.com/ja/game/) | 個性豊かなキャラクタと対局できるブラウザ将棋  |
 | [つぼ将棋](https://www.afsgames.com/shogi.htm) | オンライン対戦もできる初心者向けのブラウザ将棋 |
 | [将皇ブラウザ版](https://ken1shogi.sakura.ne.jp/shogiwebgl/) | 将皇がWebAssemblyで実装されているもよう |
