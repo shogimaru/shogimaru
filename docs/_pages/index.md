@@ -127,8 +127,8 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 
 ## <i class="fab fa-chrome"></i> ブラウザ将棋
 
-ブラウザがあれば将棋が指せるサイトです。  
-初心者向けが多い印象ですね。ブラウザ将棋の中では、最新の思考エンジンが実装されている[将棋丸](https://shogimaru.com/index.en.html)が最強か？
+インストールが面倒な方に最適！ブラウザさえあれば将棋が指せるソフト「ブラウザ将棋」をまとめました。
+ブラウザ将棋は初心者向けのものが多い印象で、その中でも最新の思考エンジンが実装されている[将棋丸](https://shogimaru.com/index.en.html)が最強か？
 
 | サイト                                      | 備考                                 |
 | ------------------------------------------- | ------------------------------------ |
@@ -138,3 +138,7 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 | [将皇ブラウザ版](https://ken1shogi.sakura.ne.jp/shogiwebgl/) | 将皇がWebAssemblyで実装されているもよう |
 | [Webブラウザ将棋](https://www.programmingmat.jp/webgame_lib/sg99a.html) | JavaScriptによるブラウザ将棋 |
 | [こまお](http://usapyon.game.coocan.jp/komao/) | 初心者用ブラウザ将棋  |
+
+## <i class="fas fa-mobile-screen-button"></i> 将棋アプリ
+
+スマートフォンで遊べるのは便利。ストアで探せば見つかるのでここでは割愛。将棋丸もいずれはアプリに。
