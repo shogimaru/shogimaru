@@ -38,18 +38,22 @@ int YaneuraOu()
 
 	int argc = 1;
 	char* argv[] = { (char*)"." };
+
+	static bool once = [&]() {
 	CommandLine::init(argc,argv);
 	USI::init(Options);
 	Bitboards::init();
 	Position::init();
 	Search::init();
 
+	//Search::clear();
+	Eval::init();
+	return true;
+	}();
+
 	// エンジンオプションの"Threads"があるとは限らないので…。
 	size_t thread_num = Options.count("Threads") ? (size_t)Options["Threads"] : 1;
 	Threads.set(thread_num);
-
-	//Search::clear();
-	Eval::init();
 
 	// USIコマンドの応答部
 
