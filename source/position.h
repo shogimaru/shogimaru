@@ -272,7 +272,8 @@ public:
 
 	// 現局面に対して
 	// この指し手によって移動させる駒を返す。(移動前の駒)
-	// 後手の駒打ちは後手の駒が返る。
+	// 駒打ちに対しては、その打つ駒が返る。
+	// また、後手の駒打ちは後手の(その打つ)駒が返る。
 	Piece moved_piece_before(Move m) const
 	{
 		ASSERT_LV3(is_ok(m));
@@ -306,7 +307,9 @@ public:
 	// is_ok(m) == false ならば、mをそのまま返す。
 	// 例 : MOVE_WINやMOVE_NULLに対してはそれがそのまま返ってくる。つまり、この時、上位16bitは0(NO_PIECE)である。
 	// 	  
-	// 注意 : mの移動元の駒が現在の手番の駒であることはこの関数ではチェックしないものとする。
+	// ※　このPositionクラスが保持している現在の手番(side_to_move)が移動させる駒に反映される。
+	// ※　mの移動元の駒が現在の手番の駒でなければ、MOVE_NONEが返ることは保証される。
+	// ※  mの移動元に駒がない場合も、MOVE_NONEが返ることは保証される。
 	Move to_move(Move16 m) const;
 	
 	// 普通の千日手、連続王手の千日手等を判定する。
@@ -336,9 +339,10 @@ public:
 
 	// 駒に対応するBitboardを得る。
 	// ・引数でcの指定がないものは先後両方の駒が返る。
-	// ・引数がPieceのものは、prはPAWN～DRAGON , GOLDS(金相当の駒) , HDK(馬・龍・玉) ,
-	//	  BISHOP_HORSE(角・馬) , ROOK_DRAGON(飛車・龍)。
-	// ・引数でPieceを2つ取るものは２種類の駒のBitboardを合成したものが返る。
+	// ・引数がPieceTypeのものは、PieceTypeのPAWN～DRAGON 以外に
+	//		PieceTypeの GOLDS(金相当の駒) , HDK(馬・龍・玉) , BISHOP_HORSE(角・馬) , ROOK_DRAGON(飛車・龍)などが指定できる。
+	//   ※　詳しくは、PieceTypeの定義を見ること。
+	// ・引数でPieceTypeを複数取るものはそれらの駒のBitboardを合成したものが返る。
 
 	Bitboard pieces(PieceType pr) const { ASSERT_LV3(pr < PIECE_BB_NB); return byTypeBB[pr]; }
 	Bitboard pieces(PieceType pr1, PieceType pr2) const { return pieces(pr1) | pieces(pr2); }
@@ -422,6 +426,9 @@ public:
 	// また、升sにある玉は~c側のKINGであるとする。
 	Bitboard slider_blockers(Color c, Square s, Bitboard& pinners) const;
 
+	// c側の駒Ptの利きのある升を表現するBitboardを返す。(MovePickerで用いている。)
+	template<Color C , PieceType Pt> Bitboard attacks_by() const;
+
 	// --- 局面を進める/戻す
 
 	// 指し手で盤面を1手進める
@@ -490,6 +497,13 @@ public:
 
 	// 二歩でなく、かつ打ち歩詰めでないならtrueを返す。
 	bool legal_pawn_drop(const Color us, const Square to) const;
+
+	// leagl()では、成れるかどうかのチェックをしていない。
+	// (先手の指し手を後手の指し手と混同しない限り、指し手生成された段階で
+	// 成れるという条件は満たしているはずだから)
+	// しかし、先手の指し手を後手の指し手と取り違えた場合、この前提が崩れるので
+	// これをチェックするための関数。成れる条件を満たしていない場合、falseが返る。
+	bool legal_promote(Move m) const;
 
 	// --- StateInfo
 
@@ -820,6 +834,23 @@ inline Bitboard Position::attackers_to(Square sq, const Bitboard& occ) const
 			// →　HDKは、銀と金のところに含めることによって、参照するテーブルを一個減らして高速化しようというAperyのアイデア。
 			) & pieces<C>(); // 先後混在しているのでc側の駒だけ最後にマスクする。
 	;
+}
+
+// c側の駒Ptの利きのある升を表現するBitboardを返す。(MovePickerで用いている。)
+// 遠方駒に関しては盤上の駒を考慮した利き。
+template<Color C , PieceType Pt>
+Bitboard Position::attacks_by() const
+{
+	if constexpr (Pt == PAWN)
+		return C == WHITE ? pawn_attacks_bb<WHITE>(pieces<WHITE, PAWN>()) : pawn_attacks_bb<BLACK>(pieces<BLACK, PAWN>());
+	else
+	{
+		Bitboard threats   = Bitboard(ZERO);
+		Bitboard attackers = pieces(C, Pt);
+		while (attackers)
+			threats |= attacks_bb<make_piece(C,Pt)>(attackers.pop(), pieces());
+		return threats;
+	}
 }
 
 // ピンされているc側の駒。下手な方向に移動させるとc側の玉が素抜かれる。

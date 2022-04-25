@@ -84,6 +84,7 @@
 #include "../book/book.h"
 #include "../learn/learn.h"
 #include "../mate/mate.h"
+#include "../engine/dlshogi-engine/dlshogi_min.h"
 
 using namespace std;
 using namespace Book;
@@ -91,26 +92,6 @@ using namespace Concurrent; // concurrent library from misc.h
 
 // positionコマンドのparserを呼び出したい。
 extern void position_cmd(Position& pos, istringstream& is, StateListPtr& states);
-
-namespace dlshogi {
-	// 探索結果を返す。
-	//   Threads.start_thinking(pos, states , limits);
-	//   Threads.main()->wait_for_search_finished(); // 探索の終了を待つ。
-	// のようにUSIのgoコマンド相当で探索したあと、rootの各候補手とそれに対応する評価値を返す。
-	extern std::vector < std::pair<Move, float>> GetSearchResult();
-}
-
-namespace Eval::dlshogi {
-	// 価値(勝率)を評価値[cp]に変換。
-	// USIではcp(centi-pawn)でやりとりするので、そのための変換に必要。
-	// 	 eval_coef : 勝率を評価値に変換する時の定数。default = 756
-	// 
-	// 返し値 :
-	//   +29900は、評価値の最大値
-	//   -29900は、評価値の最小値
-	//   +30000,-30000は、(おそらく)詰みのスコア
-	Value value_to_cp(const float score, float eval_coef);
-}
 
 namespace MakeBook2021
 {
@@ -655,14 +636,16 @@ namespace MakeBook2021 {
 			
 			// ↓の局面数を思考するごとにsaveする。
 			// 15分に1回ぐらいで良いような？
+			// 定跡ファイルが大きくなってきたら数時間に1回でいいと思う。
 			u64 book_save_interval = 30000/*nps*/ / nodes_limit * 30*60 /* 30分 */;
 
 			// 探索局面数
 			u64 think_limit = 10000000;
 
 			// 1つのroot局面に対して、何回ranged alpha searchを連続して行うのか。
-			// これ、同じ局面にhitし続けるようなら加算していくほうが健全だと思う。
-			u64 ranged_alpha_beta_loop = 5;
+			// このloop回数分は、Nodeの値を信じるかどうかを判定するためのgenerationが
+			// 変わらないので探索効率が良い。
+			u64 ranged_alpha_beta_loop = 100;
 
 			// ranged alpha beta searchの時に棋譜上に出現したleaf nodeに加点するスコア。
 			// そのleaf nodeが選ばれやすくなる。
@@ -936,12 +919,12 @@ namespace MakeBook2021 {
 						if (search_pv.size() == 0)
 						{
 							// 空の指し手を積んでおく。
-							// こうしないとpopする回数と数が合わなくてdead lockになる。る
+							// こうしないとpopする回数と数が合わなくてdead lockになる。
 							search_nodes.push(SearchNode(nullptr,MOVE_NONE,HASH_KEY()));
 							continue;
 						}
 
-						const auto next = search_pv.back();
+						const auto& next = search_pv.back();
 
 						sync_cout << "leaf node , sfen = " << next.node->sfen << " , move = " << next.move << sync_endl;
 
@@ -960,9 +943,10 @@ namespace MakeBook2021 {
 			{
 				// 思考するための局面queueから取り出す。
 				auto s_node = search_nodes.pop();
-				// 空の局面(該当がなかった)
+				// 空の指し手(該当がなかった)
 				if (s_node.move == MOVE_NONE)
 					continue;
+
 				time.reset();
 				bool already_exists,banned_node=false;
 				think(pos,&s_node,already_exists);

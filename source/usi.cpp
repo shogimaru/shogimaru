@@ -248,7 +248,7 @@ namespace USI
 						// ただし置換表を破壊されるとbenchコマンドの時にシングルスレッドなのに探索内容の同一性が保証されなくて
 						// 困るのでread_probe()を用いる。
 						bool found;
-						auto* tte = TT.read_probe(pos.state()->key(), found);
+						auto* tte = TT.read_probe(pos.state()->long_key(), found);
 
 						// 置換表になかった
 						if (!found)
@@ -946,6 +946,9 @@ void USI::loop(int argc, char* argv[])
 		else if (token == "compiler") sync_cout << compiler_info() << sync_endl;
 
 		// -- 以下、やねうら王独自拡張のカスタムコマンド
+
+		// config.hで設定した値などについて出力する。
+		else if (token == "config") sync_cout << config_info() << sync_endl;
 
 		// オプションを取得する(USI独自拡張)
 		else if (token == "getoption") getoption_cmd(is);
