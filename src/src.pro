@@ -43,6 +43,10 @@ msvc {
   QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus /utf-8
 }
 
+macx {
+  LIBS += -liconv
+}
+
 SOURCES += \
         main.cpp \
         global.cpp \

@@ -57,3 +57,9 @@ int StartDialog2::basicTime() const
     int h = _ui->hourBox->currentText().toInt();
     return h * 60 + m;
 }
+
+
+maru::TimeMethod StartDialog2::method() const
+{
+    return (maru::TimeMethod)_ui->methodBox->currentIndex();
+}

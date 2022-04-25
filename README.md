@@ -29,7 +29,7 @@
 
 ### ビルド
 
-#### WebAssembly版
+#### WebAssembly 版
 
 1. リポジトリ取得
 
@@ -81,6 +81,7 @@
 
 ## ウェブサイト
 
-- [将棋丸 WebAssembly 版サイト](https://shogimaru.com)
+- [将棋丸 WebAssembly 版](https://shogimaru.com)
+- [将棋丸（英語版） WebAssembly 版](https://shogimaru.com/index.en.html) ... 英語版と日本語版の WebAssembly 自体は同じものです
 - 将棋丸の使い方を少しずつ書いています - [操作マニュアル](https://shogimaru.github.io/shogimaru)
 - Twitter [@shogimaru](https://twitter.com/shogimaru)

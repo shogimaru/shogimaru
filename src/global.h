@@ -17,6 +17,12 @@ enum Turn : int {
     TurnMask = 0xF000,
 };
 
+// 時間方式
+enum TimeMethod : int {
+    Byoyomi = 0,  // 通常
+    Fischer = 1,  // フィッシャー（1手毎加算）
+};
+
 // プレイヤ
 enum PlayerType : int {
     Human,

@@ -51,8 +51,8 @@ public:
     bool newGame(int slowMover = 100);
     void gameover();
     void quit();
-    bool go(const QByteArrayList &position, int senteTime, int goteTime, int byoyomi);  // 考慮開始
-    bool ponder(int senteTime, int goteTime, int byoyomi);  // 先読み開始
+    bool go(const QByteArrayList &position, int senteTime, int goteTime, int byoyomi, int incTime);  // 考慮開始
+    bool ponder(int senteTime, int goteTime, int byoyomi, int incTime);  // 先読み開始
     void stop();  // 考慮中止
     bool mated(const QByteArrayList &moves);  // 局面が詰んでいるか
     bool mated(const QByteArray &startPosition, const QByteArrayList &moves = QByteArrayList());
@@ -85,7 +85,7 @@ protected slots:
 private:
     bool openContext(const QString &path);  // start process/thread
     void closeContext();
-    bool go(const QByteArrayList &position, bool ponderFlag, int senteTime, int goteTime, int byoyomi);
+    bool go(const QByteArrayList &position, bool ponderFlag, int senteTime, int goteTime, int byoyomi, int incTime);
     void setTurn();
     void sendOptions(const QVariantMap &options);
 

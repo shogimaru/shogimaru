@@ -23,15 +23,18 @@
 #include <QDebug>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QMovie>
 #include <QTransform>
 #include <QVariant>
 #include <algorithm>
 #include <cmath>
 
-constexpr auto SHOGIMARU_VERSION_STR = "1.2";
+constexpr auto SHOGIMARU_VERSION_STR = "1.3";
 const QSize BaseMainWindowSize(960, 820);
 const QList<int> RatingList = {maru::R1000, maru::R1200, maru::R1400, maru::R1600, maru::R1800, maru::R2000, maru::R2200, maru::R2400, maru::R2600, maru::R2800, maru::R3000};
-
+#ifdef Q_OS_WASM
+constexpr auto YANEURAOU_VERSION_STR = "7.10";
+#endif
 
 static int engineSkillLevel(int level, int defaultValue = 0)
 {
@@ -251,7 +254,7 @@ void MainController::createInfoBox()
     text += QString("<table style='margin-top: 24px;'><tbody>");
     text += QString("<tr><td>") + tr("Version") + " : </td><td>" + SHOGIMARU_VERSION_STR + "</td></tr>";
 #ifdef Q_OS_WASM
-    text += QString("<tr><td>") + tr("YaneuraOu") + " : </td><td>" + "7.00" + "</td></tr>";
+    text += QString("<tr><td>") + tr("YaneuraOu") + " : </td><td>" + YANEURAOU_VERSION_STR +"</td></tr>";
 #endif
     text += QString("<tr><td>Qt : </td><td>") + QT_VERSION_STR + "</td></tr>";
     text += QString("<tr><td>") + tr("Platform") + " : </td><td>" + QSysInfo::prettyProductName() + "</td></tr>";
@@ -352,7 +355,7 @@ void MainController::newRatingGame()
     // 持ち時間チェック
     int basicTime = _startDialog->basicTime() * 60000;
     int byoyomi = _startDialog->byoyomi() * 1000;
-    if (basicTime == 0 && byoyomi == 0) {
+    if ((basicTime == 0 && byoyomi == 0) || (_startDialog->method() == maru::Fischer && basicTime == 0)) {
         _startDialog->open();
         return;
     }
@@ -420,7 +423,13 @@ void MainController::newRatingGame()
     }
 
     msg += "\n\n";
-    msg += tr("Time control:%1min  Byoyomi:%2sec").arg(_startDialog->basicTime()).arg(_startDialog->byoyomi());
+    msg += tr("Time control:%1min").arg(_startDialog->basicTime());
+    msg += "  ";
+    if (_startDialog->method() == maru::Byoyomi) {
+        msg += tr("Byoyomi:%1sec").arg(_startDialog->byoyomi());
+    } else {
+        msg += tr("Add per move:%1sec").arg(_startDialog->byoyomi());
+    }
     msg += "\n\n";
     msg += tr("Good Luck!");
     MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
@@ -484,8 +493,7 @@ void MainController::startGame()
     int basicTime = _startDialog->basicTime() * 60000;
     int byoyomi = _startDialog->byoyomi() * 1000;
 
-
-    _clock->setTime(basicTime, byoyomi);
+    _clock->setTime(_startDialog->method(), basicTime, byoyomi);
     _ponderFlag = (_players[maru::Sente].type() != _players[maru::Gote].type());
     _recorder->clear();
 
@@ -496,6 +504,7 @@ void MainController::startGame()
             qCritical() << "start game error" << __FILE__ << __LINE__;
         }
         _recorder->setFirstPosition(Sfen::defaultPostion());
+        showSpinner();  // スピナー表示
 
         // エンジン開始
         int slowMover = qBound(10, basicTime / 60000, 100);  // 序盤重視率
@@ -886,10 +895,10 @@ void MainController::setTurn(maru::Turn turn)
         }
 
         if (_players[turn].type() == maru::Computer) {
-            Engine::instance().go(_recorder->allMoves(), _clock->remainingTime(maru::Sente), _clock->remainingTime(maru::Gote), _clock->byoyomi());
+            Engine::instance().go(_recorder->allMoves(), _clock->remainingTime(maru::Sente), _clock->remainingTime(maru::Gote), _clock->byoyomi(), _clock->incrementTime());
         } else {
             if (_ponderFlag) {  // 先読み
-                Engine::instance().ponder(_clock->remainingTime(maru::Sente), _clock->remainingTime(maru::Gote), _clock->byoyomi());
+                Engine::instance().ponder(_clock->remainingTime(maru::Sente), _clock->remainingTime(maru::Gote), _clock->byoyomi(), _clock->incrementTime());
             }
         }
     }
@@ -1109,6 +1118,7 @@ void MainController::slotAnalysisTimeout()
 
 void MainController::engineError()
 {
+    hideSpinner();
     _clock->stop();
     _board->stopGame();
     _lastPonder.clear();
@@ -1409,6 +1419,8 @@ void MainController::startAnalysis()
         return;
     }
 
+    showSpinner();  // スピナー表示
+
     // エンジン解析開始
     if (!Engine::instance().startAnalysis()) {
         MessageBox::information(tr("Engine error"), Engine::instance().error());
@@ -1425,6 +1437,8 @@ void MainController::startAnalysis()
 
 void MainController::startGo()
 {
+    hideSpinner();  // スピナー非表示
+
     if (_mode == Rating) {
         maru::Turn turn = maru::Sente;
         _clock->start(turn);
@@ -1574,4 +1588,30 @@ void MainController::loadSfen()
     setSentePlayer(Player(maru::Human, p.first));
     setGotePlayer(Player(maru::Human, p.second));
     updateBoard();
+}
+
+
+void MainController::showSpinner()
+{
+    delete _spinner;
+    _spinner = new QLabel(this);
+    _spinner->setAttribute(Qt::WA_TranslucentBackground, true);  // 背景透明
+    _spinner->setWindowModality(Qt::WindowModal);
+    QMovie *movie = new QMovie("assets/images/spinner.gif", QByteArray(), _spinner);
+    _spinner->setMovie(movie);
+    auto size = QImage("assets/images/spinner.gif").size();
+    auto pos = _ui->boardView->geometry().center() - QPoint(size.width() / 2, 0);
+    _spinner->setGeometry(pos.x(), pos.y(), size.width(), size.height());
+    _spinner->show();
+    movie->start();
+}
+
+
+void MainController::hideSpinner()
+{
+    if (_spinner) {
+        _spinner->hide();
+        _spinner->deleteLater();
+        _spinner = nullptr;
+    }
 }
