@@ -1,7 +1,7 @@
 ---
 permalink: /
-title: "将棋丸 | ブラウザ将棋"
-excerpt: "将棋丸はオープンソースの将棋GUIです。WebAssemblyで実装されたブラウザ版もあります。"
+title: "将棋丸"
+excerpt: "将棋丸はオープンソースの将棋GUIです。デスクトップ版アプリとWebAssemblyで実装されたブラウザ版があります。将棋丸はブラウザ将棋で最強クラスのソフトです。"
 last_modified_at: 2022-03-23
 toc: true
 ---
@@ -32,7 +32,7 @@ toc: true
 
 ### <i class="fab fa-mixcloud"></i> ブラウザ版（WebAssembly）
 
-セットアップが不要で、ネットにさえつながれば手軽に遊べます。
+ネットで手軽に遊べるブラウザ将棋です。
 
 1. [将棋丸ブラウザ版](https://shogimaru.com) へアクセスし、将棋丸を起動します。
 2. 将棋思考エンジンは組み込まれているので（新たにエンジンを追加できません）、`対局`ボタンをクリックしてすぐに対局を開始することができます。
@@ -139,6 +139,6 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 | [Webブラウザ将棋](https://www.programmingmat.jp/webgame_lib/sg99a.html) | JavaScriptによるブラウザ将棋 |
 | [こまお](http://usapyon.game.coocan.jp/komao/) | 初心者用ブラウザ将棋  |
 
-## <i class="fas fa-mobile-screen"></i> 将棋アプリ
+## <i class="fas fa-mobile-alt"></i> 将棋アプリ
 
 スマートフォンで遊べるのは便利。ストアで探せば見つかるのでここでは割愛。将棋丸もいずれはアプリに。
