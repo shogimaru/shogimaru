@@ -1,6 +1,6 @@
 ---
 permalink: /
-title: "将棋丸"
+title: "将棋丸 | ブラウザ将棋"
 excerpt: "将棋丸はオープンソースの将棋GUIです。WebAssemblyで実装されたブラウザ版もあります。"
 last_modified_at: 2022-03-23
 toc: true
@@ -10,7 +10,7 @@ toc: true
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 
 将棋丸はオープンソースの将棋 GUI です。  
-思考エンジンと通信するための USI プロトコルに対応しており、次の特徴があります。
+将棋思考エンジンと通信するための USI プロトコルに対応しており、次の特徴があります。
 
 - クロスプラットフォーム - Windows, macOS, Linux, WebAssembly
 - MultiPV 表示
@@ -139,6 +139,6 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 | [Webブラウザ将棋](https://www.programmingmat.jp/webgame_lib/sg99a.html) | JavaScriptによるブラウザ将棋 |
 | [こまお](http://usapyon.game.coocan.jp/komao/) | 初心者用ブラウザ将棋  |
 
-## <i class="fas fa-mobile-screen-button"></i> 将棋アプリ
+## <i class="fas fa-mobile-screen"></i> 将棋アプリ
 
 スマートフォンで遊べるのは便利。ストアで探せば見つかるのでここでは割愛。将棋丸もいずれはアプリに。

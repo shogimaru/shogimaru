@@ -1,17 +1,18 @@
-# 将棋丸
+# 将棋丸 | ブラウザ将棋
 
 [![ActionsCI](https://github.com/shogimaru/shogimaru/actions/workflows/actions.yml/badge.svg)](https://github.com/shogimaru/shogimaru/actions/workflows/actions.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 [![Release](https://img.shields.io/github/v/release/shogimaru/shogimaru.svg)](https://github.com/shogimaru/shogimaru/releases)
 
 オープンソースの将棋 GUI を C++ で作っています。
+思考エンジンと通信するための USI プロトコルに対応しており、次の特徴があります。
 
 - クロスプラットフォーム - Windows, macOS, Linux, WebAssembly
-- 多くの将棋思考エンジンに対応
+- MultiPV 表示
 - UI は Qt ベース
-- MultiPV 対応
 - 棋譜の解析モード
 - 棋譜読込・保存
+- 多言語対応（日本語、英語）
 
 ## 開発環境
 
