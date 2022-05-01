@@ -7,6 +7,10 @@ MOC_DIR  = .obj/
 OBJECTS_DIR = .obj/
 DEFINES += QT_DEPRECATED_WARNINGS
 
+!CONFIG(debug, debug|release) {
+  DEFINES += QT_NO_DEBUG_OUTPUT
+}
+
 wasm {
   CONFIG +=
   LIBS = ../engines/YaneuraOu/source/YaneuraOu.wasm

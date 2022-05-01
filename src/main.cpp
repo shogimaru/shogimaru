@@ -1,10 +1,10 @@
-#include "maincontroller.h"
 #include "file.h"
+#include "maincontroller.h"
 #include <QApplication>
+#include <QDebug>
 #include <QFontDatabase>
 #include <QTimer>
 #include <QTranslator>
-#include <QDebug>
 #include <locale>
 
 

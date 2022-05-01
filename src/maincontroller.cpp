@@ -1017,7 +1017,9 @@ void MainController::pondered(const PonderInfo &info)
         _lastPonder = pi;
 
         // 詰みありになるとエンジンは読み筋を返さなくなる場合あり
-        _ponderTimer.start(10000);  // restart
+        if (pi.mate || _ponderTimer.isActive()) {
+            _ponderTimer.start(20000);  // restart
+        }
 
         User &user = User::load();
         if (pi.pv.value(0) == "resign"

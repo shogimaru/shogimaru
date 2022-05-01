@@ -150,7 +150,7 @@ bool Sfen::parse(const QByteArray &s)
         }
         auto p = move(mv);
         if (p.isEmpty()) {
-            qCritical() << "Invalid move" << mv;
+            qWarning() << "Invalid move" << mv;
             goto error;
         }
     }
@@ -158,7 +158,7 @@ bool Sfen::parse(const QByteArray &s)
 
 error:
     clear();
-    qCritical() << "SFEN parse error";
+    qWarning() << "SFEN parse error";
     return false;
 }
 
