@@ -1,6 +1,8 @@
+#include "global.h"
 #include "file.h"
 #include "maincontroller.h"
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QDebug>
 #include <QFontDatabase>
 #include <QTimer>
@@ -11,8 +13,16 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    File::mountDevice();
+    QCoreApplication::setApplicationName("Shogimaru");
+    QCoreApplication::setApplicationVersion(maru::SHOGIMARU_VERSION_STR);
 
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Shogi GUI supporting USI protocol");
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.process(app);
+
+    File::mountDevice();
     QTranslator translator;
     qDebug() << QLocale::system().name();
     QString ts = QString("message_") + QLocale::system().name();
