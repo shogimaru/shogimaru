@@ -12,7 +12,7 @@ class QFont;
 namespace maru {
 
 // バージョン
-constexpr auto SHOGIMARU_VERSION_STR = "1.3.1";
+constexpr auto SHOGIMARU_VERSION_STR = "1.3.2";
 
 enum Turn : int {
     Sente = 0x1000,

@@ -12,7 +12,6 @@
 
 int main(int argc, char *argv[])
 {
-    QApplication app(argc, argv);
     QCoreApplication::setApplicationName("Shogimaru");
     QCoreApplication::setApplicationVersion(maru::SHOGIMARU_VERSION_STR);
 
@@ -20,8 +19,13 @@ int main(int argc, char *argv[])
     parser.setApplicationDescription("Shogi GUI supporting USI protocol");
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.process(app);
+    parser.process(QCoreApplication(argc, argv));
 
+    //-------------------------------------------
+    // Access the window manager system from here
+    //-------------------------------------------
+
+    QApplication app(argc, argv);
     File::mountDevice();
     QTranslator translator;
     qDebug() << QLocale::system().name();
