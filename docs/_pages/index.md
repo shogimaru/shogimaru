@@ -104,24 +104,25 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
 | [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠            | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ。EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
 | [Apery](https://hiraokatakuya.github.io/apery/)                         | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)                                                        |                                                                               |
-| [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html)           | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する                          |
 | [dlshogi](https://github.com/TadaoYamaoka/DeepLearningShogi)            | [リリースページ](https://github.com/TadaoYamaoka/DeepLearningShogi/releases)                                             | ディープラーニング系                                                          |
 | [技巧](https://github.com/gikou-official/Gikou)                         | [リリースページ](https://github.com/gikou-official/Gikou/releases)                                                       |
 | [芝浦将棋 Softmax](https://github.com/tanuki12hiromasa/ShogiStudyThird) | [リリースページ](https://github.com/tanuki12hiromasa/ShogiStudyThird/releases/tag/210331)                                | 他にも評価関数ファイルを置かないといけないみたい                              |
 | [白ビール](https://github.com/Tama4649/Kristallweizen)                  |                                                                                                                          | 評価関数ファイルをやねうら王に設定する                                        |
 | [たぬきち](https://github.com/nodchip/tanuki-)                          | [リリースページ](https://github.com/nodchip/tanuki-/releases)                                                            | やねうら王ベース                                                              |
+| [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html)           | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する                          |
 | [GPS 将棋](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/)              | [ダウンロードページ](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/index.php?%A5%C0%A5%A6%A5%F3%A5%ED%A1%BC%A5%C9)       | もう更新されていない？                                                        |
 
 ## <i class="fas fa-mouse"></i> 将棋 GUI
 
-検索して見つけられた、将棋丸と同じ USI 対応の将棋 GUI のサイトをまとめました。
+ネット検索して見つけられた、将棋丸と同じ USI 対応の将棋 GUI のサイトをまとめました。
 
-| GUI                                                            | 備考                                 |
-| -------------------------------------------------------------- | ------------------------------------ |
-| [将棋所](http://shogidokoro.starfree.jp/)                      | 広く使われている GUI                 |
-| [ShogiGUI](http://shogigui.siganus.com/)                       | 棋譜解析にとても便利                 |
-| [WhaleWatcher](http://garnet-alice.net/programs/whalewatcher/) | クジラちゃんに癒やされながら指せます |
-| [ShogiDroid](http://shogidroid.siganus.com/)                   | Android 用                           |
+| GUI                                                              | 備考                                                                       |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [将棋所](http://shogidokoro.starfree.jp/)                        | 広く使われている GUI                                                       |
+| [ShogiGUI](http://shogigui.siganus.com/)                         | 棋譜解析にとても便利                                                       |
+| [WhaleWatcher](http://garnet-alice.net/programs/whalewatcher/)   | クジラちゃんに癒やされながら指せます                                       |
+| [Electron 将棋](https://sunfish-shogi.github.io/electron-shogi/) | [Electron](https://www.electronjs.org/) で作られたオープンソース将棋アプリ。ブラウザ版もあるが対局はまだできないらしい。 |
+| [ShogiDroid](http://shogidroid.siganus.com/)                     | Android 用                                                                 |
 
 将棋丸はこれらのソフトを参考にしています。
 
@@ -130,14 +131,14 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 インストールが面倒な方に最適！ブラウザさえあれば将棋が指せるソフト「ブラウザ将棋」をまとめました。
 ブラウザ将棋は初心者向けのものが多い印象で、その中でも最新の思考エンジンが実装されている[将棋丸](https://shogimaru.com/index.en.html)が最強か？
 
-| サイト                                      | 備考                                 |
-| ------------------------------------------- | ------------------------------------ |
-| [ぴよ将棋 w](https://www.studiok-i.net/ps/) | ぴよ将棋のブラウザ版で思考エンジンはサーバサイドにあります |
-| [きのあ将棋](https://syougi.qinoa.com/ja/game/) | 個性豊かなキャラクタと対局できるブラウザ将棋  |
-| [つぼ将棋](https://www.afsgames.com/shogi.htm) | オンライン対戦もできる初心者向けのブラウザ将棋 |
-| [将皇ブラウザ版](https://ken1shogi.sakura.ne.jp/shogiwebgl/) | 将皇がWebAssemblyで実装されているもよう |
-| [Webブラウザ将棋](https://www.programmingmat.jp/webgame_lib/sg99a.html) | JavaScriptによるブラウザ将棋 |
-| [こまお](http://usapyon.game.coocan.jp/komao/) | 初心者用ブラウザ将棋  |
+| サイト                                                                   | 備考                                                       |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| [ぴよ将棋 w](https://www.studiok-i.net/ps/)                              | ぴよ将棋のブラウザ版で思考エンジンはサーバサイドにあります |
+| [きのあ将棋](https://syougi.qinoa.com/ja/game/)                          | 個性豊かなキャラクタと対局できるブラウザ将棋               |
+| [つぼ将棋](https://www.afsgames.com/shogi.htm)                           | オンライン対戦もできる初心者向けのブラウザ将棋             |
+| [将皇ブラウザ版](https://ken1shogi.sakura.ne.jp/shogiwebgl/)             | 将皇が WebAssembly で実装されているもよう                  |
+| [Web ブラウザ将棋](https://www.programmingmat.jp/webgame_lib/sg99a.html) | JavaScript によるブラウザ将棋                              |
+| [こまお](http://usapyon.game.coocan.jp/komao/)                           | 初心者用ブラウザ将棋                                       |
 
 ## <i class="fas fa-mobile-alt"></i> 将棋アプリ
 

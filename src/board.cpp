@@ -570,6 +570,7 @@ void Board::setLastMove(int coord)
     _lastMovedSquare->highlight();
 }
 
+
 /*
 void Board::resetPosition(const QStringList &position)
 {

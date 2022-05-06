@@ -53,7 +53,6 @@ protected:
     void movePieceByUsi(const QByteArray &coord, maru::Turn turn, bool update);
     void updatePos();
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-    //void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
     bool createPiece(int pos, Piece::Name name, maru::Turn owner = maru::Sente);
     void setLastMove(int coord);

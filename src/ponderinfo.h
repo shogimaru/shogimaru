@@ -16,7 +16,7 @@ public:
     int mateCount {0};  // 詰み手数（0なら手数不明）
     QByteArray currmove;
     int hashfull {0};
-    int nps {0};
+    qint64 nps {0};
     QByteArrayList pv;
     QByteArray message;
 

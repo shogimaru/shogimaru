@@ -70,9 +70,9 @@ void PonderInfo::parse(const QByteArray &info)
                 continue;
             }
         } else if (*it == "nodes") {
-            nodes = (*(++it)).toInt();
+            nodes = (*(++it)).toLongLong();
         } else if (*it == "nps") {
-            nps = (*(++it)).toInt();
+            nps = (*(++it)).toLongLong();
         } else if (*it == "hashfull") {
             hashfull = (*(++it)).toInt();
         } else if (*it == "time") {

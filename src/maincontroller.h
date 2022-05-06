@@ -25,6 +25,7 @@ class AnalysisDialog;
 class RecordDialog;
 class MyPage;
 class EvaluationGraph;
+class OperationButtonGroup;
 class QAbstractButton;
 class QComboBox;
 class QMessageBox;
@@ -88,6 +89,15 @@ public slots:
     void engineError();
     void showSpinner();
     void hideSpinner();
+    // 棋譜操作
+    void showNext();
+    void showNext10Moves();
+    void showNextCandidate();
+    void showPrevious();
+    void showPrevious10Moves();
+    void showPreviousCandidate();
+    void showFirstPosition();
+    void showLastPosition();
 
 protected:
     void recordResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail);
@@ -96,6 +106,8 @@ protected:
     void slotPonderedItemSelected(int row, int column);
     void nextAnalysis();
     void timerEvent(QTimerEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 signals:
     void timeout();
@@ -122,6 +134,7 @@ private:
     MyPage *_myPage {nullptr};
     QMessageBox *_infoBox {nullptr};
     EvaluationGraph *_graph {nullptr};
+    OperationButtonGroup *_opeButtonGroup {nullptr};
     bool _rotated {false};  // 上下回転表示
     bool _ponderFlag {true};  // 先読み
     int _boardScale {0};

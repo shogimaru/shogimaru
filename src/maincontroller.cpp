@@ -9,6 +9,7 @@
 #include "messagebox.h"
 #include "mypage.h"
 #include "nicknamedialog.h"
+#include "operationbuttongroup.h"
 #include "piece.h"
 #include "recorddialog.h"
 #include "recorder.h"
@@ -23,6 +24,7 @@
 #include <QDebug>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QKeyEvent>
 #include <QMovie>
 #include <QTransform>
 #include <QVariant>
@@ -89,13 +91,17 @@ MainController::MainController(QWidget *parent) :
     _recordDialog(new RecordDialog(this)),
     _myPage(new MyPage(this)),
     _infoBox(new QMessageBox(this)),
-    _graph(new EvaluationGraph)
+    _graph(new EvaluationGraph),
+    _opeButtonGroup(new OperationButtonGroup)
 {
     _ui->setupUi(this);
     _ui->centralWidget->setLayout(_ui->mainVLayout);  // レイアウト
     // 評価グラフ
     _graph->setParent(_ui->graphWidget);
     _graph->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+    // 棋譜操作ボタン
+    _opeButtonGroup->setParent(_ui->opeWidget);
+    _opeButtonGroup->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
 
     setWindowTitle("Shogimaru");
     _ui->label->setText("<b>" + tr("Shogimaru") + "<\b>");
@@ -115,6 +121,10 @@ MainController::MainController(QWidget *parent) :
     _ui->boardView->setRenderHints(QPainter::SmoothPixmapTransform);
     _ui->boardView->setBackgroundBrush(Board::board().scaled(w, h));
     _ui->boardView->setScene(_board);
+    _ui->boardView->setFocusPolicy(Qt::NoFocus);
+
+    // 棋譜ウィジット
+    _ui->recordWidget->installEventFilter(this);  // キーイベントを奪う See bool eventFilter()
 
     // メッセージテーブルウィジット
     _ui->messageTableWidget->setGridStyle(Qt::NoPen);  // 罫線非表示
@@ -122,6 +132,7 @@ MainController::MainController(QWidget *parent) :
     _ui->messageTableWidget->setWordWrap(false);
     _ui->messageTableWidget->setColumnWidth(0, 52);  // 1列目の幅
     _ui->messageTableWidget->setColumnWidth(1, 90);  // 2列目の幅
+    _ui->messageTableWidget->setFocusPolicy(Qt::NoFocus);
 
     // 情報行
     _ui->infoLine->setReadOnly(true);
@@ -155,6 +166,14 @@ MainController::MainController(QWidget *parent) :
     connect(_graph, &EvaluationGraph::currentMoveChanged, this, &MainController::setCurrentRecordRow);
     connect(_ui->recordWidget, &QListWidget::currentRowChanged, _graph, &EvaluationGraph::setCurrentMove);
     connect(_ui->messageTableWidget, &QTableWidget::currentCellChanged, this, &MainController::slotPonderedItemSelected);
+    connect(_opeButtonGroup, &OperationButtonGroup::next, this, &MainController::showNext);
+    connect(_opeButtonGroup, &OperationButtonGroup::next10Moves, this, &MainController::showNext10Moves);
+    connect(_opeButtonGroup, &OperationButtonGroup::nextCandidate, this, &MainController::showNextCandidate);
+    connect(_opeButtonGroup, &OperationButtonGroup::previous, this, &MainController::showPrevious);
+    connect(_opeButtonGroup, &OperationButtonGroup::previous10Moves, this, &MainController::showPrevious10Moves);
+    connect(_opeButtonGroup, &OperationButtonGroup::previousCandidate, this, &MainController::showPreviousCandidate);
+    connect(_opeButtonGroup, &OperationButtonGroup::firstPosition, this, &MainController::showFirstPosition);
+    connect(_opeButtonGroup, &OperationButtonGroup::lastPosition, this, &MainController::showLastPosition);
     _ponderTimer.callOnTimeout(this, &MainController::slotAnalysisTimeout);
 
     auto scaleBoard = [=](int index) {  // 拡大率変更
@@ -231,6 +250,7 @@ void MainController::createToolBar()
     for (int i = 40; i <= 200; i += 20) {
         _boardScaleBox->addItem(QString::number(i) + "%", i);
     }
+    _boardScaleBox->setFocusPolicy(Qt::NoFocus);
     _ui->toolBar->addWidget(_boardScaleBox);
     _ui->toolBar->addSeparator();
     _ui->toolBar->addAction(_ui->myPageAction);
@@ -253,7 +273,7 @@ void MainController::createInfoBox()
     text += QString("<table style='margin-top: 24px;'><tbody>");
     text += QString("<tr><td>") + tr("Version") + " : </td><td>" + maru::SHOGIMARU_VERSION_STR + "</td></tr>";
 #ifdef Q_OS_WASM
-    text += QString("<tr><td>") + tr("YaneuraOu") + " : </td><td>" + YANEURAOU_VERSION_STR +"</td></tr>";
+    text += QString("<tr><td>") + tr("YaneuraOu") + " : </td><td>" + YANEURAOU_VERSION_STR + "</td></tr>";
 #endif
     text += QString("<tr><td>Qt : </td><td>") + QT_VERSION_STR + "</td></tr>";
     text += QString("<tr><td>") + tr("Platform") + " : </td><td>" + QSysInfo::prettyProductName() + "</td></tr>";
@@ -288,6 +308,7 @@ void MainController::updateButtonStates()
         _ui->messageTableWidget->show();
         _graph->setAttribute(Qt::WA_TransparentForMouseEvents, false);
         _graph->show();
+        _opeButtonGroup->setEnabled(true);
         _ui->infoLine->hide();
         break;
 
@@ -303,6 +324,7 @@ void MainController::updateButtonStates()
         _ui->messageTableWidget->hide();
         _graph->setAttribute(Qt::WA_TransparentForMouseEvents);
         _graph->hide();
+        _opeButtonGroup->setEnabled(false);
         _ui->infoLine->hide();
         break;
 
@@ -320,6 +342,7 @@ void MainController::updateButtonStates()
         _ui->messageTableWidget->show();
         _graph->setAttribute(Qt::WA_TransparentForMouseEvents);
         _graph->show();
+        _opeButtonGroup->setEnabled(false);
         _ui->infoLine->show();
         break;
 
@@ -337,6 +360,7 @@ void MainController::updateButtonStates()
         _ui->messageTableWidget->show();
         _graph->setAttribute(Qt::WA_TransparentForMouseEvents, false);
         _graph->show();
+        _opeButtonGroup->setEnabled(false);
         _ui->infoLine->hide();
         break;
 
@@ -935,7 +959,7 @@ void MainController::slotPonderedItemSelected(int row, int column)
 void MainController::pondered(const PonderInfo &info)
 {
     // スコア更新（先手優勢ならプラス、後手優勢ならマイナス）
-    auto updateScore = [](PonderInfo &pi, bool minus) {
+    auto updateScore = [&](PonderInfo &pi, bool minus) {
         if (minus) {
             pi.scoreCp *= -1;
             pi.mate *= -1;
@@ -945,6 +969,10 @@ void MainController::pondered(const PonderInfo &info)
             pi.scoreCp = (pi.mate > 0) ? 9999 : -9999;
         } else {
             pi.scoreCp = qBound(-9999, pi.scoreCp, 9999);
+        }
+
+        if (_mode == Analyzing) {
+            pi.multipv = std::max(pi.multipv, 1);
         }
     };
 
@@ -1005,6 +1033,18 @@ void MainController::pondered(const PonderInfo &info)
             const ScoreItem item(pi.scoreCp, pi.mate, pi.mateCount, pi.depth, pi.nodes, pi.pv);
             _recorder->recordPonderingScore(_analysisMoves, pi.multipv, item);
 
+            const auto mark = QString::fromUtf8(u8"┣┓");
+            auto *recordItem = _ui->recordWidget->currentItem();
+            if (recordItem) {
+                // 分岐マークをつける
+                auto text = recordItem->text();
+                if (!text.endsWith(mark)) {
+                    text += "\t" + mark;
+                    recordItem->setText(text);
+                }
+            }
+
+            // スコア更新
             if (QDateTime::currentSecsSinceEpoch() > _lastPvShownTime) {  // per 1sec
                 _lastPvShownTime = QDateTime::currentSecsSinceEpoch();
                 auto scores = _recorder->scores(_analysisMoves);
@@ -1303,7 +1343,7 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
     Sfen sf(sfen);
 
     // 読み筋・解析手順の表示
-    auto addMessageItem = [sf](QTableWidget *messageTableWidget, int row, const QString &head, const ScoreItem &item) {
+    auto showMessageItem = [sf](QTableWidget *messageTableWidget, int row, const QString &head, const ScoreItem &item) {
         if (item.isEmpty()) {
             return;
         }
@@ -1343,13 +1383,13 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
         for (int row = 0; row < rownum; row++) {
             const auto &it = scores[row + 1];
             QString str = (row > 0) ? QString::number(row + 1) : tr("Best");
-            addMessageItem(_ui->messageTableWidget, row, str, it);
+            showMessageItem(_ui->messageTableWidget, row, str, it);
         }
     } else {
         // index:0 指し手
         if (scores.count() > 0 && !scores[0].isEmpty()) {
             // 先読み候補の表示
-            addMessageItem(_ui->messageTableWidget, 0, tr("Pnd"), scores[0]);
+            showMessageItem(_ui->messageTableWidget, 0, tr("Pnd"), scores[0]);
         }
     }
 }
@@ -1545,6 +1585,62 @@ void MainController::timerEvent(QTimerEvent *event)
 }
 
 
+void MainController::keyPressEvent(QKeyEvent *event)
+{
+    qDebug() << "keyPressEvent" << event->key() << event->modifiers();
+
+    // ショートカットキー
+    switch (event->key()) {
+    case Qt::Key_Down:
+        if (event->modifiers() == Qt::NoModifier) {
+            showNext();
+        } else if (event->modifiers() == Qt::AltModifier) {
+            showNext10Moves();
+        } else if (event->modifiers() == Qt::ControlModifier) {
+            showLastPosition();
+        } else {
+            // Do nothing
+        }
+        break;
+
+    case Qt::Key_Up:
+        if (event->modifiers() == Qt::NoModifier) {
+            showPrevious();
+        } else if (event->modifiers() == Qt::AltModifier) {
+            showPrevious10Moves();
+        } else if (event->modifiers() == Qt::ControlModifier) {
+            showFirstPosition();
+        } else {
+            // Do nothing
+        }
+        break;
+
+    case Qt::Key_Right:
+        showNextCandidate();
+        break;
+
+    case Qt::Key_Left:
+        showPreviousCandidate();
+        break;
+
+    default:
+        break;
+    }
+}
+
+
+bool MainController::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        keyPressEvent(keyEvent);
+        return true;
+    }
+    // standard event processing
+    return QWidget::eventFilter(obj, event);
+}
+
+
 void MainController::clear()
 {
     _recorder->clear();
@@ -1614,5 +1710,176 @@ void MainController::hideSpinner()
         _spinner->hide();
         _spinner->deleteLater();
         _spinner = nullptr;
+    }
+}
+
+
+void MainController::showNext()
+{
+    switch (_mode) {
+    case Watch: {  // 棋譜再生
+        int row = _ui->messageTableWidget->currentRow();
+        if (row < 0) {
+            // 次に進む
+            int current = _ui->recordWidget->currentRow();
+            int idx = std::min(current + 1, _recorder->count());
+            _ui->recordWidget->setCurrentRow(idx);
+        } else {
+            // 次の候補
+            int col = _ui->messageTableWidget->currentColumn() + 1;
+            auto *item = _ui->messageTableWidget->item(row, col);
+            if (item && !item->text().trimmed().isEmpty()) {
+                _ui->messageTableWidget->setCurrentCell(row, col);
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+
+void MainController::showNext10Moves()
+{
+    switch (_mode) {
+    case Watch: {  // 棋譜再生
+        int row = _ui->messageTableWidget->currentRow();
+        if (row < 0) {
+            int current = _ui->recordWidget->currentRow();
+            int idx = std::min(current + 10, _recorder->count());
+            _ui->recordWidget->setCurrentRow(idx);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+
+void MainController::showNextCandidate()
+{
+    switch (_mode) {
+    case Watch: {  // 棋譜再生
+        int row = _ui->messageTableWidget->currentRow() + 1;
+        auto *item = _ui->messageTableWidget->item(row, 2);
+        if (item && !item->text().trimmed().isEmpty()) {
+            _ui->messageTableWidget->setCurrentCell(row, 2);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+
+void MainController::showPrevious()
+{
+    switch (_mode) {
+    case Watch: {  // 棋譜再生
+        int row = _ui->messageTableWidget->currentRow();
+        if (row < 0) {
+            // 前に戻る
+            int current = _ui->recordWidget->currentRow();
+            int idx = std::max(current - 1, 0);
+            _ui->recordWidget->setCurrentRow(idx);
+        } else {
+            int col = _ui->messageTableWidget->currentColumn();
+            if (col == 2) {
+                // 本譜へ戻る
+                int idx = _ui->recordWidget->currentRow();
+                _ui->recordWidget->setCurrentRow(-1);  // イベントを飛ばすため
+                _ui->recordWidget->setCurrentRow(idx);
+                _ui->messageTableWidget->setCurrentCell(-1, -1);  // フォーカスを外す
+            } else if (col > 2) {
+                // 前の候補
+                col = std::max(col - 1, 2);
+                auto *item = _ui->messageTableWidget->item(row, col);
+                if (item && !item->text().trimmed().isEmpty()) {
+                    _ui->messageTableWidget->setCurrentCell(row, col);
+                }
+            } else {
+                // Do nothong
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+
+void MainController::showPrevious10Moves()
+{
+    switch (_mode) {
+    case Watch: {  // 棋譜再生
+        int row = _ui->messageTableWidget->currentRow();
+        if (row < 0) {
+            int current = _ui->recordWidget->currentRow();
+            int idx = std::max(current - 10, 0);
+            _ui->recordWidget->setCurrentRow(idx);
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+
+void MainController::showPreviousCandidate()
+{
+    switch (_mode) {
+    case Watch: {  // 棋譜再生
+        int row = _ui->messageTableWidget->currentRow();
+        if (row == 0) {
+            // 本譜へ戻る
+            int idx = _ui->recordWidget->currentRow();
+            _ui->recordWidget->setCurrentRow(-1);  // イベントを飛ばすため
+            _ui->recordWidget->setCurrentRow(idx);
+            _ui->messageTableWidget->setCurrentCell(-1, -1);  // フォーカスを外す
+        } else if (row > 0) {
+            // 次の候補
+            row--;
+            auto *item = _ui->messageTableWidget->item(row, 2);
+            if (item && !item->text().trimmed().isEmpty()) {
+                _ui->messageTableWidget->setCurrentCell(row, 2);
+            }
+        } else {
+            // Do nothing
+        }
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+
+void MainController::showFirstPosition()
+{
+    switch (_mode) {
+    case Watch:  // 棋譜再生
+        _ui->recordWidget->setCurrentRow(0);
+        break;
+    default:
+        break;
+    }
+}
+
+
+void MainController::showLastPosition()
+{
+    switch (_mode) {
+    case Watch: {  // 棋譜再生
+        int idx = _recorder->count();
+        _ui->recordWidget->setCurrentRow(idx);
+        break;
+    }
+    default:
+        break;
     }
 }

@@ -79,6 +79,7 @@ SOURCES += \
         mypage.cpp \
         messagebox.cpp \
         evaluationgraph.cpp \
+        operationbuttongroup.cpp \
         maincontroller.cpp
 
 HEADERS += \
@@ -110,6 +111,7 @@ HEADERS += \
         file.h \
         sound.h \
         evaluationgraph.h \
+        operationbuttongroup.h \
         maincontroller.h
 
 FORMS += \
@@ -119,6 +121,7 @@ FORMS += \
         ../forms/analysisdialog.ui \
         ../forms/recorddialog.ui \
         ../forms/settingsdialog.ui \
+        ../forms/operationbuttongroup.ui \
 #        ../forms/startdialog.ui \
         ../forms/startdialog2.ui
 
