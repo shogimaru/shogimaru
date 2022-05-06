@@ -54,9 +54,10 @@ windeployqt shogimaru.exe
 move /y vc_redist.x64.exe ..
 
 cd ..
+del /q %TARGET%_windows.zip
 move /y dist %TARGET%
 powershell compress-archive %TARGET% %TARGET%_windows.zip
-rd /s /q %TARGET%
+move /y %TARGET% dist
 
 pause
 exit /b
