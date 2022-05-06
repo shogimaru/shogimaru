@@ -16,6 +16,18 @@ OperationButtonGroup::OperationButtonGroup(QWidget *parent) :
     _ui->firstButton->setText(QString::fromUtf8(u8"｜◀"));
     _ui->lastButton->setText(QString::fromUtf8(u8"▶｜"));
 
+#ifdef Q_OS_WIN
+    QFont font("Yu Gothic UI", 8);
+    _ui->nextButton->setFont(font);
+    _ui->next10Button->setFont(font);
+    _ui->nextCandidateButton->setFont(font);
+    _ui->prevButton->setFont(font);
+    _ui->prev10Button->setFont(font);
+    _ui->prevCandidateButton->setFont(font);
+    _ui->firstButton->setFont(font);
+    _ui->lastButton->setFont(font);
+#endif
+
     connect(_ui->nextButton, &QPushButton::clicked, this, &OperationButtonGroup::next);
     connect(_ui->next10Button, &QPushButton::clicked, this, &OperationButtonGroup::next10Moves);
     connect(_ui->nextCandidateButton, &QPushButton::clicked, this, &OperationButtonGroup::nextCandidate);
