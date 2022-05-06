@@ -17,13 +17,14 @@ OperationButtonGroup::OperationButtonGroup(QWidget *parent) :
     _ui->lastButton->setText(QString::fromUtf8(u8"▶｜"));
 
 #ifdef Q_OS_WIN
-    QFont font("Yu Gothic UI", 8);
+    _ui->nextCandidateButton->setText(QString::fromUtf8(u8"＞"));
+    _ui->prevCandidateButton->setText(QString::fromUtf8(u8"＜"));
+
+    QFont font("Yu Gothic UI", 7);
     _ui->nextButton->setFont(font);
     _ui->next10Button->setFont(font);
-    _ui->nextCandidateButton->setFont(font);
     _ui->prevButton->setFont(font);
     _ui->prev10Button->setFont(font);
-    _ui->prevCandidateButton->setFont(font);
     _ui->firstButton->setFont(font);
     _ui->lastButton->setFont(font);
 #endif
