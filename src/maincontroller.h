@@ -105,6 +105,9 @@ protected:
     void displayTurn(maru::Turn turn);
     void slotPonderedItemSelected(int row, int column);
     void nextAnalysis();
+    void stopAnalysis();
+    bool startEngineForAnalysis(int moves);
+    void stopEngineForAnalysis();
     void timerEvent(QTimerEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;

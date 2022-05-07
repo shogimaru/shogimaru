@@ -177,7 +177,7 @@
              <rect>
               <x>5</x>
               <y>0</y>
-              <width>181</width>
+              <width>221</width>
               <height>31</height>
              </rect>
             </property>
@@ -193,9 +193,9 @@
            <widget class="QLabel" name="senteTimeLabel">
             <property name="geometry">
              <rect>
-              <x>190</x>
+              <x>230</x>
               <y>0</y>
-              <width>151</width>
+              <width>111</width>
               <height>31</height>
              </rect>
             </property>
@@ -227,9 +227,9 @@
            <widget class="QLabel" name="goteTimeLabel">
             <property name="geometry">
              <rect>
-              <x>190</x>
+              <x>230</x>
               <y>0</y>
-              <width>151</width>
+              <width>111</width>
               <height>31</height>
              </rect>
             </property>
@@ -269,7 +269,7 @@
              <rect>
               <x>5</x>
               <y>0</y>
-              <width>181</width>
+              <width>221</width>
               <height>31</height>
              </rect>
             </property>

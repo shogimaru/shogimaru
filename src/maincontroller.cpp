@@ -513,12 +513,12 @@ void MainController::startGame()
     //     "----Pg-PN "
     //     "b BPrb4p 1";
 
+    clear();  // 画面クリア
     int basicTime = _startDialog->basicTime() * 60000;
     int byoyomi = _startDialog->byoyomi() * 1000;
 
     _clock->setTime(_startDialog->method(), basicTime, byoyomi);
     _ponderFlag = (_players[maru::Sente].type() != _players[maru::Gote].type());
-    _recorder->clear();
 
     if (_players[maru::Sente].type() == maru::Computer || _players[maru::Gote].type() == maru::Computer) {
         // 初期局面から開始
@@ -539,19 +539,12 @@ void MainController::startGame()
 
     _rotated = (_players[maru::Sente].type() == maru::Computer && _players[maru::Gote].type() == maru::Human);  // 反転有無
     updateBoard();
-    _ui->recordWidget->clear();
-    _ui->messageTableWidget->clear();
 
     // 対局開始
     _mode = Rating;
     updateButtonStates();
     showRemainingTime(maru::Sente, basicTime, byoyomi);
     showRemainingTime(maru::Gote, basicTime, byoyomi);
-
-    // 棋譜記録
-    auto *item = new QListWidgetItem(tr("  0 Start"), _ui->recordWidget);
-    _ui->recordWidget->addItem(item);
-    _ui->recordWidget->scrollToItem(item);
 }
 
 
@@ -1077,27 +1070,6 @@ void MainController::pondered(const PonderInfo &info)
 // 次の解析へ
 void MainController::nextAnalysis()
 {
-    // 解析終了関数
-    auto stopAnalysis = [&](int moves) {
-        // 表示
-        auto scores = _recorder->scores(moves);
-        auto sfen = _recorder->sfen(moves);
-        showAnalyzingMoves(scores, sfen);
-        setCurrentRecordRow(moves);
-        // 終了
-        Engine::instance().gameover();
-        _ponderTimer.stop();
-        killTimer(_analysisTimerId);
-        _analysisTimerId = 0;
-        _ui->infoLine->clear();
-        _lastPonder.clear();
-        _mode = Watch;
-        MessageBox::information(tr("Information"), tr("Analysis completed"));
-        qDebug() << "Analysis completed";
-        setGraphScores();  // グラフ表示
-        updateButtonStates();
-    };
-
     // 詰みあり or 制限超過
     Engine::instance().stop();
     _ponderTimer.stop();
@@ -1111,7 +1083,7 @@ void MainController::nextAnalysis()
             bool illegal = _recorder->isIllegalMove(_analysisMoves);
             if (illegal) {
                 // 解析終了
-                stopAnalysis(_analysisMoves);
+                stopAnalysis();
                 return;
             }
 
@@ -1127,7 +1099,7 @@ void MainController::nextAnalysis()
 
             if (_analysisMoves >= _recorder->count() - 1) {
                 // 解析終了
-                stopAnalysis(_analysisMoves);
+                stopAnalysis();
                 return;
             }
         }
@@ -1137,15 +1109,44 @@ void MainController::nextAnalysis()
         Engine::instance().analysis(sfen);
         setCurrentRecordRow(_analysisMoves);
         _elapsedTimer.start();
+        _ui->messageTableWidget->clear();  // クリア
 
     } else {
         // 解析終了
-        stopAnalysis(_analysisMoves);
+        stopAnalysis();
         return;
     }
 
     // 評価グラフに評価値セット
     setGraphScores();
+    updateButtonStates();
+}
+
+
+void MainController::stopEngineForAnalysis()
+{
+    Engine::instance().gameover();
+    _ponderTimer.stop();
+    killTimer(_analysisTimerId);
+    _analysisTimerId = 0;
+    _ui->infoLine->clear();
+    _lastPonder.clear();
+}
+
+// 解析終了関数
+void MainController::stopAnalysis()
+{
+    // 表示
+    auto scores = _recorder->scores(_analysisMoves);
+    auto sfen = _recorder->sfen(_analysisMoves);
+    showAnalyzingMoves(scores, sfen);
+    setCurrentRecordRow(_analysisMoves);
+    // 終了
+    stopEngineForAnalysis();
+    _mode = Watch;
+    MessageBox::information(tr("Information"), tr("Analysis completed"));
+    qDebug() << "Analysis completed";
+    setGraphScores();  // グラフ表示
     updateButtonStates();
 }
 
@@ -1298,15 +1299,54 @@ void MainController::rotate(bool rotation)
 // エンジン勝ち宣言
 void MainController::engineWin()
 {
-    stopGame(_clock->currentTurn(), maru::Win, maru::Win_Declare);
-    showGameoverBox(tr("The computer declared victory by entering the king, according to CSA rules."));
+    switch (_mode) {
+    case Rating:  // 対局
+        stopGame(_clock->currentTurn(), maru::Win, maru::Win_Declare);
+        showGameoverBox(tr("The computer declared victory by entering the king, according to CSA rules."));
+        break;
+
+    case Analyzing:  // 検討
+        // 想定していないが念のため
+        if (_analysisMoves < _recorder->count() - 1) {
+            stopEngineForAnalysis();
+            startEngineForAnalysis(_analysisMoves + 1);
+        } else {
+            stopAnalysis();
+        }
+        break;
+
+    case Watch:  // 棋譜再生
+    case Edit:  // 編集
+    default:
+        qWarning() << "Invalid state" << __FILE__ << __LINE__;
+        break;
+    }
 }
 
 // エンジン投了
 void MainController::engineResign()
 {
-    stopGame(_clock->currentTurn(), maru::Loss, maru::Loss_Resign);
-    showGameoverBox(tr("You win!"));
+    switch (_mode) {
+    case Rating:  // 対局
+        stopGame(_clock->currentTurn(), maru::Loss, maru::Loss_Resign);
+        showGameoverBox(tr("You win!"));
+        break;
+
+    case Analyzing:  // 検討
+        if (_analysisMoves < _recorder->count() - 1) {
+            stopEngineForAnalysis();
+            startEngineForAnalysis(_analysisMoves + 1);
+        } else {
+            stopAnalysis();
+        }
+        break;
+
+    case Watch:  // 棋譜再生
+    case Edit:  // 編集
+    default:
+        qWarning() << "Invalid state" << __FILE__ << __LINE__;
+        break;
+    }
 }
 
 
@@ -1397,9 +1437,13 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
 
 void MainController::showRemainingTime(maru::Turn turn, int time, int byoyomi)
 {
-    int t = (time > 0) ? time : byoyomi;
-    QString str = QTime(0, 0, 0, 999).addMSecs(t).toString("h:mm:ss");
-    str += (time == 0 && byoyomi > 0) ? tr(" byoyomi") : "";  // 秒読み
+    QString str = QTime(0, 0, 0, 999).addMSecs(time).toString("h:mm:ss");
+
+    if (_startDialog->method() == maru::Byoyomi) {
+        // 秒読み表示
+        int byo = (byoyomi > 0) ? (byoyomi - 1) / 1000 + 1 : 0;
+        str += QString("  %1").arg(byo, 2);
+    }
 
     if (turn == maru::Sente) {
         _ui->senteTimeLabel->setText(str);
@@ -1461,18 +1505,29 @@ void MainController::startAnalysis()
     }
 
     showSpinner();  // スピナー表示
-
-    // エンジン解析開始
-    if (!Engine::instance().startAnalysis()) {
-        MessageBox::information(tr("Engine error"), Engine::instance().error());
-        return;
-    }
-
-    _analysisMoves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
-    _mode = Analyzing;
     updateButtonStates();
     showRemainingTime(maru::Sente, 0, 0);  // 先手残り時間
     showRemainingTime(maru::Gote, 0, 0);  // 後手残り時間
+
+    int moves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
+    bool ok = startEngineForAnalysis(moves);
+    if (!ok) {
+        MessageBox::information(tr("Engine error"), Engine::instance().error());
+        return;
+    }
+}
+
+
+bool MainController::startEngineForAnalysis(int moves)
+{
+    // エンジン解析開始
+    if (!Engine::instance().startAnalysis()) {
+        return false;
+    }
+
+    _analysisMoves = moves;
+    _mode = Analyzing;
+    return true;
 }
 
 
@@ -1645,14 +1700,14 @@ void MainController::clear()
 {
     _recorder->clear();
     _ui->recordWidget->clear();
-    auto *item = new QListWidgetItem(tr("  0 Start"), _ui->recordWidget);
+    QString str = QLatin1String("  0  ") + tr("Start");
+    auto *item = new QListWidgetItem(str, _ui->recordWidget);
     _ui->recordWidget->addItem(item);
     _ui->recordWidget->scrollToItem(item);
 
-    _rotated = false;  // 反転有無
     _ui->messageTableWidget->clear();
     _graph->clear();  // グラフクリア
-
+    _rotated = false;  // 反転無しに戻す
     updateMainWindow();
 }
 
