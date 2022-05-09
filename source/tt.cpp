@@ -73,10 +73,11 @@ void TTEntry::save_(TTEntry::KEY_TYPE key_for_ttentry, Value v, bool pv , Bound 
 // 置換表のサイズを確保しなおす。
 void TranspositionTable::resize(size_t mbSize) {
 
-#if defined(TANUKI_MATE_ENGINE) || defined(YANEURAOU_MATE_ENGINE)
-	// MateEngineではこの置換表は用いないので確保しない。
+#if defined(TANUKI_MATE_ENGINE) || defined(YANEURAOU_MATE_ENGINE) || defined(YANEURAOU_ENGINE_DEEP)
+	// これらのエンジンでは、この置換表は用いないので確保しない。
 	return;
 #endif
+
 	// Optionのoverrideによってスレッド初期化前にハンドラが呼び出された。これは無視する。
 	if (Threads.size() == 0)
 		return;
@@ -110,7 +111,7 @@ void TranspositionTable::resize(size_t mbSize) {
 	// cf. Explicitly zero TT upon resize. : https://github.com/official-stockfish/Stockfish/commit/2ba47416cbdd5db2c7c79257072cd8675b61721f
 
 	// Large Pageを確保する。ランダムメモリアクセスが5%程度速くなる。
-	table = static_cast<Cluster*>(tt_memory.alloc(clusterCount * sizeof(Cluster),32));
+	table = static_cast<Cluster*>(tt_memory.alloc(clusterCount * sizeof(Cluster), sizeof(Cluster) ));
 
 	// clear();
 
@@ -133,11 +134,14 @@ void TranspositionTable::clear()
 
 	auto size = clusterCount * sizeof(Cluster);
 
-#if !defined(EVAL_LEARN)
+#if !defined(EVAL_LEARN) && !defined(__EMSCRIPTEN__)
 	// 進捗を表示しながら並列化してゼロクリア
 	// Stockfishのここにあったコードは、独自の置換表を実装した時にも使いたいため、tt.cppに移動させた。
 	Tools::memclear("USI_Hash" , table, size);
 #else
+	// yaneuraou.wasm
+	// pthread_joinによってブラウザのメインスレッドがブロックされるため、単一スレッドでメモリをクリアする処理に変更
+
 	// LEARN版のときは、
 	// 単一スレッドでメモリをクリアする。(他のスレッドは仕事をしているので..)
 	// 教師生成を行う時は、対局の最初にスレッドごとのTTに対して、
@@ -236,7 +240,7 @@ TTEntry* TranspositionTable::read_probe(const Key key_for_index, const TTEntry::
 	for (int i = 0; i < ClusterSize; ++i)
 	{
 		if (tte[i].key == key_for_ttentry || !tte[i].depth8)
-				return found = (bool)tte[i].depth8, &tte[i];
+			return found = (bool)tte[i].depth8, &tte[i];
 	}
 	return found = false, nullptr;
 }
@@ -250,15 +254,18 @@ TTEntry* TranspositionTable::read_probe(const Key key_for_index, const TTEntry::
 // TTClusterSizeとして3を選択した場合、TTEntryに格納されるhash keyは16bitになる。
 // → config.h で TTClusterSize を設定する。
 
-void TTEntry::save(Key    k, Value v, bool pv , Bound b, Depth d, Move m, Value ev) { save_((TTEntry::KEY_TYPE)(k >> 1),v, pv, b, d, m, ev);}
+void TTEntry::save(Key     k, Value v, bool pv , Bound b, Depth d, Move m, Value ev) { save_((TTEntry::KEY_TYPE)(k >> 1)          ,v, pv, b, d, m, ev);}
 void TTEntry::save(Key128& k, Value v, bool pv , Bound b, Depth d, Move m, Value ev) { save_((TTEntry::KEY_TYPE) k.extract64<1>() ,v, pv, b, d, m, ev);}
 void TTEntry::save(Key256& k, Value v, bool pv , Bound b, Depth d, Move m, Value ev) { save_((TTEntry::KEY_TYPE) k.extract64<1>() ,v, pv, b, d, m, ev);}
-TTEntry* TranspositionTable::probe     (const Key    key, bool& found) const { return      probe(key     ,(TTEntry::KEY_TYPE)(key >> 1), found); }
-TTEntry* TranspositionTable::probe     (const Key128& key, bool& found) const { return      probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
-TTEntry* TranspositionTable::probe     (const Key256& key, bool& found) const { return      probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
-TTEntry* TranspositionTable::read_probe(const Key    key, bool& found) const { return read_probe(key     ,(TTEntry::KEY_TYPE)(key >> 1), found); }
-TTEntry* TranspositionTable::read_probe(const Key128& key, bool& found) const { return read_probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
-TTEntry* TranspositionTable::read_probe(const Key256& key, bool& found) const { return read_probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
+TTEntry* TranspositionTable::probe      (const Key     key, bool& found) const { return      probe(key               ,(TTEntry::KEY_TYPE)(key >> 1          ), found); }
+TTEntry* TranspositionTable::probe      (const Key128& key, bool& found) const { return      probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
+TTEntry* TranspositionTable::probe      (const Key256& key, bool& found) const { return      probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
+TTEntry* TranspositionTable::read_probe (const Key     key, bool& found) const { return read_probe(key               ,(TTEntry::KEY_TYPE)(key >> 1          ), found); }
+TTEntry* TranspositionTable::read_probe (const Key128& key, bool& found) const { return read_probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
+TTEntry* TranspositionTable::read_probe (const Key256& key, bool& found) const { return read_probe(key.extract64<0>(),(TTEntry::KEY_TYPE)(key.extract64<1>()), found); }
+TTEntry* TranspositionTable::first_entry(const Key     key) const { return _first_entry(key               ); }
+TTEntry* TranspositionTable::first_entry(const Key128& key) const { return _first_entry(key.extract64<0>()); }
+TTEntry* TranspositionTable::first_entry(const Key256& key) const { return _first_entry(key.extract64<0>()); }
 
 int TranspositionTable::hashfull() const
 {
@@ -267,7 +274,7 @@ int TranspositionTable::hashfull() const
 
 	// Stockfish11では、1000 Cluster(3000 TTEntry)についてサンプリングするように変更されたが、
 	// 計測時間がもったいないので、古いコードのままにしておく。
-	
+
 	int cnt = 0;
 	for (int i = 0; i < 1000 / ClusterSize; ++i)
 		for (int j = 0; j < ClusterSize; ++j)
@@ -294,7 +301,7 @@ void TranspositionTable::init_tt_per_thread()
 	// 1スレッドあたりのクラスター数(端数切捨て)
 	// clusterCountは2の倍数でないと駄目なので、端数を切り捨てるためにLSBを0にする。
 	size_t clusterCountPerThread = (clusterCount / thread_size) & ~(size_t)1;
-	 
+
 	ASSERT_LV3((clusterCountPerThread & 1) == 0);
 
 	// これを、自分が確保したglobalな置換表用メモリから切り分けて割当てる。

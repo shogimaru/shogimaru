@@ -50,15 +50,15 @@ struct StateInfo {
 	// board_key()は盤面のhash。hand_key()は手駒のhash。それぞれ加算したのがkey() 盤面のhash。
 	// board_key()のほうは、手番も込み。
 	
-	Key key()                     const { return long_key(); }
-	Key board_key()               const { return board_long_key(); }
-	Key hand_key()                const { return hand_long_key(); }
+	Key key()                     const { return hash_key_to_key(hash_key());       }
+	Key board_key()               const { return hash_key_to_key(board_hash_key()); }
+	Key hand_key()                const { return hash_key_to_key(hand_hash_key());  }
 
 	// HASH_KEY_BITSが128のときはKey128が返るhash key,256のときはKey256
 
-	HASH_KEY long_key()           const { return board_key_ + hand_key_; }
-	HASH_KEY board_long_key()     const { return board_key_; }
-	HASH_KEY hand_long_key()      const { return hand_key_; }
+	HASH_KEY hash_key()           const { return board_key_ + hand_key_; }
+	HASH_KEY board_hash_key()     const { return board_key_            ; }
+	HASH_KEY hand_hash_key()      const { return              hand_key_; }
 
 	// 現局面で手番側に対して王手をしている駒のbitboard
 	Bitboard checkersBB;
@@ -113,7 +113,7 @@ struct StateInfo {
 #if defined(EVAL_KPPT) || defined(EVAL_KPP_KKPT)
 
 	// 評価値。(次の局面で評価値を差分計算するときに用いる)
-	// まだ計算されていなければsum.p[2][0]の値はINT_MAX
+	// まだ計算されていなければsum.p[2][0]の値はint_max
 	Eval::EvalSum sum;
 
 #endif
@@ -306,7 +306,7 @@ public:
 	// 定跡DBや置換表から取り出したMove16(16bit型の指し手)を32bit化する。
 	// is_ok(m) == false ならば、mをそのまま返す。
 	// 例 : MOVE_WINやMOVE_NULLに対してはそれがそのまま返ってくる。つまり、この時、上位16bitは0(NO_PIECE)である。
-	// 	  
+	//
 	// ※　このPositionクラスが保持している現在の手番(side_to_move)が移動させる駒に反映される。
 	// ※　mの移動元の駒が現在の手番の駒でなければ、MOVE_NONEが返ることは保証される。
 	// ※  mの移動元に駒がない場合も、MOVE_NONEが返ることは保証される。
@@ -529,15 +529,15 @@ public:
 	// --- Accessing hash keys
 
 	// StateInfo::key()への簡易アクセス。
-	Key key() const { return st->key(); }
-	HASH_KEY long_key() const { return st->long_key(); }
+	Key           key() const { return st->key()     ; }
+	HASH_KEY hash_key() const { return st->hash_key(); }
 
 	// ある指し手を指した後のhash keyを返す。
 	// 将棋だとこの計算にそこそこ時間がかかるので、通常の探索部でprefetch用に
 	// これを計算するのはあまり得策ではないが、詰将棋ルーチンでは置換表を投機的に
 	// prefetchできるとずいぶん速くなるのでこの関数を用意しておく。
-	Key key_after(Move m) const;
-	HASH_KEY long_key_after(Move m) const;
+	Key      key_after     (Move m) const;
+	HASH_KEY hash_key_after(Move m) const;
 
 	// --- misc
 
@@ -943,5 +943,6 @@ std::ostream& operator<<(std::ostream& os, const Position& pos);
 
 // depthに応じたZobrist Hashを得る。depthを含めてhash keyを求めたいときに用いる。
 HASH_KEY DepthHash(int depth);
+
 
 #endif // of #ifndef _POSITION_H_

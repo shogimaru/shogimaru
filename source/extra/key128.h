@@ -36,7 +36,7 @@ struct alignas(16) Key128
 	Key128() {}
 
 	// kを下位64bitに格納する(上位64bitは0)
-	Key128(const Key& k) { set(k,0); }
+	Key128(const Key& k) { set(k, 0); }
 
 #if defined (USE_SSE2)
 	Key128(const Key128& bb) { _mm_store_si128(&this->m, bb.m); }
@@ -54,7 +54,8 @@ struct alignas(16) Key128
 #endif
 	}
 
-	operator Key() const { return extract64<0>(); }
+	// これ暗黙で変換するの便利だが、バグに気づかずに危ない意味があるな…。
+	//operator Key() const { return extract64<0>(); }
 
 	// _u64[n]を取り出す。SSE4の命令が使えるときはそれを使う。
 	// n == 0なら下位64bit、n == 1なら上位64bitが取り出される。
@@ -106,6 +107,13 @@ struct std::hash<Key128> {
 	}
 };
 
+static std::ostream& operator << (std::ostream& os, const Key128& k)
+{
+	// 上位bitから出力する。(数字ってそういうものであるから…)
+	os <<  k.extract64<1>() << ":" << k.extract64<0>();
+	return os;
+}
+
 // 256bit版
 struct alignas(32) Key256
 {
@@ -128,13 +136,13 @@ struct alignas(32) Key256
 	// 下位64bitから順にk0, k1, k2, k3に設定する。
 	void set(Key k0, Key k1, Key k2, Key k3) {
 #if defined(USE_AVX2)
-	m = _mm256_set_epi64x(k3,k2,k1,k0);
+	m = _mm256_set_epi64x(k3, k2, k1, k0);
 #else
 	p[0] = k0; p[1] = k1; p[2] = k2; p[3] = k3;
 #endif
 	}
 
-	operator Key() const { return extract64<0>(); }
+	//operator Key() const { return extract64<0>(); }
 
 	// p[n]を取り出す。SSE4の命令が使えるときはそれを使う。
 	template <int n>
@@ -182,5 +190,17 @@ struct std::hash<Key256> {
 		return (size_t)(k.extract64<0>());
 	}
 };
+
+static std::ostream& operator << (std::ostream& os, const Key256& k)
+{
+	// 上位bitから出力する。(数字ってそういうものであるから…)
+	os <<  k.extract64<3>() << ":" << k.extract64<2>() <<  k.extract64<1>() << ":" << k.extract64<0>();
+	return os;
+}
+
+// HASH_KEYをKeyに変換する。
+static Key hash_key_to_key(const Key     key) { return key               ; }
+static Key hash_key_to_key(const Key128& key) { return key.extract64<0>(); }
+static Key hash_key_to_key(const Key256& key) { return key.extract64<0>(); }
 
 #endif // _KEY128_H_

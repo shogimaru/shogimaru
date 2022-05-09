@@ -77,6 +77,8 @@ MATERIAL_LEVEL = 1
 EVAL_EMBEDDING = OFF
 # EVAL_EMBEDDING = ON
 
+CPPFLAGS += $(EXTRA_CPPFLAGS)
+
 ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_KPPT)
   CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_KPPT
   ENGINE_NAME := YaneuraOu_KPPT
@@ -224,7 +226,8 @@ LOCAL_SRC_FILES += \
   ../source/eval/nnue/features/half_relative_kp.cpp                    \
   ../source/eval/nnue/features/half_kpe9.cpp                           \
   ../source/eval/nnue/features/pe9.cpp                                 \
-  ../source/engine/yaneuraou-engine/yaneuraou-search.cpp
+  ../source/engine/yaneuraou-engine/yaneuraou-search.cpp               \
+  ../source/engine/dlshogi-engine/yo_cluster.cpp
 	ifeq ($(EVAL_EMBEDDING),ON)
 		LOCAL_SRC_FILES += \
 			../source/eval/nnue/embedded_nnue.cpp

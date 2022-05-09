@@ -55,6 +55,7 @@ int YaneuraOu()
 	size_t thread_num = Options.count("Threads") ? (size_t)Options["Threads"] : 1;
 	Threads.set(thread_num);
 
+#if !defined(__EMSCRIPTEN__)
 	// USIコマンドの応答部
 
 	USI::loop(argc, argv);
@@ -62,6 +63,10 @@ int YaneuraOu()
 	// 生成して、待機させていたスレッドの停止
 
 	Threads.set(0);
+#else
+	// yaneuraOu.wasm
+	// ここでループしてしまうと、ブラウザのメインスレッドがブロックされてしまうため、コメントアウト
+#endif
 
 	return 0;
 }

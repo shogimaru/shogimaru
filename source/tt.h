@@ -17,6 +17,9 @@ struct Key256;
 /// 本エントリーは10bytesに収まるようになっている。3つのエントリーを並べたときに32bytesに収まるので
 /// CPUのcache lineに一発で載るというミラクル。
 ///
+/// ※ cache line sizeは、IntelだとPentium4やPentiumMからでPentiumⅢ(3)までは32byte。
+///    そこ以降64byte。AMDだとK8のときには既に64byte。
+///
 /// key        16 bit : hash keyの下位16bit(bit0は除くのでbit16..1)
 /// depth       8 bit : 格納されているvalue値の探索深さ
 /// move       16 bit : このnodeの最善手(指し手16bit ≒ Move16 , Moveの上位16bitは無視される)
@@ -27,12 +30,12 @@ struct Key256;
 /// eval value 16 bit : このnodeでのevaluate()の返し値
 struct TTEntry {
 
-	Move16 move() const { return Move16(move16); }
-	Value value() const { return (Value)value16; }
-	Value eval() const { return (Value)eval16; }
-	Depth depth() const { return (Depth)depth8 + DEPTH_OFFSET; }
-	bool is_pv() const { return (bool)(genBound8 & 0x4); }
-	Bound bound() const { return (Bound)(genBound8 & 0x3); }
+	Move16 move()  const { return Move16(move16); }
+	Value  value() const { return (Value)value16; }
+	Value  eval()  const { return (Value)eval16;  }
+	Depth  depth() const { return (Depth)depth8 + DEPTH_OFFSET; }
+	bool   is_pv() const { return (bool )(genBound8 & 0x4); }
+	Bound  bound() const { return (Bound)(genBound8 & 0x3); }
 
 	// 置換表のエントリーに対して与えられたデータを保存する。上書き動作
 	//   v    : 探索のスコア
@@ -41,7 +44,7 @@ struct TTEntry {
 	//   d    : その時の探索深さ
 	//   m    : ベストな指し手
 	// ※ KeyとしてKey(64 bit)以外に 128,256bitのhash keyにも対応。(やねうら王独自拡張)
-	void save(Key k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
+	void save(Key     k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
 	void save(Key128& k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
 	void save(Key256& k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
 
@@ -50,7 +53,7 @@ struct TTEntry {
 	// やねうら王では、TTClusterSizeを変更できて、これが2の時は、TTEntryに格納するhash keyは64bit。(Stockfishのように)3の時は16bit。
 #if TT_CLUSTER_SIZE == 3
 	typedef uint16_t KEY_TYPE;
-#elif TT_CLUSTER_SIZE == 2
+#else // TT_CLUSTER_SIZEが2,4,6,8の時は64bit。5,7は選択する意味がないと思うので考えない。
 	typedef uint64_t KEY_TYPE;
 #endif
 
@@ -93,7 +96,11 @@ private:
 struct TranspositionTable {
 
 	// 1クラスターにおけるTTEntryの数
-	// TTEntry 10bytes×3つ + 2(padding) = 32bytes
+	// TT_CLUSTER_SIZE == 2のとき、TTEntry 10bytes×3つ + 2(padding) =  32bytes
+	// TT_CLUSTER_SIZE == 3のとき、TTEntry 16bytes×2つ + 0(padding) =  32bytes
+	// TT_CLUSTER_SIZE == 4のとき、TTEntry 16bytes×4つ + 0(padding) =  64bytes
+	// TT_CLUSTER_SIZE == 6のとき、TTEntry 16bytes×6つ + 0(padding) =  96bytes
+	// TT_CLUSTER_SIZE == 8のとき、TTEntry 16bytes×8つ + 0(padding) = 128bytes
 	static constexpr int ClusterSize = TT_CLUSTER_SIZE;
 
 	struct Cluster {
@@ -103,7 +110,7 @@ struct TranspositionTable {
 #endif
 	};
 
-	static_assert(sizeof(Cluster) == 32, "Unexpected Cluster size");
+	static_assert((sizeof(Cluster) % 32) == 0, "Unexpected Cluster size");
 
 	// --- Constants used to refresh the hash table periodically
 
@@ -138,7 +145,7 @@ public:
 	// 見つかったならfound == trueにしてそのTT_ENTRY*を返す。
 	// 見つからなかったらfound == falseで、このとき置換表に書き戻すときに使うと良いTT_ENTRY*を返す。
 	// ※ KeyとしてKey(64 bit)以外に 128,256bitのhash keyにも対応。(やねうら王独自拡張)
-	TTEntry* probe(const Key key, bool& found) const;
+	TTEntry* probe(const Key     key, bool& found) const;
 	TTEntry* probe(const Key128& key, bool& found) const;
 	TTEntry* probe(const Key256& key, bool& found) const;
 
@@ -146,7 +153,7 @@ public:
 	// ConsiderationMode時のPVの出力時は置換表をprobe()したいが、hitしないときに空きTTEntryを作る挙動が嫌なので、
 	// こちらを用いる。
 	// ※ KeyとしてKey(64 bit)以外に 128,256bitのhash keyにも対応。(やねうら王独自拡張)
-	TTEntry* read_probe(const Key key, bool& found) const;
+	TTEntry* read_probe(const Key     key, bool& found) const;
 	TTEntry* read_probe(const Key128& key, bool& found) const;
 	TTEntry* read_probe(const Key256& key, bool& found) const;
 
@@ -168,7 +175,22 @@ public:
 
 	// keyを元にClusterのindexを求めて、その最初のTTEntry*を返す。
 	// ※　ここで渡されるkeyのbit 0は局面の手番フラグ(Position::side_to_move())であると仮定している。
-	TTEntry* first_entry(const Key key) const {
+	TTEntry* first_entry(const Key     key) const;
+	TTEntry* first_entry(const Key128& key) const;
+	TTEntry* first_entry(const Key256& key) const;
+
+#if defined(EVAL_LEARN)
+	// スレッド数が変更になった時にThread.set()から呼び出される。
+	// これに応じて、スレッドごとに保持しているTTを初期化する。
+	void init_tt_per_thread();
+#endif
+
+private:
+	friend struct TTEntry;
+
+	// keyを元にClusterのindexを求めて、その最初のTTEntry*を返す。内部実装用。
+	// ※　ここで渡されるkeyのbit 0は局面の手番フラグ(Position::side_to_move())であると仮定している。
+	TTEntry* _first_entry(const Key key) const {
 		// Stockfishのコード
 		// mul_hi64は、64bit * 64bitの掛け算をして下位64bitを取得する関数。
 		//return &table[mul_hi64(key, clusterCount)].entry[0];
@@ -196,15 +218,6 @@ public:
 		return &table[(index << 1) | ((u64)key & 1)].entry[0];
 	}
 
-#if defined(EVAL_LEARN)
-	// スレッド数が変更になった時にThread.set()から呼び出される。
-	// これに応じて、スレッドごとに保持しているTTを初期化する。
-	void init_tt_per_thread();
-#endif
-
-private:
-	friend struct TTEntry;
-
 	// この置換表が保持しているクラスター数。
 	// Stockfishはresize()ごとに毎回新しく置換表を確保するが、やねうら王では
 	// そこは端折りたいので、毎回は確保しない。そのため前回サイズがここに格納されていないと
@@ -231,12 +244,12 @@ private:
 	// probe()の内部実装用。
 	// key_for_index   : first_entry()で使うためのkey
 	// key_for_ttentry : TTEntryに格納するためのkey
-	TTEntry* probe(const Key key_for_index, const TTEntry::KEY_TYPE key_for_ttentry , bool& found) const;
+	TTEntry* probe     (const Key key_for_index, const TTEntry::KEY_TYPE key_for_ttentry, bool& found) const;
 	
 	// read_probe()の内部実装用
 	// key_for_index   : first_entry()で使うためのkey
 	// key_for_ttentry : TTEntryに格納するためのkey
-	TTEntry* read_probe(const Key key_for_index, const TTEntry::KEY_TYPE key_for_ttentry , bool& found) const;
+	TTEntry* read_probe(const Key key_for_index, const TTEntry::KEY_TYPE key_for_ttentry, bool& found) const;
 
 };
 

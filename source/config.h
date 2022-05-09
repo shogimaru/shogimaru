@@ -8,7 +8,7 @@
 
 // 思考エンジンのバージョンとしてUSIプロトコルの"usi"コマンドに応答するときの文字列。
 // ただし、この値を数値として使用することがあるので数値化できる文字列にしておく必要がある。
-#define ENGINE_VERSION "7.10"
+#define ENGINE_VERSION "7.50"
 
 // --------------------
 //  思考エンジンの種類
@@ -194,9 +194,13 @@
 //#define HASH_KEY_BITS 64
 
 // 置換表に関する設定
-// TTClusterのなかのTTEntryの数。
-// Stockfishは3。これを2にすると、置換表効率は悪くなるが、hashの格納bit数が増えるので
+// TTClusterのなかのTTEntryの数。2,3,4,6,8,16,32などが選べる。
+// Stockfishは3。
+// これを2にすると、置換表効率は悪くなるが、hashの格納bit数が増えるので
 // hash衝突が起きる確率自体は下がるため、hash衝突由来のバグが出にくくなる。
+// cf. https://yaneuraou.yaneu.com/2022/04/23/yaneuraou-v710-128-bit-edition-released/
+// これを4にすると、1つのTTEntryが64byteになる。いまどきのPCならCPUのcache line sizeが64byteであるため、
+// 速度低下はほぼないはず。
 //#define TT_CLUSTER_SIZE 3
 
 
@@ -267,7 +271,7 @@
 // sortが少し高速化されるらしい。
 // 安定ソートではないので並び順が以前のとは異なるから、benchコマンドの探索ノード数は変わる。
 // CPU targetによって実装が変わるのでCPUによってbenchコマンドの探索ノード数は変わる。
-//#define USE_SUPER_SORT
+// #define USE_SUPER_SORT
 
 
 // ---------------------
@@ -295,6 +299,13 @@
 // "source/engine/yaneuraou-engine/yaneuraou-param.h"をそこに配置すること。
 //#define TUNING_SEARCH_PARAMETERS
 
+
+// ---------------------
+//  YO-Cluster : YaneuraOu The Cluster
+// ---------------------
+
+// YO-Clusterを使う時は、これをdefineする。
+//#define USE_YO_CLUSTER
 
 // ---------------------
 // デバッグに関する設定

@@ -10,6 +10,7 @@
 #include "Node.h"
 #include "UctSearch.h"
 #include "dlshogi_searcher.h"
+#include "dlshogi_min.h"
 
 #include "../../eval/deep/nn_types.h"
 
@@ -37,18 +38,18 @@ void USI::extra_option(USI::OptionsMap& o)
     (*this)["Min_Book_Score"]              = USIOption(-3000, -ScoreInfinite, ScoreInfinite);
     (*this)["USI_Ponder"]                  = USIOption(false);
     (*this)["Stochastic_Ponder"]           = USIOption(true);
-    (*this)["Time_Margin"]                 = USIOption(1000, 0, INT_MAX);
+    (*this)["Time_Margin"]                 = USIOption(1000, 0, int_max);
     (*this)["Mate_Root_Search"]            = USIOption(29, 0, 35);
     (*this)["DfPn_Hash"]                   = USIOption(2048, 64, 4096); // DfPnハッシュサイズ
-    (*this)["DfPn_Min_Search_Millisecs"]   = USIOption(300, 0, INT_MAX);
+    (*this)["DfPn_Min_Search_Millisecs"]   = USIOption(300, 0, int_max);
 #endif
 
 #ifdef MAKE_BOOK
 	// 定跡を生成するときはPV出力は抑制したほうが良さげ。
-    o["PV_Interval"]                 << USI::Option(0, 0, INT_MAX);
-    o["Save_Book_Interval"]          << USI::Option(100, 0, INT_MAX);
+    o["PV_Interval"]                 << USI::Option(0, 0, int_max);
+    o["Save_Book_Interval"]          << USI::Option(100, 0, int_max);
 #else
-    o["PV_Interval"]                 << USI::Option(500, 0, INT_MAX);
+    o["PV_Interval"]                 << USI::Option(500, 0, int_max);
 #endif // !MAKE_BOOK
 
 	o["UCT_NodeLimit"]				 << USI::Option(10000000, 100000, 1000000000); // UCTノードの上限
@@ -67,7 +68,7 @@ void USI::extra_option(USI::OptionsMap& o)
 	// 引き分けの時の値 : 1000分率で
 	// 引き分けの局面では、この値とみなす。
 	// root color(探索開始局面の手番)に応じて、2通り。
-	
+
 	o["DrawValueBlack"]              << USI::Option(500, 0, 1000);
 	o["DrawValueWhite"]              << USI::Option(500, 0, 1000);
 
@@ -133,31 +134,31 @@ void USI::extra_option(USI::OptionsMap& o)
 	// CPUを使っていることがあるので、default値、ちょっと少なめにしておく。
 	o["DNN_Batch_Size1"]             << USI::Option(32, 1, 1024);
 #endif
-	o["DNN_Batch_Size2"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size3"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size4"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size5"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size6"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size7"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size8"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size9"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size10"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size11"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size12"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size13"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size14"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size15"]             << USI::Option(0, 0, 65536);
-    o["DNN_Batch_Size16"]             << USI::Option(0, 0, 65536);
+	o["DNN_Batch_Size2"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size3"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size4"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size5"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size6"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size7"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size8"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size9"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size10"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size11"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size12"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size13"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size14"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size15"]             << USI::Option(0, 0, 1024);
+	o["DNN_Batch_Size16"]             << USI::Option(0, 0, 1024);
 
 #if defined(ORT_MKL)
-	// nn_onnx_runtime.cpp の NNOnnxRuntime::load() で使用するオプション。 
+	// nn_onnx_runtime.cpp の NNOnnxRuntime::load() で使用するオプション。
 	// グラフ全体のスレッド数?（default値1）ORT_MKLでは効果が無いかもしれない。
 	o["InterOpNumThreads"]           << USI::Option(1, 1, 65536);
 	// ノード内の実行並列化の際のスレッド数設定（default値4、NNUE等でのThreads相当）
 	o["IntraOpNumThreads"]           << USI::Option(4, 1, 65536);
 #endif
 
-    //(*this)["Const_Playout"]               = USIOption(0, 0, INT_MAX);
+    //(*this)["Const_Playout"]               = USIOption(0, 0, int_max);
 	// →　Playout数固定。これはNodeLimitでできるので不要。
 
 	// → leaf nodeではdf-pnに変更。
@@ -306,7 +307,7 @@ void MainThread::search()
 	Move move = searcher.UctSearchGenmove(&rootPos, game_root_sfen , moves_from_game_root , ponderMove);
 
 	// ponder中であれば、呼び出し元で待機しなければならない。
-	
+
 	// 最大depth深さに到達したときに、ここまで実行が到達するが、
 	// まだThreads.stopが生じていない。しかし、ponder中や、go infiniteによる探索の場合、
 	// USI(UCI)プロトコルでは、"stop"や"ponderhit"コマンドをGUIから送られてくるまでbest moveを出力してはならない。
@@ -359,28 +360,184 @@ namespace dlshogi
 	//   Threads.start_thinking(pos, states , limits);
 	//   Threads.main()->wait_for_search_finished(); // 探索の終了を待つ。
 	// のようにUSIのgoコマンド相当で探索したあと、rootの各候補手とそれに対応する評価値を返す。
-	std::vector < std::pair<Move, float>> GetSearchResult()
+	void GetSearchResult(std::vector < std::pair<Move, float>>& result)
 	{
 		// root node
 		Node* root_node = searcher.search_limits.current_root;
 
 		// 子ノードの数
-		int num = root_node->child_num;
+		ChildNumType num = root_node->child_num;
 
 		// 返し値として返す用のコンテナ
-		std::vector < std::pair<Move, float>> v(num);
+		result.clear();
+		result.reserve(num);
 
-		for (int i = 0; i < num; ++i)
+		for (ChildNumType i = 0; i < num; ++i)
 		{
 			auto& child = root_node->child[i];
 			Move m = child.move;
 			// move_count == 0であって欲しくはないのだが…。
 			float win = child.move_count == 0 ? child.nnrate : (float)child.win / child.move_count;
-//			v.emplace_back(std::pair<Move, float>(m, win));
-			v[i] = std::pair<Move, float>(m, win);
+//			result.emplace_back(std::pair<Move, float>(m, win));
+			result[i] = std::pair<Move, float>(m, win);
+		}
+	}
+
+	// 訪問回数上位の訪問回数自体を格納しておく構造体
+	struct TopVisited
+	{
+		// n : 訪問回数の上位n個のPVを格納する
+		TopVisited(size_t n_) : n(n_)
+		{
+			// n個は格納するはずなので事前に確保しておく。
+			tops.reserve(n);
 		}
 
-		return v;
+		// 現在の上位N番目(ビリ)の訪問回数
+		NodeCountType nth_nodes() const {
+			if (tops.size() == 0)
+				return 0;
+			return tops.back();
+		}
+
+		// 訪問回数としてmを追加する。
+		// topsには上位N個が残る。
+		void append(NodeCountType m)
+		{
+			// 要素数が足りていないなら末尾にダミーの要素を追加しておく。
+			if (tops.size() < n)
+				tops.push_back(0);
+			
+			// 下位から順番にmがinsertできるところを探す。その間、要素を後ろにスライドさせていく。
+			for(size_t i = tops.size() - 1 ; ; --i)
+			{
+				auto c = (i == 0) ?  std::numeric_limits<NodeCountType>::max() : tops[i - 1];
+
+				// topsを後ろから見ていって、mを超える要素があればその一つ手前に挿入すれば良い。
+				// これは必ず見つかる。
+				// なぜなら、i == 0のとき c = max となるから、これよりmが大きいことはなく、
+				// そこで必ずこの↓ifが成立する。
+				if (c >= m)
+				{
+					// 挿入するところが見つかった。
+					ASSERT_LV3(i < tops.size() );
+					tops[i] = m;
+					break;
+				}
+
+				// 要素をひとつ後ろにスライドさせる。
+				tops[i] = c;
+			}
+		}
+
+		// 保持している要素の個数を返す。
+		size_t size() const { return tops.size(); }
+
+	private:
+		// 現在のtop N
+		std::vector<NodeCountType> tops;
+
+		// 上位n個を格納する。
+		size_t n;
+	};
+
+	// 訪問回数上位n位の、訪問回数を取得するためのDFS(Depth First Search)
+	//   node : 探索開始node
+	//   tv   : 訪問回数上位 n
+	//   ply  : rootからの手数
+	void dfs_for_node_visited(Node* node, TopVisited& tv , int ply, bool same_color)
+	{
+		// rootではない偶数局面で、その訪問回数が現在のn thより多いならそれを記録する。
+		if (   ply != 0
+			&& (ply % 2) == (same_color ? 0 : 1)
+			&& node->move_count > tv.nth_nodes()
+			)
+			tv.append(node->move_count);
+
+		// 子ノードの数
+		ChildNumType num = node->child_num;
+		for (int i = 0; i < num; ++i)
+		{
+			auto& child = node->child[i];
+			NodeCountType move_count = child.move_count;
+
+			// n番目を超えているのでこの訪問回数を追加する。
+			if (move_count > tv.nth_nodes())
+				// このnodeを再帰的に辿る必要がある。
+				// 超えていないものは辿らない、すなわち枝刈りする。
+				dfs_for_node_visited(node->child_nodes[i].get(), tv , ply + 1, same_color);
+		}
+	}
+
+	// 訪問回数上位n位の、訪問回数を取得するためのDFS(Depth First Search)
+	//   node  : 探索開始node
+	//   tv    : 訪問回数上位 n
+	//   ply   : rootからの手数
+	//   sfens : 訪問回数上位 n のnodeまでのroot nodeからの手順文字列(先頭にスペースが入る)
+	//		→　これは返し値
+	//   pv    : rootから現在の局面までの手順
+	void dfs_for_sfen(Node* node, TopVisited& tv , int ply , bool same_color, SfenNodeList& snlist , std::vector<Move>& pv)
+	{
+		// rootではない偶数局面で、その訪問回数が現在のn thより多いならそれを記録する。
+		if (   ply != 0
+			&& (ply % 2) == (same_color ? 0 : 1)
+			&& node->move_count >= tv.nth_nodes()
+			&& snlist.size() < tv.size()
+			)
+		{
+			std::string pv_string;
+
+			// PV手順をUSIの文字列化して連結する。(先頭にスペースが入る)
+			for(auto m : pv)
+				pv_string += " " + to_usi_string(m);
+			snlist.emplace_back(SfenNode(pv_string, node->move_count));
+		}
+
+		// 子ノードの数
+		ChildNumType num = node->child_num;
+		for (int i = 0; i < num; ++i)
+		{
+			auto& child = node->child[i];
+
+			NodeCountType move_count = child.move_count;
+			Move          m          = child.move;
+
+			// n番目以上なのでこの訪問回数を追加する。
+			if (   move_count >= tv.nth_nodes()
+				&& node->child_nodes          != nullptr
+				&& node->child_nodes[i].get() != nullptr)
+			{
+				// このnodeを再帰的に辿る必要がある。
+				// move_count以下のものは辿らない、すなわち枝刈りする。
+				pv.push_back(m);
+				dfs_for_sfen(node->child_nodes[i].get(), tv , ply + 1, same_color, snlist, pv);
+				pv.pop_back();
+			}
+		}
+	}
+
+	// 訪問回数上位 n 個の局面のsfen文字列を返す。文字列の先頭にスペースが入る。
+	void GetTopVisitedNodes(size_t n, SfenNodeList& snlist, bool same_color)
+	{
+		// root node
+		Node* root_node = searcher.search_limits.current_root;
+
+		// n番目の訪問回数xをまずDFSで確定させて、
+		// そのあとx以上の訪問回数を持つ偶数node(rootと同じ手番を持つnode)を列挙すれば良い。
+
+		TopVisited tv(n);
+		dfs_for_node_visited(root_node, tv , 0, same_color);
+
+		// n番目まで訪問回数が確定したので、再度dfsして局面を取り出す。
+
+		std::vector<Move> pv;
+		dfs_for_sfen        (root_node, tv , 0, same_color, snlist, pv);
+
+		// 上位n個(同じ訪問回数のものがあると溢れてる可能性があるのでsortして上位n個を取り出す。)
+		std::sort(snlist.begin(), snlist.end());
+
+		if (snlist.size() > n)
+			snlist.resize(n);
 	}
 
 	// 探索したノード数を返す。

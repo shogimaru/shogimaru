@@ -348,8 +348,13 @@ struct Timer
 	// このシンボルが定義されていると、今回の思考時間を計算する機能が有効になる。
 #if defined(USE_TIME_MANAGEMENT)
 
-  // 今回の思考時間を計算して、optimum(),maximum()が値をきちんと返せるようにする。
+	// 今回の思考時間を計算して、optimum(),maximum()が値をきちんと返せるようにする。
+	// ※　ここで渡しているlimitsは、今回の探索の終わりまでなくならないものとする。
+	//    "ponderhit"でreinit()でこの変数を参照することがあるため。
 	void init(const Search::LimitsType& limits, Color us, int ply);
+
+	// ponderhitの時に残り時間が付与されている時(USI拡張)、再度思考時間を調整するために↑のinit()相当のことを行う。
+	void reinit() { init_(*lastcall_Limits, lastcall_Us, lastcall_Ply);}
 
 	TimePoint minimum() const { return minimumTime; }
 	TimePoint optimum() const { return optimumTime; }
@@ -375,12 +380,21 @@ private:
 	// 今回の残り時間 - Options["NetworkDelay2"]
 	TimePoint remain_time;
 
+	// init()の内部実装用。
+	void init_(const Search::LimitsType& limits, Color us, int ply);
+
+	// init()が最後に呼び出された時に各引数。これを保存しておき、reinit()の時にはこれを渡す。
+	Search::LimitsType* lastcall_Limits; // どこかに確保しっぱなしにするだろうからポインタでいいや…
+	Color lastcall_Us;
+	int lastcall_Ply;
+
 #endif
 
 private:
-	// 探索開始時間
+	// 探索開始時刻。
 	TimePoint startTime;
 
+	// reset()かreset_for_ponderhit()が呼び出された時刻。
 	TimePoint startTimeFromPonderhit;
 };
 
@@ -1038,6 +1052,9 @@ namespace StringExtension
 	// 文字列valueが、文字列endingで終了していればtrueを返す。
 	extern bool EndsWith(std::string const& value, std::string const& ending);
 
+	// 文字列sのなかに文字列tが含まれるかを判定する。含まれていればtrueを返す。
+	extern bool Contains(const std::string& s, const std::string& t);
+
 	// 文字列valueに対して文字xを文字yに置換した新しい文字列を返す。
 	extern std::string Replace(std::string const& value, char x, char y);
 
@@ -1175,6 +1192,33 @@ namespace Concurrent
 		std::mutex mutex_;
 	};
 }
+
+// --------------------
+// StandardInputWrapper
+// --------------------
+
+// 標準入力のwrapper
+// 事前にコマンドを積んだりできる。
+class StandardInput
+{
+public:
+	// 標準入力から1行もらう。Ctrl+Zが来れば"quit"が来たものとする。
+	// また先行入力でqueueに積んでおくことができる。(次のinput()で取り出される)
+	std::string input();
+
+	// 先行入力としてqueueに積む。(次のinput()で取り出される)
+	void push(const std::string& s);
+
+	// main()に引数として渡されたパラメーターを解釈してqueueに積む。
+	void parse_args(int argc, char* argv[]);
+
+private:
+	// 先行入力されたものを積んでおくqueue。
+	// これが尽きれば標準入力から入力する。
+	std::queue<std::string> cmds;
+};
+
+extern StandardInput std_input;
 
 // --------------------
 //     UnitTest

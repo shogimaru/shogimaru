@@ -17,9 +17,6 @@ using namespace std;
 //  USI拡張コマンド "bench"(ベンチマーク)
 // ----------------------------------
 
-// positionコマンドのparserをbenchmarkコマンドから呼び出したい。
-extern void position_cmd(Position & pos, istringstream & is, StateListPtr & states);
-
 // benchmark用デフォルトの局面集
 const vector<string> BenchSfen =
 {
@@ -209,8 +206,6 @@ void bench_cmd(Position& current, istringstream& is)
 		<< "\nNodes searched       (main thread) : " << nodes_searched_main
 		<< "\nNodes searched/second(main thread) : " << 1000 * nodes_searched_main / elapsed;
 #endif
-
-	cout << endl;
 
 	// 終了したことを出力しないと他のスクリプトから呼び出した時に終了判定にこまる。
 	cout << "\n==========================="

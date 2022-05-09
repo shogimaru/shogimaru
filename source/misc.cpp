@@ -467,6 +467,8 @@ void* std_aligned_alloc(size_t alignment, size_t size) {
 	return posix_memalign(&mem, alignment, size) ? nullptr : mem;
 #elif defined(_WIN32)
 	return _mm_malloc(size, alignment);
+#elif defined(__EMSCRIPTEN__)
+	return aligned_alloc(alignment, size);
 #else
 	return std::aligned_alloc(alignment, size);
 #endif
@@ -2115,6 +2117,12 @@ namespace StringExtension
 		return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 	};
 
+	// 文字列sのなかに文字列tが含まれるかを判定する。含まれていればtrueを返す。
+	bool Contains(const std::string& s, const std::string& t) {
+	   return s.find(t) != std::string::npos;
+	   // C++20ならstring::contains()が使えるのだが…。
+	}
+
 	// 文字列valueに対して文字xを文字yに置換した新しい文字列を返す。
 	std::string Replace(std::string const& value, char x, char y)
 	{
@@ -2215,6 +2223,80 @@ namespace CommandLine {
 			binaryDirectory.replace(0, 1, workingDirectory);
 	}
 
+}
+
+// --------------------
+// StandardInputWrapper
+// --------------------
+
+StandardInput std_input;
+
+// 標準入力から1行もらう。Ctrl+Zが来れば"quit"が来たものとする。
+// また先行入力でqueueに積んでおくことができる。(次のinput()で取り出される)
+std::string StandardInput::input()
+{
+	string cmd;
+	if (cmds.size() == 0)
+	{
+		if (!std::getline(cin, cmd)) // 入力が来るかEOFがくるまでここで待機する。
+			cmd = "quit";
+	} else {
+		// 積んであるコマンドがあるならそれを実行する。
+		// 尽きれば"quit"だと解釈してdoループを抜ける仕様にすることはできるが、
+		// そうしてしまうとgoコマンド(これはノンブロッキングなので)の最中にquitが送られてしまう。
+		// ただ、
+		// YaneuraOu-mid.exe bench,quit
+		// のようなことは出来るのでPGOの役には立ちそうである。
+		cmd = cmds.front();
+		cmds.pop();
+	}
+	return cmd;
+}
+
+// 先行入力としてqueueに積む。(次のinput()で取り出される)
+void StandardInput::push(const std::string& s)
+{
+	cmds.push(s);
+}
+
+void StandardInput::parse_args(int argc, char* argv[])
+{
+	// ファイルからコマンドの指定
+	if (argc >= 3 && string(argv[1]) == "file")
+	{
+		vector<string> cmds0;
+		SystemIO::ReadAllLines(argv[2], cmds0);
+
+		// queueに変換する。
+		for (auto c : cmds0)
+			std_input.push(c);
+
+	} else {
+
+		std::string cmd;
+
+		// 引数として指定されたものを一つのコマンドとして実行する機能
+		// ただし、','が使われていれば、そこでコマンドが区切れているものとして解釈する。
+
+		for (int i = 1; i < argc; ++i)
+		{
+			string s = argv[i];
+
+			// sから前後のスペースを除去しないといけない。
+			while (*s.rbegin() == ' ') s.pop_back();
+			while (*s.begin() == ' ') s = s.substr(1, s.size() - 1);
+
+			if (s != ",")
+				cmd += s + " ";
+			else
+			{
+				std_input.push(cmd);
+				cmd = "";
+			}
+		}
+		if (cmd.size() != 0)
+			cmds.push(cmd);
+	}
 }
 
 // --------------------

@@ -421,6 +421,12 @@ void MainThread::search()
 	// root nodeにおける自分の手番
 	Color us = rootPos.side_to_move();
 
+	// --- 今回の思考時間の設定。
+	// これは、ponderhitした時にponderhitにパラメーターが付随していれば
+	// 再計算するする必要性があるので、いずれにせよ呼び出しておく必要がある。
+
+	Time.init(Limits, us, rootPos.game_ply());
+
 	// 今回、通常探索をしたかのフラグ(やねうら王独自拡張)
 	// このフラグがtrueなら(定跡にhitしたり1手詰めを発見したりしたので)探索をスキップした。
 	bool search_skipped = true;
@@ -546,10 +552,6 @@ void MainThread::search()
 	// ---------------------
 	//    通常の思考処理
 	// ---------------------
-
-	// --- 今回の思考時間の設定。
-
-	Time.init(Limits, us, rootPos.game_ply());
 
 	// --- 置換表のTTEntryの世代を進める。
 
@@ -1479,7 +1481,7 @@ namespace {
 		// excludedMoveがある(singular extension時)は、異なるentryにアクセスするように。
 		// ただし、このときpos.key()のbit0を破壊することは許されないので、make_key()でbit0はクリアしておく。
 		// excludedMoveがMOVE_NONEの時はkeyを変更してはならない。
-		posKey = excludedMove == MOVE_NONE ? pos.long_key() : pos.long_key() ^ HASH_KEY(make_key(excludedMove));
+		posKey = excludedMove == MOVE_NONE ? pos.hash_key() : pos.hash_key() ^ HASH_KEY(make_key(excludedMove));
 
 		tte = TT.probe(posKey, ss->ttHit);
 
@@ -2399,33 +2401,23 @@ namespace {
 						extension = -1;
 				}
 
-				// Check extensions
+				// Check extensions (~1 Elo)
 				// 王手延長
 
 				//  注意 : 王手延長に関して、Stockfishのコード、ここに持ってくる時には気をつけること！
 				// →　将棋では王手はわりと続くのでそのまま持ってくるとやりすぎの可能性が高い。
-
-#if 1
-				// Check extensions (~1 Elo)
-
+				// 
 				// ※ Stockfish 14では depth > 6 だったのが、Stockfish 15でdepth > 9に変更されたが				
-				//  それでもまだやりすぎの感はある。
+				//  それでもまだやりすぎの感はある。やねうら王では、延長の条件をさらに絞る。
 
-					else if (givesCheck
-						&& depth > 9
-						&& abs(ss->staticEval) > 71)
-						extension = 1;
-#endif
-
-#if 0
-				// やねうら王独自コード
-				// →　王手延長は、開き王手と駒損しない王手に限定する。
 				else if (givesCheck
-					&& depth > 6
+					&& depth > 9
 					&& abs(ss->staticEval) > 71
-					&& (pos.is_discovery_check_on_king(~us, move) || pos.see_ge(move)))
+					// この条件、やねうら王で独自追加。
+					// →　王手延長は、開き王手と駒損しない王手に限定する。
+					&& (pos.is_discovery_check_on_king(~us, move) || pos.see_ge(move))
+					)
 					extension = 1;
-#endif
 
 				// Quiet ttMove extensions (~0 Elo)
 				// PV nodeで quietなttは良い指し手のはずだから延長するというもの。
@@ -3005,7 +2997,7 @@ namespace {
 		// Transposition table lookup
 		// 置換表のlookup
 
-		posKey = pos.long_key();
+		posKey = pos.hash_key();
 		tte = TT.probe(posKey, ss->ttHit);
 		ttValue = ss->ttHit ? value_from_tt(tte->value(), ss->ply) : VALUE_NONE;
 		ttMove  = ss->ttHit ? pos.to_move(tte->move()) : MOVE_NONE;
@@ -3375,7 +3367,7 @@ namespace {
 		// →　置換表にhitしたのに枝刈りがなされていない時点で有効手があるわけで詰みではないことは言えるのか…。
 		// cf. https://yaneuraou.yaneu.com/2022/04/22/yaneuraous-qsearch-is-buggy/
 
-		//		if ( ss->inCheck && bestValue == -VALUE_INFINITE)
+		// if (ss->inCheck && bestValue == -VALUE_INFINITE)
 		// ↑Stockfishのコード。↓こう変更したほうが良いように思うが計測してみると大差ない。
 		// Stockfishも12年前は↑ではなく↓この書き方だったようだ。moveCountが除去された時に変更されてしまったようだ。
 		//  cf. https://github.com/official-stockfish/Stockfish/commit/452f0d16966e0ec48385442362c94a810feaacd9
@@ -4014,11 +4006,16 @@ namespace Learner
 	// また引数で指定されたdepth == 0の時、qsearch、0未満の時、evaluateを呼び出すが、
 	// この時、rootMovesは得られない。
 	// 
+	// あと、multiPVで値を取り出したい時、
+	//   pos.this_thread()->rootMoves[N].value
+	// の値は、反復深化での今回のiterationでのupdateされていない場合、previous_scoreを用いないといけない。
+	// →　usi.cppの、読み筋の出力部のコードを読むこと。
+	// 
 	// 前提条件) pos.set_this_thread(Threads[thread_id])で探索スレッドが設定されていること。
 	// 　また、Threads.stopが来ると探索を中断してしまうので、そのときのPVは正しくない。
 	// 　search()から戻ったあと、Threads.stop == trueなら、その探索結果を用いてはならない。
 	// 　あと、呼び出し前は、Threads.stop == falseの状態で呼び出さないと、探索を中断して返ってしまうので注意。
-
+	//
 	ValueAndPV search(Position& pos, int depth_, size_t multiPV /* = 1 */, u64 nodesLimit /* = 0 */)
 	{
 		std::vector<Move> pvs;
