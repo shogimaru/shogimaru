@@ -425,7 +425,7 @@ namespace USI {
 					combo_list.push_back(varText);
 				}
 				else {
-					std::cout << "Error : invalid command: " << token << std::endl;
+					usi::cmd << "Error : invalid command: " << token << std::endl;
 				}
 			}
 

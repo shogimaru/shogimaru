@@ -55,7 +55,8 @@ int YaneuraOu()
 	size_t thread_num = Options.count("Threads") ? (size_t)Options["Threads"] : 1;
 	Threads.set(thread_num);
 
-#if !defined(__EMSCRIPTEN__)
+//#if !defined(__EMSCRIPTEN__)
+#if 1
 	// USIコマンドの応答部
 
 	USI::loop(argc, argv);

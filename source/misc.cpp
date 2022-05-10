@@ -58,6 +58,7 @@ extern "C" {
 #include <cstdio>				// fopen(),fread()
 #include <cmath>				// std::exp()
 #include "usi.h"				// Options
+#include "command.h"
 #include "testcmd/unit_test.h"	// UnitTester
 
 using namespace std;
@@ -359,7 +360,7 @@ const std::string config_info()
 	config += o2("USE_GLOBAL_OPTIONS"       , global_options     );
 	config += o2("EVAL_LEARN"               , eval_learn         );
 	config += o2("USE_MATE_DFPN"            , use_mate_dfpn      );
-	
+
 	// コンパイラ情報もついでに出力する。
 	//config += "\n\n" + compiler_info();
 
@@ -2238,7 +2239,8 @@ std::string StandardInput::input()
 	string cmd;
 	if (cmds.size() == 0)
 	{
-		if (!std::getline(cin, cmd)) // 入力が来るかEOFがくるまでここで待機する。
+		cmd = Command::instance().wait(); // 入力が来るかEOFがくるまでここで待機する。
+		if (cmd.empty())
 			cmd = "quit";
 	} else {
 		// 積んであるコマンドがあるならそれを実行する。
