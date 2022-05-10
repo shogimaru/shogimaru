@@ -56,6 +56,7 @@ bool Engine::open(const QString &path)
 
             for (auto &response : responses) {
                 auto str = QString::fromStdString(response).trimmed();
+                //qDebug() << str;
                 if (str == "usiok") {
                     return true;
                 }
