@@ -1,11 +1,12 @@
 #include "user.h"
 #include "file.h"
 #include "global.h"
+#include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QString>
 
-const QLatin1String jsonPath("user.json");
+const QLatin1String jsonName("user.json");
 const QLatin1String Version("version");
 const QLatin1String Nickname("nickname");
 const QLatin1String Rating("rating");
@@ -21,6 +22,16 @@ const QLatin1String AnalysisNodes("analysisNodes");
 const QLatin1String AnalysisDepth("analysisDepth");
 const QLatin1String SoundEnable("soundEnable");
 const QLatin1String PieceType("pieceType");
+
+
+static QString jsonPath()
+{
+#ifdef Q_OS_WASM
+    return jsonName;
+#else
+    return QDir(maru::appLocalDataLocation()).absoluteFilePath(jsonName);
+#endif
+}
 
 
 User::User()
@@ -50,7 +61,7 @@ bool User::save()
     json[SoundEnable] = soundEnable();
     json[PieceType] = pieceType();
 
-    File file(jsonPath);
+    File file(jsonPath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         return false;
     }
@@ -69,7 +80,7 @@ User &User::load()
         return user;
     }
 
-    File file(jsonPath);
+    File file(jsonPath());
     if (!file.open(QIODevice::ReadOnly)) {
         return user;
     }

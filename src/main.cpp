@@ -1,9 +1,10 @@
-#include "global.h"
 #include "file.h"
+#include "global.h"
 #include "maincontroller.h"
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDebug>
+#include <QDir>
 #include <QFontDatabase>
 #include <QTimer>
 #include <QTranslator>
@@ -44,6 +45,9 @@ int main(int argc, char *argv[])
     QFont font(family, 12);
 #endif
     QApplication::setFont(font);
+
+    QString path = maru::appLocalDataLocation();
+    QDir(path).mkpath(".");
 
     MainController control;
     control.show();

@@ -8,6 +8,16 @@ constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
 constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
 
 
+static QString settingsJsonPath()
+{
+#ifdef Q_OS_WASM
+    return QLatin1String(SETTINGS_JSON_FILE_NAME);
+#else
+    return QDir(maru::appLocalDataLocation()).absoluteFilePath(SETTINGS_JSON_FILE_NAME);
+#endif
+}
+
+
 void EngineSettings::addEngine(const EngineData &engine)
 {
     _availableEngines << engine;
@@ -44,10 +54,10 @@ EngineSettings EngineSettings::loadJson(const QString &path)
 
 EngineSettings EngineSettings::load()
 {
-    EngineSettings settings = loadJson(SETTINGS_JSON_FILE_NAME);
+    EngineSettings settings = loadJson(settingsJsonPath());
 
-    if (settings._availableEngines.isEmpty()) {
 #ifdef Q_OS_WASM
+    if (settings._availableEngines.isEmpty()) {
         settings = loadJson(DEFAULT_SETTINGS_JSON_FILE_NAME);
         if (settings.availableEngines().isEmpty()) {
             qCritical() << "Error load settings:" << DEFAULT_SETTINGS_JSON_FILE_NAME;
@@ -64,8 +74,8 @@ EngineSettings EngineSettings::load()
         settings._availableEngines[0].options = options;
         qDebug() << "Loaded default json:" << DEFAULT_SETTINGS_JSON_FILE_NAME;
         settings.save();
-#endif
     }
+#endif
     return settings;
 }
 
@@ -93,9 +103,9 @@ void EngineSettings::save() const
     jsonObject["version"] = 1;
 
     // ファイル書き込み
-    QFile file(SETTINGS_JSON_FILE_NAME);
+    QFile file(settingsJsonPath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        qCritical() << "File open error" << SETTINGS_JSON_FILE_NAME;
+        qCritical() << "File open error" << file.fileName();
         return;
     }
 

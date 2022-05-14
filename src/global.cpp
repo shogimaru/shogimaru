@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QLabel>
 #include <QMap>
+#include <QStandardPaths>
 #include <QWidget>
 #include <random>
 #ifndef Q_OS_WIN
@@ -163,6 +164,15 @@ bool isLocaleLangJapanese()
 {
     static const bool langJa = QLocale::system().name().toLower().startsWith("ja");
     return langJa;
+}
+
+QString appLocalDataLocation()
+{
+#ifdef Q_OS_WASM
+    return QLatin1String(".");
+#else
+    return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+#endif
 }
 
 }

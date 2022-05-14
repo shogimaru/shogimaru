@@ -1,10 +1,12 @@
 #include "kifu.h"
 #include "file.h"
+#include "global.h"
+#include <QDebug>
+#include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDebug>
 
-const QLatin1String jsonPath("kifu.dat");
+const QLatin1String jsonName("kifu.dat");
 const QLatin1String Sfen("sfen");
 const QLatin1String Sente("sente");
 const QLatin1String Gote("gote");
@@ -14,6 +16,16 @@ const QLatin1String Detail("detail");
 const QLatin1String Rating("rating");
 const QLatin1String Version("v");
 const QLatin1String Ctime("ctime");
+
+
+static QString jsonPath()
+{
+#ifdef Q_OS_WASM
+    return jsonName;
+#else
+    return QDir(maru::appLocalDataLocation()).absoluteFilePath(jsonName);
+#endif
+}
 
 
 bool Kifu::saveAppend(const Kifu &kifu)
@@ -29,7 +41,7 @@ bool Kifu::saveAppend(const Kifu &kifu)
     json[Version] = kifu.v;
     json[Ctime] = kifu.ctime.toSecsSinceEpoch();
 
-    File file(jsonPath);
+    File file(jsonPath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
         return false;
     }
@@ -45,7 +57,7 @@ QList<Kifu> Kifu::load(int maxCount)
 {
     QList<Kifu> kifuList;
 
-    File file(jsonPath);
+    File file(jsonPath());
     if (!file.open(QIODevice::ReadOnly)) {
         return kifuList;
     }
