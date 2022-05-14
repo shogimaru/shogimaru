@@ -53,4 +53,3 @@ build_script:
   - cmd: echo %PATH%
   - cmd: qmake -r CONFIG+=release
   - cmd: nmake
-  - cmd: shogimaru.exe -v

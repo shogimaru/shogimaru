@@ -18,7 +18,7 @@ jobs:
           qmake CONFIG+=release
           make -j4
       - name: version
-        run: ./shogimaru -v
+        run: shogimaru.app/Contents/MacOS/shogimaru -v
 
   # ci-ubuntu-gcc:
   #   runs-on: ubuntu-latest
