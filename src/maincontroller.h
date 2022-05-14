@@ -55,6 +55,7 @@ public:
     void rotate(bool rotation);  // 上下回転
     void setSentePlayer(const Player &player);
     void setGotePlayer(const Player &player);
+    void setEventName(const QString &name);  // 棋戦名
     void showGameoverBox(const QString &msg) const;
     bool isIllegalMove();
     void showAnalyzingMoves(const QVector<ScoreItem> &scores, const QByteArray &sfen);

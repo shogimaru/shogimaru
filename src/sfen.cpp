@@ -24,6 +24,7 @@ void Sfen::clear()
     _counter = 1;
     _players.first.clear();
     _players.second.clear();
+    _eventName.clear();
     _gameResult = 0;
 }
 
@@ -408,6 +409,7 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
     Sfen sfen(DefaultSfen);  // TODO 駒落ちに未対応
     QString senteName;
     QString goteName;
+    QString event;
     maru::Turn turn = maru::Sente;
 
     if (ok) {
@@ -483,7 +485,10 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
             continue;
         }
         if (line.startsWith('$')) {
-            // informations
+            // 棋戦名
+            if (line.startsWith("$EVENT:")) {
+                event = line.mid(7).trimmed();
+            }
             continue;
         }
         if (line.startsWith('P')) {
@@ -567,6 +572,8 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
 
     // 対局者
     sfen.setPlayers(senteName, goteName);
+    // 棋戦名
+    sfen.setEventName(event);
 
     if (ok) {
         *ok = true;

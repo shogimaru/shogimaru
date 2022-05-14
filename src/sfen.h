@@ -29,6 +29,8 @@ public:
     QStringList generateKif(const QByteArrayList &moves, bool compact = true) const;
     QPair<QString, QString> players() const { return _players; }
     void setPlayers(const QString &sente, const QString &gote);
+    QString eventName() const { return _eventName; }
+    void setEventName(const QString &eventName) { _eventName = eventName; }
     QPair<maru::GameResult, maru::ResultDetail> gameResult() const;
     void setGameResult(maru::GameResult result, maru::ResultDetail detail);
     void setGameResult(maru::Turn turn, maru::GameResult result, maru::ResultDetail detail);
@@ -48,6 +50,7 @@ private:
     QList<QPair<QByteArray, QByteArray>> _moves;  // <移動後のPiece, USI>
     int _counter {1};
     QPair<QString, QString> _players;  // <先手,後手>
+    QString _eventName;  // 棋戦名
     int _gameResult {0};
 
     friend class Board;

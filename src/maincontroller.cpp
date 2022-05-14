@@ -231,6 +231,13 @@ void MainController::setGotePlayer(const Player &player)
     showRemainingTime(maru::Gote, 0, 0);
 }
 
+// 棋戦名
+void MainController::setEventName(const QString &name)
+{
+    QString text = maru::elideText(name, _ui->labelEvent);
+    _ui->labelEvent->setText(text);
+}
+
 
 void MainController::createToolBar()
 {
@@ -1698,6 +1705,7 @@ bool MainController::eventFilter(QObject *obj, QEvent *event)
 
 void MainController::clear()
 {
+    _ui->labelEvent->clear();
     _recorder->clear();
     _ui->recordWidget->clear();
     QString str = QLatin1String("  0  ") + tr("Start");
@@ -1739,6 +1747,7 @@ void MainController::loadSfen()
     auto p = sfen.players();
     setSentePlayer(Player(maru::Human, p.first));
     setGotePlayer(Player(maru::Human, p.second));
+    setEventName(sfen.eventName());
     updateBoard();
 }
 

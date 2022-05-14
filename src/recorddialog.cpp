@@ -267,7 +267,27 @@ void RecordDialog::parseRecordJson()
     QString csa;
     for (auto it = array.begin(); it != array.end(); ++it) {
         auto obj = it->toObject();
-        if (obj.value("index").toInt() > 0) {
+        int idx = obj.value("index").toInt();
+        if (idx == 0) {
+            // 棋戦名を取得
+            static const QString word = QString::fromUtf8(u8"棋戦:");
+            auto descriptions = obj.value("descriptions").toArray();
+
+            for (auto it = descriptions.begin(); it != descriptions.end(); ++it) {
+                auto desc = it->toString();
+                if (desc.startsWith(word)) {
+                    auto event = desc.mid(word.length()).split("\n").value(0).trimmed();
+                    if (!event.isEmpty()) {
+                        csa += QLatin1String("$EVENT:");
+                        csa += event;
+                        csa += "\n";
+                    }
+                }
+            }
+            continue;
+
+        } else if (idx > 0) {
+            // 指し手
             QString str = obj.value("csa").toString();
             if (str.isEmpty()) {
                 csa += "%TORYO\n";
