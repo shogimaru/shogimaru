@@ -20,8 +20,8 @@
 # YANEURAOU_MATE_ENGINE          : やねうら王 詰将棋solver (2020/12/29～)
 # USER_ENGINE                    : USER定義エンジン
 
-#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
-YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
+YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
+#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKPE9
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_KPPT
@@ -98,8 +98,7 @@ NVCC_CPPFLAGS = -std=c++17 -x cu -maxrregcount=0 --machine 64 --compile -cudart 
 WCPPFLAGS  =
 LDFLAGS  = $(EXTRA_LDFLAGS)
 LIBS     =
-INCLUDE  = -I../../../src
-AR       = ar cqs
+INCLUDE  = # -I../include
 
 # makeするときにCPPFLAGSを追加で指定したいときはこれを用いる。
 EXTRA_CPPFLAGS =
@@ -225,7 +224,7 @@ ifneq (,$(findstring clang++,$(COMPILER)))
 endif
 
 # wstringを使うためにこのシンボル定義が必要。
-#CPPFLAGS  += -DUNICODE
+CPPFLAGS  += -DUNICODE
 
 # em++ では strip: -Wl,-s の指定はしない
 ifeq (,$(findstring em++,$(COMPILER)))
@@ -598,10 +597,8 @@ DEPENDS  = $(OBJECTS:.o=.d)
 all: clean $(TARGET)
 .PHONY : all normal evallearn tournament prof profgen profuse pgo clean
 
-$(TARGET): $(OBJECTS) $(LIBS)
-	$(AR) $@ $^
-#$(TARGET): $(OBJECTS) $(CUDA_OBJECTS)
-#	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CPPFLAGS) $(LIBS)
+$(TARGET): $(OBJECTS) $(CUDA_OBJECTS)
+	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CPPFLAGS) $(LIBS)
 
 $(OBJDIR)/%.o: %.cpp
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
