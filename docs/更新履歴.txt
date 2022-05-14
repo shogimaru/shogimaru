@@ -1,8 +1,226 @@
 ﻿
 やねうら王 更新履歴
 
+■　2022/05/12
+
+
+- V7.62
+  - ふかうら王、Softmax_Temperatureをdlshogiに合わせて千分率から百分率で指定するように変更。
+  - ふかうら王、Eval_Coefのデフォルト値を756→285に変更。
+  - Mizarさん、プルリク、なんやかや。
+
+
+- ふかうら王、Softmax_Temperatureをdlshogiに合わせて千分率から百分率で指定するように変更。
+
+
+- ふかうら王、Eval_Coefのデフォルト値を756→285に変更。
+  - cf. dlshogiの評価値のスケール調整 : https://tadaoyamaoka.hatenablog.com/entry/2021/10/19/230601
+
+
+-DORT_NO_EXCEPTIONS #242
+  - Mizarさんのプルリク
+  Makefile経由のonnxruntime使用時、-DORT_NO_EXCEPTIONS コンパイルオプションを指定して例外を抑止する
+  cf. https://onnxruntime.ai/docs/api/c/struct_ort_1_1_exception.html
+  -lonnxruntimeリンカオプションの指定をMakefileに移動  
+
+
+■　2022/05/11
+
+
+- DeepLearning for Ubuntu Linux ビルドテストの修正・追加 (#241)
+  - Mizarさんのプルリク
+* - actions:make-deep-ubuntu: add cuda path, add ORT_CPU
+* - build.sh: YANEURAOU_ENGINE_DEEP_ORT_CPU
+
+
+- ORT model filename #240
+  - Mizarさんのプルリク
+  - Linux環境でモデルファイル名を渡すための修正。
+
+
+- types.hでコンパイラの警告が出るようになっていたの修正。
+
+
+- Makefile修正 #239
+  - Mizarさんのプルリク
+
+
+- V7.61
+  - ふかうら王のメモリリークの問題が解決したので。
+
+
+- FastAlloc削除
+	#define USE_FAST_ALLOC
+
+// 高速なmemory allocator
+// これをdefineすると、FastAllocが使えるようになる。
+// 
+// これは、ふかうら王で、
+//   1. メモリを高速にnew/deleteする必要があった。
+//   2. USI_Hashで事前に確保したmemory poolから割り当てたかった。
+// ので開発した。
+//#define USE_FAST_ALLOC
+
+#if defined(USE_FAST_ALLOC)
+	// memory allocatorに確保する場合。
+	FAST_ALLOC.memory_alloc(size_t(Options["USI_Hash"]));
+#endif
+
+#if defined(USE_FAST_ALLOC)
+		// --- use custom memory allocator
+
+		static void* operator new     (std::size_t size) /* throw(std::bad_alloc) */ { return FAST_ALLOC.alloc(size); }
+	    static void* operator new[]   (std::size_t size) /* throw(std::bad_alloc) */ { return FAST_ALLOC.alloc(size); }
+	    static void  operator delete  (void* p         ) /* throw(              ) */ {        FAST_ALLOC.free (p   ); }
+	    static void  operator delete[](void* p         ) /* throw(              ) */ {        FAST_ALLOC.free (p   ); }
+#endif
+
+	bool use_fast_alloc =
+#if defined(USE_FAST_ALLOC)
+		true;
+#else
+		false;
+#endif
+
+	config += o2("USE_FAST_ALLOC"           , use_fast_alloc     );
+
+  #if defined(USE_FAST_ALLOC)
+			<< " hashfull " << FAST_ALLOC.hashfull();
+			// →　専用のメモリアロケーターからメモリを割り当てるようにしたので正確に残り空き容量を出力できる。
+#else
+
+
+
+- ふかうら王、局面が進んだ時のメモリ開放ロジック、間違えていた(気がする)。
+  - dlshogiと同じように書いたらメモリちゃんと開放されるようになった。
+  - FAST_ALLOC使わないことにする。(従来通りに戻す)
+
+
+- DirectML 1.8.2 #238
+  - Mizarさんからのプルリク。
+
+
+- V7.60
+- fast_alloc.cppがClangでコンパイルエラーになっていたの修正。
+
+
+- エンジンオプションのデフォルト値を現代に合わせて変更。
+  - ConsiderationMode →　デフォルトでオンに変更。
+  - USI_Hash → デフォルトで 1024に変更。
+
+
+- 入力特徴量の転送量削減 #237
+  - Mizarさんのプルリク
+  TadaoYamaoka/DeepLearningShogi@1053b87
+  https://tadaoyamaoka.hatenablog.com/entry/2022/01/10/212539
+
+
+- WebAssemblyビルドの調整 #236
+  - Mizarさんのプルリク
+
+  Node.js 18.1.0 で実行できない問題の回避。
+  lib,src: implement WebAssembly Web API nodejs/node#42701
+  Fails with Node.js v18.1.0 antelle/argon2-browser#81
+  Node.js implemented WebAssembly.instantiateStreaming in v18.1.0 emscripten-core/emscripten#16913
+  emcc output does not work in Node.js 18. emscripten-core/emscripten#16915
+  Fixes #16913: Don't use fetch() in Node.js environment emscripten-core/emscripten#16917
+  PROXY_TO_PTHREAD ビルドオプションの無効化。(標準出力への出力順が狂う場合があったため)
+
+
+- clusterのコード、engineフォルダに移動。(整理中)
+
+
+- FastAlloc, LargeMemory対応。
+- FastAlloc、メモリ使用率が90%超えてたらクリアしたいのだが、
+  Garbageが別スレッドで回っているので簡単ではないな…。
+// V7.55
+
+
+■　2022/05/10
+
+
+- FastAlloc開発
+  - 超高速なメモリアロケーターを書いた。
+  - ふかうら王ではTTを使わないように書き換える。
+  - ふかうら王では、Node,ChildNodeのallocateにFastAllocを用いるように書き換える。
+  - ふかうら王ではUSI_Hashを用いるように変更した。
+    - hashfullが1000になるとメモリに空きがないので思考できなくなる。
+    - goした時点で900ぐらいなら、そこでお掃除したほうが良いのでは…。(考え中)
+    - 15分切れ負けでponderありならUSI_Hash、8GBぐらいでギリ足りる感じ。(16GBぐらいあったほうが安心)
+
+  ===================================================
+   FastAllocは、たぬきさんにレビューしていただきました。
+        この場をお借りして、感謝申し上げます。
+  ===================================================
+
+■　2022/05/09
+
+
+- ふかうら王
+  - winに代入する時にWinTypeにcastしてから代入するように。
+  - ChildNodeのmove constructorでwinのmove忘れていたの修正。
+  - Node::select_interval、いったん削除。また実験してから導入を考える。
+
+- 廃止したコード
+		// SelectMaxUcbChild()の高速化のために前回選択した子ノードのindexを記憶しておく。
+		// 調べる間隔は、select_intervalにする。
+		u16 last_best_child;
+		u16 select_interval;
+
+    SelectMaxUcbChild()
+
+		// 訪問回数が多いなら、そう簡単に子ノードは変化しないのでしばらくは前回と同じbest_childを返す。
+		if (current->select_interval)
+		{
+			--current->select_interval;
+			return current->last_best_child;
+		}
+
+		// 訪問回数に応じてチェックの回数を減らす。root付近でのnodeのlock時間を減らす考え。
+		// A100×8とかでnpsが少し改善するかも…。(GeForce RTX 3090×1だとやらないほうがマシレベル…)
+		current->select_interval = (u16)std::min(current->move_count / 16384, (NodeCountType)7);
+
+	// 勝ちが確定しているため、親からは、この子ノードを選択する
+	current->last_best_child = i;
+
+
+- HASH_KEY_BITSが128,256の時にkeyコマンドを使ったら全桁表示されるように。
+
+
+- makeでのお勧めビルドの説明修正。
+
 
 ■　2022/05/07
+
+
+- USI拡張コマンド.txt、書き直す。
+- 解説.txt、書き直す。
+  - GitHub wikiを使う。
+
+
+- yo_cluster 専用のフォルダ作成。
+  部品ごとに分解して、再利用しやすくする。
+  - configコマンドでUSE_YO_CLUSTERがdefineされているかを出力するようにした。
+  - makefileでYO_CLUSTER=ONとなっていれば"cluster"コマンドが有効になるようにした。
+
+
+- YANEURAOU_ENGINE_DEEPが定義されている時、置換表を確保しないようにした。
+
+
+- HASH_KEY_BITが128,256の時にKPPT/KPP_KKPTのビルドが通らなかった問題を修正。
+
+
+- position::is_repetition()高速化
+
+	// ここまでに通過した局面のhashkeyを格納する用。
+	// hashkeyの下位N bitをindexとして、通過するごとに trajectories[index]++ のようにインクリメントする。
+	int8_t trajectories[64 * 1024];
+
+  	std::memset(trajectories, 0, sizeof(trajectories));
+
+    // →　これアイデア自体は悪くないのだが、このメモリクリア、position::set()でも
+    行わないといけなくて、局面送られてくるごとにこのクリアするの、わりと嫌な意味はあるな…。
+    // この実装、見送ろう…。
 
 
 - やねうら王V7.50リリース

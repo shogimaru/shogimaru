@@ -70,9 +70,12 @@ namespace Eval::dlshogi
 #else
 	    Ort::ThrowOnError(OrtSessionOptionsAppendExecutionProvider_CPU(session_options, true));
 #endif
+#if defined(_WIN32)
 		// Windows環境ではwstringでファイル名を渡す必要があるようだが？
 		std::wstring onnx_filename = MultiByteToWideChar(model_filename);
-		//std::string onnx_filename(filename);
+#else
+		std::string onnx_filename(model_filename);
+#endif
 
 		session.reset(new Ort::Session(env, onnx_filename.c_str(), session_options));
 
@@ -117,7 +120,7 @@ namespace Eval::dlshogi
 	}
 
 	// NNによる推論
-	void NNOnnxRuntime::forward(const int batch_size, NN_Input1* x1, NN_Input2* x2, NN_Output_Policy* y1, NN_Output_Value* y2)
+	void NNOnnxRuntime::forward(const int batch_size, PType* p1, PType* p2, NN_Input1* x1, NN_Input2* x2, NN_Output_Policy* y1, NN_Output_Value* y2)
 	{
 		// input
 

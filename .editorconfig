@@ -4,6 +4,29 @@ root = true
 [*]
 charset = utf-8
 end_of_line = lf
+
+# Code files
+[*.{cpp,h,hpp,cs,csx,vb,vbx,cu,cuh}]
+indent_size = 4
+indent_style = tab
+insert_final_newline = true
+charset = utf-8-bom
+end_of_line = lf
+
+# Visual Studio XML files
+[*.{csproj,xml,xslt,vcxproj,vcxproj.*,props}]
+charset = utf-8-bom
+end_of_line = crlf
+insert_final_newline = false
+
+# Document files
+[*.txt]
+charset = utf-8-bom
+end_of_line = crlf
+
+[*.md]
+charset = utf-8-bom
+end_of_line = crlf
 trim_trailing_whitespace = false
 insert_final_newline = false
 

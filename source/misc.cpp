@@ -350,6 +350,12 @@ const std::string config_info()
 		false;
 #endif
 
+	bool use_yo_cluster =
+#if defined(USE_YO_CLUSTER)
+		true;
+#else
+		false;
+#endif
 
 	config += o2("PRETTY_JP"                , pretty_jp          );
 	config += o2("FOR_TOURNAMENT"           , for_tournament     );
@@ -360,7 +366,8 @@ const std::string config_info()
 	config += o2("USE_GLOBAL_OPTIONS"       , global_options     );
 	config += o2("EVAL_LEARN"               , eval_learn         );
 	config += o2("USE_MATE_DFPN"            , use_mate_dfpn      );
-
+	config += o2("USE_YO_CLUSTER"           , use_yo_cluster     );
+	
 	// コンパイラ情報もついでに出力する。
 	//config += "\n\n" + compiler_info();
 

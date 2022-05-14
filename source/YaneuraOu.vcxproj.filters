@@ -80,6 +80,9 @@
     <Filter Include="リソース ファイル\testcmd">
       <UniqueIdentifier>{f54ef520-240b-40a2-be3a-0c6c3df35b0b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="リソース ファイル\engine\yo-cluster">
+      <UniqueIdentifier>{81bfe4ec-70a8-412d-9241-496550d208fa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="evaluate.h">
@@ -304,6 +307,9 @@
     <ClInclude Include="eval\deep\nn_types.h">
       <Filter>リソース ファイル\eval\deep</Filter>
     </ClInclude>
+    <ClInclude Include="eval\deep\unpack.cuh">
+      <Filter>リソース ファイル\eval\deep</Filter>
+    </ClInclude>
     <ClInclude Include="mate\mate.h">
       <Filter>リソース ファイル\mate</Filter>
     </ClInclude>
@@ -321,6 +327,9 @@
     </ClInclude>
     <ClInclude Include="engine\dlshogi-engine\dlshogi_min.h">
       <Filter>リソース ファイル\engine\dlshogi-engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\yo-cluster\ProcessNegotiator.h">
+      <Filter>リソース ファイル\engine\yo-cluster</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -519,11 +528,14 @@
     <ClCompile Include="testcmd\unit_test.cpp">
       <Filter>リソース ファイル\testcmd</Filter>
     </ClCompile>
-    <ClCompile Include="engine\dlshogi-engine\yo_cluster.cpp">
-      <Filter>リソース ファイル\engine\dlshogi-engine</Filter>
-    </ClCompile>
     <ClCompile Include="eval\nnue\features\half_kp_vm.cpp">
       <Filter>リソース ファイル\eval\nnue\features</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\yo-cluster\yo_cluster.cpp">
+      <Filter>リソース ファイル\engine\yo-cluster</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\yo-cluster\ProcessNegotiator.cpp">
+      <Filter>リソース ファイル\engine\yo-cluster</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -579,5 +591,12 @@
     <None Include="..\script\bench.py">
       <Filter>script</Filter>
     </None>
+    <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\onnxruntime.dll" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\onnxruntime_providers_shared.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="eval\deep\unpack.cu">
+      <Filter>リソース ファイル\eval\deep</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

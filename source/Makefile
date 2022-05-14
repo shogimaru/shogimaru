@@ -31,6 +31,10 @@ YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
 #YANEURAOU_EDITION = YANEURAOU_MATE_ENGINE
 #YANEURAOU_EDITION = USER_ENGINE
 
+# やねうら王のcluster機能を使いたいなら、これもdefineする。(define if you want to use YO-cluster)
+YO_CLUSTER = OFF
+#YO_CLUSTER = ON
+
 
 # ターゲットCPU (target cpu)
 
@@ -90,6 +94,7 @@ COMPILER = clang++
 
 # 標準的なコンパイルオプション (standard compile options)
 CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -MMD -MP -fpermissive
+NVCC_CPPFLAGS = -std=c++17 -x cu -maxrregcount=0 --machine 64 --compile -cudart static -DNDEBUG -Xcompiler "-Ofast"
 WCPPFLAGS  =
 LDFLAGS  = $(EXTRA_LDFLAGS)
 LIBS     =
@@ -186,7 +191,7 @@ else
 		LDFLAGS += -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=$(EM_INITIAL_MEMORY_SIZE) -s MAXIMUM_MEMORY=4294967296
 		LDFLAGS += -s TOTAL_STACK=67108864
 		LDFLAGS += -s LLD_REPORT_UNDEFINED
-		LDFLAGS += -s PROXY_TO_PTHREAD
+		# LDFLAGS += -s PROXY_TO_PTHREAD
 		# LDFLAGS += -s ALLOW_UNIMPLEMENTED_SYSCALLS
 		# LDFLAGS += -s ASSERTIONS
 		LDFLAGS += -s --closure 1
@@ -326,6 +331,7 @@ SOURCES  = \
 	testcmd/normal_test_cmd.cpp                                                \
 	testcmd/benchmark.cpp
 
+CUDA_SOURCES =
 
 #ifneq (,$(findstring evallearn,$@))
 # →これこの時点で$@を取得できないのか…。なんぞこれ。
@@ -375,21 +381,28 @@ ifneq (,$(findstring YANEURAOU_ENGINE_DEEP,$(YANEURAOU_EDITION)))
 
 		ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_TENSOR_RT)
 			CPPFLAGS += -DTENSOR_RT
-			LDFLAGS += -lnvinfer -lnvparsers -lnvonnxparser -lcudnn -lcudart
+			NVCC_CPPFLAGS += -DTENSOR_RT
+			LDFLAGS += -lnvinfer -lnvonnxparser -lcudart
 			# CPPFLAGS += -I/usr/local/cuda/include
 			# LDFLAGS += -L/usr/local/cuda/lib64
+			# LDFLAGS += -L/usr/local/cuda/lib64/stubs
+			CUDA_SOURCES += eval/deep/unpack.cu
 
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_CPU)
-			CPPFLAGS += -DORT_CPU
+			CPPFLAGS += -DONNXRUNTIME -DORT_NO_EXCEPTIONS -DORT_CPU
+			LDFLAGS += -lonnxruntime
 
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_DML)
-			CPPFLAGS += -DORT_DML
+			CPPFLAGS += -DONNXRUNTIME -DORT_NO_EXCEPTIONS -DORT_DML
+			LDFLAGS += -lonnxruntime
 
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_MKL)
-			CPPFLAGS += -DORT_MKL
+			CPPFLAGS += -DONNXRUNTIME -DORT_NO_EXCEPTIONS -DORT_MKL
+			LDFLAGS += -lonnxruntime
 
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_TRT)
-			CPPFLAGS += -DORT_TRT
+			CPPFLAGS += -DONNXRUNTIME -DORT_NO_EXCEPTIONS -DORT_TRT
+			LDFLAGS += -lonnxruntime
 
 		endif
 	endif
@@ -404,8 +417,7 @@ ifneq (,$(findstring YANEURAOU_ENGINE_DEEP,$(YANEURAOU_EDITION)))
 		engine/dlshogi-engine/PrintInfo.cpp                             \
 		engine/dlshogi-engine/UctSearch.cpp                             \
 		engine/dlshogi-engine/Node.cpp                                  \
-		engine/dlshogi-engine/YaneuraOu_dlshogi_bridge.cpp              \
-		engine/dlshogi-engine/yo_cluster.cpp
+		engine/dlshogi-engine/YaneuraOu_dlshogi_bridge.cpp
 endif
 
 ifneq (,$(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)))
@@ -439,8 +451,7 @@ ifneq (,$(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)))
 		eval/nnue/features/half_relative_kp.cpp                         \
 		eval/nnue/features/half_kpe9.cpp                                \
 		eval/nnue/features/pe9.cpp                                      \
-		engine/yaneuraou-engine/yaneuraou-search.cpp                    \
-		engine/dlshogi-engine/yo_cluster.cpp
+		engine/yaneuraou-engine/yaneuraou-search.cpp
 
 	ifneq (,$(findstring em++,$(COMPILER)))
 		SOURCES += \
@@ -473,6 +484,13 @@ endif
 
 ifneq ($(ENGINE_NAME),)
 	CPPFLAGS += -DENGINE_NAME_FROM_MAKEFILE=$(ENGINE_NAME)
+endif
+
+ifeq ($(YO_CLUSTER),ON)
+	SOURCES += \
+		engine/yo-cluster/ProcessNegotiator.cpp   \
+		engine/yo-cluster/yo_cluster.cpp
+	CPPFLAGS += -DUSE_YO_CLUSTER
 endif
 
 
@@ -571,8 +589,10 @@ endif
 
 # YANEURAOU_EDITION , CPUターゲット名 などのシンボルをコンパイル時に定義してやる。
 CPPFLAGS += -D$(YANEURAOU_EDITION) -DTARGET_CPU=\"$(TARGET_CPU)\" $(EXTRA_CPPFLAGS)
+NVCC_CPPFLAGS += -D$(YANEURAOU_EDITION) -DTARGET_CPU=\"$(TARGET_CPU)\"
 
 OBJECTS  = $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
+CUDA_OBJECTS = $(addprefix $(OBJDIR)/, $(CUDA_SOURCES:.cu=.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
 all: clean $(TARGET)
@@ -580,10 +600,15 @@ all: clean $(TARGET)
 
 $(TARGET): $(OBJECTS) $(LIBS)
 	$(AR) $@ $^
+#$(TARGET): $(OBJECTS) $(CUDA_OBJECTS)
+#	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CPPFLAGS) $(LIBS)
 
 $(OBJDIR)/%.o: %.cpp
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	$(COMPILER) $(CPPFLAGS) $(INCLUDE) -o $@ -c $<
+
+$(OBJDIR)/%.o: %.cu
+	nvcc $(NVCC_CPPFLAGS) $(INCLUDE) -o $@ $<
 
 # https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
 
@@ -624,6 +649,6 @@ pgo:
 	$(MAKE) profuse
 
 clean:
-	rm -f $(OBJECTS) $(DEPENDS) $(TARGET) ${OBJECTS:.o=.gcda}
+	rm -f $(OBJECTS) $(CUDA_OBJECTS) $(DEPENDS) $(TARGET) ${OBJECTS:.o=.gcda}
 
 -include $(DEPENDS)
