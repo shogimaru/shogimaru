@@ -1022,33 +1022,45 @@
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="97"/>
-        <location filename="../forms/recorddialog.ui" line="116"/>
+        <location filename="../forms/recorddialog.ui" line="160"/>
+        <location filename="../forms/recorddialog.ui" line="166"/>
         <source>Load</source>
         <translation type="unfinished">読込</translation>
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="110"/>
+        <location filename="../forms/recorddialog.ui" line="128"/>
         <source>Load a game record in CSA or SFEN format.</source>
         <translation type="unfinished">棋譜を読み込みます (CSA/SFEN)</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="128"/>
+        <location filename="../forms/recorddialog.ui" line="116"/>
+        <source>URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="147"/>
+        <source>Enter URL</source>
+        <translation type="unfinished">URLを入力</translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="178"/>
         <source>Load a game record file of CSA or SFEN format.</source>
         <translation type="unfinished">棋譜ファイルを読み込みます (CSA/SFEN)</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="141"/>
+        <location filename="../forms/recorddialog.ui" line="191"/>
         <source>Load...</source>
         <translation type="unfinished">読込...</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="147"/>
-        <location filename="../forms/recorddialog.ui" line="159"/>
+        <location filename="../forms/recorddialog.ui" line="197"/>
+        <location filename="../forms/recorddialog.ui" line="209"/>
         <source>Save</source>
         <translation type="unfinished">保存</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="172"/>
+        <location filename="../forms/recorddialog.ui" line="222"/>
         <source>Save the current game record.</source>
         <translation type="unfinished">現在の棋譜を保存します</translation>
     </message>
@@ -1073,7 +1085,7 @@
         <translation type="obsolete">ダウンロード</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="187"/>
+        <location filename="../forms/recorddialog.ui" line="237"/>
         <source>Close</source>
         <translation type="unfinished">閉じる</translation>
     </message>

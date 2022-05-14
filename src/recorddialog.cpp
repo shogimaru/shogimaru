@@ -9,7 +9,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
-#include <QMetaMethod>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QUrl>
@@ -27,6 +26,7 @@ RecordDialog::RecordDialog(QWidget *parent) :
 
     connect(_ui->listWidget, &QListWidget::itemClicked, this, &RecordDialog::loadItem);
     connect(_ui->loadTextButton, &QPushButton::clicked, this, &RecordDialog::loadRecord);
+    connect(_ui->loadUrlButton, &QPushButton::clicked, this, &RecordDialog::loadUrlRecord);
     connect(_ui->fileOpenButton, &QPushButton::clicked, this, &RecordDialog::openFile);
     connect(_ui->saveButton, &QPushButton::clicked, this, &RecordDialog::selectSaveFile);
     connect(_ui->closeButton, &QPushButton::clicked, this, &QDialog::reject);  // 閉じるボタン
@@ -64,19 +64,60 @@ void RecordDialog::loadRecord()
 }
 
 
+void RecordDialog::loadUrlRecord()
+{
+    auto url = _ui->urlLineEdit->text().trimmed();
+    if (url.isEmpty()) {
+        return;
+    }
+
+    request(url, &RecordDialog::parseRecord);
+}
+
+
+void RecordDialog::parseRecord()
+{
+    QNetworkReply *reply = dynamic_cast<QNetworkReply *>(sender());
+    if (!reply) {
+        return;
+    }
+
+    reply->deleteLater();
+    if (reply->error() != QNetworkReply::NoError) {
+        qCritical() << reply->errorString();
+        return;
+    }
+
+    auto kifu = reply->readAll();
+    // SJISでトライ
+    QString str = maru::fromShiftJis(kifu);
+    if (!isReadable(str)) {  // 文字化けならUTF-8で読み込む
+        str = QString::fromUtf8(kifu);
+    }
+
+    if (!validate(str)) {
+        MessageBox::information(tr("Notation Error"), tr("Load Error"));
+        return;
+    }
+
+    QDialog::accept();
+}
+
+// 文字化け有無
+bool RecordDialog::isReadable(const QString &text)
+{
+    for (auto c : text) {
+        if (c.category() < 3 || c.category() > 27) {
+            return false;
+        }
+    }
+    return !text.isEmpty();
+};
+
+
 void RecordDialog::openFile()
 {
     auto fileContentReady = [this](const QString &, const QByteArray &fileContent) {
-        // 文字化け有無
-        auto isReadable = [](const QString &str) {
-            for (auto c : str) {
-                if (c.category() < 3 || c.category() > 27) {
-                    return false;
-                }
-            }
-            return !str.isEmpty();
-        };
-
         if (!fileContent.isEmpty()) {
             // SJISでトライ
             QString str = maru::fromShiftJis(fileContent);
@@ -122,13 +163,14 @@ bool RecordDialog::validate(const QString &record)
 }
 
 
-void RecordDialog::request(const QString &url, const char *method)
+template <typename Func>
+void RecordDialog::request(const QString &url, Func slot)
 {
     QUrl reqestUrl(url);
     auto *manager = new QNetworkAccessManager(this);
     auto *reply = manager->get(QNetworkRequest(reqestUrl));
     connect(manager, &QNetworkAccessManager::finished, manager, &QNetworkAccessManager::deleteLater);
-    connect(reply, SIGNAL(finished()), this, method);
+    connect(reply, &QNetworkReply::finished, this, slot);
 }
 
 
@@ -139,7 +181,7 @@ void RecordDialog::open()
 
     if (_ui->listWidget->count() == 0) {
         // HTTP request
-        request(ShogiDbUrl.arg(NUM_RECORDS), SLOT(parseJsonArray()));
+        request(ShogiDbUrl.arg(NUM_RECORDS), &RecordDialog::parseJsonArray);
     }
 
     _ui->textEdit->clear();
@@ -194,7 +236,7 @@ void RecordDialog::loadItem(QListWidgetItem *item)
     auto obj = item->data(Qt::UserRole).toJsonObject();
     int id = obj.value("id").toInt();
     // HTTP request
-    request(Url.arg(id), SLOT(parseRecordJson()));
+    request(Url.arg(id), &RecordDialog::parseRecordJson);
     //qDebug() << Url.arg(id);
     _ui->listWidget->setEnabled(false);
 }

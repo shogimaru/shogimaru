@@ -21,10 +21,10 @@ public:
     void open();
     Sfen result() const { return _sfen; }
     void loadRecord();
-
-public slots:
+    void loadUrlRecord();
     void openFile();
     void selectSaveFile();
+    void parseRecord();
     void parseJsonArray();
     void parseRecordJson();
     void loadItem(QListWidgetItem *item);
@@ -33,8 +33,9 @@ signals:
     void saveFileSelected(const QString &filePath);
 
 private:
+    bool isReadable(const QString &text);
     bool validate(const QString &record);
-    void request(const QString &url, const char *method);
+    template <typename Func> void request(const QString &url, Func slot);
 
     Ui::RecordDialog *_ui {nullptr};
     Sfen _sfen;
