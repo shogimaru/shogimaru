@@ -17,6 +17,8 @@ jobs:
         run: |
           qmake CONFIG+=release
           make -j4
+      - name: version
+        run: ./shogimaru -v
 
   # ci-ubuntu-gcc:
   #   runs-on: ubuntu-latest
