@@ -138,21 +138,21 @@ MainController::MainController(QWidget *parent) :
     _ui->infoLine->setReadOnly(true);
     _ui->infoLine->hide();
 
-    connect(_ui->newAction, &QAction::triggered, _startDialog, &QDialog::open);
-    connect(_ui->settingsAction, &QAction::triggered, this, &MainController::slotSettingsAction);
-    connect(_settingsDialog, &SettingsDialog::finished, this, &MainController::updateMainWindow);
-    connect(_ui->analysisAction, &QAction::triggered, this, &MainController::slotAnalysisAction);
-    connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);
+    connect(_ui->newAction, &QAction::triggered, _startDialog, &QDialog::open);  // 対局ボタンクリック
+    connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);  // 対局ダイアログOKボタンクリック
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
-    connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalysis);
-    connect(_ui->recordAction, &QAction::triggered, _recordDialog, &RecordDialog::open);
-    connect(_recordDialog, &QDialog::accepted, this, &MainController::loadSfen);
+    connect(_ui->resignAction, &QAction::triggered, this, &MainController::resign);  // 投了ボタンクリック
+    connect(_ui->settingsAction, &QAction::triggered, this, &MainController::slotSettingsAction);  // 設定ボタンクリック
+    connect(_settingsDialog, &SettingsDialog::finished, this, &MainController::updateMainWindow);  // 設定ダイアログ閉じる
+    connect(_ui->analysisAction, &QAction::triggered, this, &MainController::slotAnalysisAction);  // 解析ボタンクリック
+    connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalysis);  // 解析ダイアログOKボタンクリック
+    connect(_ui->recordAction, &QAction::triggered, _recordDialog, &RecordDialog::open);  // 棋譜ボタンクリック
+    connect(_recordDialog, &QDialog::accepted, this, &MainController::loadSfen);  // 棋譜ダイアログ 棋譜読込
     connect(_recordDialog, &RecordDialog::saveFileSelected, this, &MainController::saveFile);
     //connect(_ui->retractButton, &QPushButton::clicked, this, &MainController::retract); // 待った
-    connect(_ui->rotateAction, &QAction::triggered, this, &MainController::toggleRotate);
-    connect(_ui->resignAction, &QAction::triggered, this, &MainController::resign);
-    connect(_ui->myPageAction, &QAction::triggered, _myPage, &MyPage::open);
-    connect(_ui->infoAction, &QAction::triggered, this, &MainController::openInfoBox);
+    connect(_ui->rotateAction, &QAction::triggered, this, &MainController::toggleRotate);  // 回転ボタンクリック
+    connect(_ui->myPageAction, &QAction::triggered, _myPage, &MyPage::open);  // マイページボタンクリック
+    connect(_ui->infoAction, &QAction::triggered, this, &MainController::openInfoBox);  // 情報ボタンクリック
     connect(_ui->recordWidget, &QListWidget::itemSelectionChanged, this, &MainController::slotRecordItemSelected);
     connect(&Engine::instance(), &Engine::ready, this, &MainController::startGo);
     connect(&Engine::instance(), &Engine::bestMove, _board, &Board::movePiece);
@@ -1512,13 +1512,13 @@ void MainController::startAnalysis()
     }
 
     showSpinner();  // スピナー表示
-    updateButtonStates();
+    int moves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
+    bool startok = startEngineForAnalysis(moves);
     showRemainingTime(maru::Sente, 0, 0);  // 先手残り時間
     showRemainingTime(maru::Gote, 0, 0);  // 後手残り時間
+    updateButtonStates();
 
-    int moves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
-    bool ok = startEngineForAnalysis(moves);
-    if (!ok) {
+    if (!startok) {
         MessageBox::information(tr("Engine error"), Engine::instance().error());
         return;
     }
