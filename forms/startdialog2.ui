@@ -63,6 +63,9 @@
       <height>26</height>
      </rect>
     </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
     <item>
      <property name="text">
       <string>0</string>
@@ -147,6 +150,9 @@
       <width>61</width>
       <height>26</height>
      </rect>
+    </property>
+    <property name="currentIndex">
+     <number>5</number>
     </property>
     <item>
      <property name="text">
@@ -251,6 +257,9 @@
       <width>131</width>
       <height>26</height>
      </rect>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
     </property>
     <item>
      <property name="text">

@@ -20,7 +20,7 @@ void StartDialog2::open()
     int basicTime = user.basicTime();
 
     if (!byoyomi && !basicTime) {  // デフォルト値
-        byoyomi = 30;
+        byoyomi = 5;
         basicTime = 5;
     }
 
