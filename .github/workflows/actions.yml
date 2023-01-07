@@ -27,7 +27,7 @@ jobs:
       - name: apt
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 g++ make cmake
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 libgl1-mesa-dev libpulse-dev libcrypt-dev g++ make cmake
       - name: qmake version
         run: |
           sudo rm -f /usr/bin/qmake
@@ -37,6 +37,8 @@ jobs:
         run: |
           qmake CONFIG+=release
           make
+      - name: version
+        run: ./shogimaru -v
 
   ci-ubuntu-clang:
     runs-on: ubuntu-22.04
@@ -45,7 +47,7 @@ jobs:
       - name: apt
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 clang make cmake
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 libgl1-mesa-dev libpulse-dev libcrypt-dev clang make cmake
       - name: qmake version
         run: |
           sudo rm -f /usr/bin/qmake
@@ -55,3 +57,5 @@ jobs:
         run: |
           qmake -spec linux-clang CONFIG+=release
           make
+      - name: version
+        run: ./shogimaru -v
