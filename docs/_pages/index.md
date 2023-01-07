@@ -12,9 +12,9 @@ toc: true
 将棋丸はオープンソースの将棋 GUI です。  
 将棋思考エンジンと通信するための USI プロトコルに対応しており、次の特徴があります。
 
-- クロスプラットフォーム - Windows, macOS, Linux, WebAssembly
+- クロスプラットフォーム - Windows, Mac, Linux, WebAssembly
 - MultiPV 表示
-- 棋譜の解析モード
+- 棋譜の解析モード、評価グラフ
 - 棋譜読込・保存
 - 多言語対応（日本語、英語）
 
@@ -41,7 +41,7 @@ toc: true
 
 ### <i class="fas fa-desktop"></i> デスクトップ版
 
-CPU/GPU をフルに活用し計算スピードを高めるためにはデスクトップ版を使います。  
+Windows、Mac、Linux などで動作する GUI アプリです。CPU/GPU をフルに活用し計算スピードを高めるためにはデスクトップ版を使います。  
 将棋思考エンジンを設定するために、次の手順でセットアップします。
 
 1.  あらかじめ将棋思考エンジンをダウンロードし、フォルダへ展開しておきます。
@@ -116,13 +116,13 @@ CPU/GPU をフルに活用し計算スピードを高めるためにはデスク
 
 ネット検索して見つけられた、将棋丸と同じ USI 対応の将棋 GUI のサイトをまとめました。
 
-| GUI                                                              | 備考                                                                       |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [将棋所](http://shogidokoro.starfree.jp/)                        | 広く使われている GUI                                                       |
-| [ShogiGUI](http://shogigui.siganus.com/)                         | 棋譜解析にとても便利                                                       |
-| [WhaleWatcher](http://garnet-alice.net/programs/whalewatcher/)   | クジラちゃんに癒やされながら指せます                                       |
+| GUI                                                              | 備考                                                                                                                     |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [将棋所](http://shogidokoro.starfree.jp/)                        | 広く使われている GUI                                                                                                     |
+| [ShogiGUI](http://shogigui.siganus.com/)                         | 棋譜解析にとても便利                                                                                                     |
+| [WhaleWatcher](http://garnet-alice.net/programs/whalewatcher/)   | クジラちゃんに癒やされながら指せます                                                                                     |
 | [Electron 将棋](https://sunfish-shogi.github.io/electron-shogi/) | [Electron](https://www.electronjs.org/) で作られたオープンソース将棋アプリ。ブラウザ版もあるが対局はまだできないらしい。 |
-| [ShogiDroid](http://shogidroid.siganus.com/)                     | Android 用                                                                 |
+| [ShogiDroid](http://shogidroid.siganus.com/)                     | Android 用                                                                                                               |
 
 将棋丸はこれらのソフトを参考にしています。
 
