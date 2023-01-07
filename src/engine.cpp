@@ -404,7 +404,9 @@ void Engine::stop()
     case Pondering:
         Command::instance().request("stop");
         res = Command::instance().pollFor("bestmove", 1000, response);
-        //qDebug() << "go stop" << res;
+        if (!res) {
+            qWarning() << "go stop" << res;
+        }
         _state = Idle;
         break;
 

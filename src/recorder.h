@@ -14,7 +14,6 @@ class Sfen;
 class IllegalCheck {
 public:
     IllegalCheck() = default;
-    IllegalCheck(const IllegalCheck &) = default;
     IllegalCheck(bool c, const QByteArray &s) :
         check(c),
         sfen(s)
@@ -28,7 +27,6 @@ public:
 class ScoreItem {
 public:
     ScoreItem() = default;
-    ScoreItem(const ScoreItem &) = default;
     ScoreItem(int sc, int mt = 0, int mc = 0, int dep = 0, qint64 n = 0, const QByteArrayList &p = QByteArrayList()) :
         score(sc),
         mate(mt),
