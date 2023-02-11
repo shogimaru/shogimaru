@@ -110,7 +110,12 @@ void USI::extra_option(USI::OptionsMap& o)
     o["UCT_Threads14"]                << USI::Option(0, 0, 256);
     o["UCT_Threads15"]                << USI::Option(0, 0, 256);
     o["UCT_Threads16"]                << USI::Option(0, 0, 256);
+#if defined(COREML)
+	// Core MLでは、ONNXではなく独自形式のモデルが必要。
+    o["DNN_Model1"]                  << USI::Option(R"(model.mlmodel)");
+#else
     o["DNN_Model1"]                  << USI::Option(R"(model.onnx)");
+#endif
     o["DNN_Model2"]                  << USI::Option("");
     o["DNN_Model3"]                  << USI::Option("");
     o["DNN_Model4"]                  << USI::Option("");
@@ -133,6 +138,9 @@ void USI::extra_option(USI::OptionsMap& o)
 #elif defined(ONNXRUNTIME)
 	// CPUを使っていることがあるので、default値、ちょっと少なめにしておく。
 	o["DNN_Batch_Size1"]             << USI::Option(32, 1, 1024);
+#elif defined(COREML)
+	// M1チップで8程度でスループットが飽和する。
+	o["DNN_Batch_Size1"]             << USI::Option(8, 1, 1024);
 #endif
 	o["DNN_Batch_Size2"]             << USI::Option(0, 0, 1024);
 	o["DNN_Batch_Size3"]             << USI::Option(0, 0, 1024);
@@ -149,14 +157,6 @@ void USI::extra_option(USI::OptionsMap& o)
 	o["DNN_Batch_Size14"]             << USI::Option(0, 0, 1024);
 	o["DNN_Batch_Size15"]             << USI::Option(0, 0, 1024);
 	o["DNN_Batch_Size16"]             << USI::Option(0, 0, 1024);
-
-#if defined(ORT_MKL)
-	// nn_onnx_runtime.cpp の NNOnnxRuntime::load() で使用するオプション。
-	// グラフ全体のスレッド数?（default値1）ORT_MKLでは効果が無いかもしれない。
-	o["InterOpNumThreads"]           << USI::Option(1, 1, 65536);
-	// ノード内の実行並列化の際のスレッド数設定（default値4、NNUE等でのThreads相当）
-	o["IntraOpNumThreads"]           << USI::Option(4, 1, 65536);
-#endif
 
     //(*this)["Const_Playout"]               = USIOption(0, 0, int_max);
 	// →　Playout数固定。これはNodeLimitでできるので不要。

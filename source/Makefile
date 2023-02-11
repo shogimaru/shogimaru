@@ -4,7 +4,6 @@
 # normal     : 通常使用用
 # evallearn  : 教師局面からの学習用
 # tournament : 大会で使う用
-# gensfen    : 教師生成用(2019年版)
 
 # === ビルドオプション (build options) ===
 
@@ -332,6 +331,8 @@ SOURCES  = \
 
 CUDA_SOURCES =
 
+OBJC_SOURCES =
+
 #ifneq (,$(findstring evallearn,$@))
 # →これこの時点で$@を取得できないのか…。なんぞこれ。
 
@@ -395,13 +396,14 @@ ifneq (,$(findstring YANEURAOU_ENGINE_DEEP,$(YANEURAOU_EDITION)))
 			CPPFLAGS += -DONNXRUNTIME -DORT_NO_EXCEPTIONS -DORT_DML
 			LDFLAGS += -lonnxruntime
 
-		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_MKL)
-			CPPFLAGS += -DONNXRUNTIME -DORT_NO_EXCEPTIONS -DORT_MKL
-			LDFLAGS += -lonnxruntime
-
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_TRT)
 			CPPFLAGS += -DONNXRUNTIME -DORT_NO_EXCEPTIONS -DORT_TRT
 			LDFLAGS += -lonnxruntime
+
+		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_COREML)
+			CPPFLAGS += -DCOREML
+			LDFLAGS += -framework Foundation -framework CoreML
+			OBJC_SOURCES += eval/deep/nn_coreml.mm
 
 		endif
 	endif
@@ -487,8 +489,11 @@ endif
 
 ifeq ($(YO_CLUSTER),ON)
 	SOURCES += \
+		engine/yo-cluster/ClusterCommon.cpp       \
 		engine/yo-cluster/ProcessNegotiator.cpp   \
-		engine/yo-cluster/yo_cluster.cpp
+		engine/yo-cluster/EngineNegotiator.cpp    \
+		engine/yo-cluster/ClusterObserver.cpp     \
+		engine/yo-cluster/ClusterStrategy.cpp
 	CPPFLAGS += -DUSE_YO_CLUSTER
 endif
 
@@ -592,12 +597,13 @@ NVCC_CPPFLAGS += -D$(YANEURAOU_EDITION) -DTARGET_CPU=\"$(TARGET_CPU)\"
 
 OBJECTS  = $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
 CUDA_OBJECTS = $(addprefix $(OBJDIR)/, $(CUDA_SOURCES:.cu=.o))
+OBJC_OBJECTS = $(addprefix $(OBJDIR)/, $(OBJC_SOURCES:.mm=.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
 all: clean $(TARGET)
 .PHONY : all normal evallearn tournament prof profgen profuse pgo clean
 
-$(TARGET): $(OBJECTS) $(CUDA_OBJECTS)
+$(TARGET): $(OBJECTS) $(CUDA_OBJECTS) $(OBJC_OBJECTS)
 	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CPPFLAGS) $(LIBS)
 
 $(OBJDIR)/%.o: %.cpp
@@ -606,6 +612,10 @@ $(OBJDIR)/%.o: %.cpp
 
 $(OBJDIR)/%.o: %.cu
 	nvcc $(NVCC_CPPFLAGS) $(INCLUDE) -o $@ $<
+
+$(OBJDIR)/%.o: %.mm
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	$(COMPILER) $(CPPFLAGS) -fobjc-arc $(INCLUDE) -o $@ -c $<
 
 # https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
 
@@ -624,11 +634,6 @@ evallearn:
 tournament:
 	$(MAKE) CPPFLAGS='$(CPPFLAGS) $(LTOFLAGS) -DFOR_TOURNAMENT' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
 
-# 教師棋譜生成用(開発用なので非公開) // currently private
-gensfen:
-	$(MAKE) CPPFLAGS='$(CPPFLAGS) $(LTOFLAGS) $(OPENMP) $(BLAS_CPPFLAGS) -DEVAL_LEARN -DGENSFEN2019' LDFLAGS='$(LDFLAGS) $(OPENMP_LDFLAGS) $(BLAS_LDFLAGS) $(LTOFLAGS)' $(TARGET)
-
-
 #　とりあえずPGOはAVX2とSSE4.2専用
 prof:
 	$(MAKE) CPPFLAGS='$(CPPFLAGS) -pg' tournament
@@ -646,6 +651,6 @@ pgo:
 	$(MAKE) profuse
 
 clean:
-	rm -f $(OBJECTS) $(CUDA_OBJECTS) $(DEPENDS) $(TARGET) ${OBJECTS:.o=.gcda}
+	rm -f $(OBJECTS) $(CUDA_OBJECTS) $(OBJC_OBJECTS) $(DEPENDS) $(TARGET) ${OBJECTS:.o=.gcda}
 
 -include $(DEPENDS)

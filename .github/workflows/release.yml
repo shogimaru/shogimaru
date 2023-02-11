@@ -22,7 +22,6 @@ jobs:
           - normal
           - tournament
           - evallearn
-          - gensfen
         archcpu:
           - "ZEN3,ZEN2,ZEN1,AVX512VNNI,AVXVNNI,AVX512,AVX2,SSE42"
           - "SSE41,SSSE3,SSE2,NO_SSE"
@@ -44,11 +43,9 @@ jobs:
             target: normal
           - compiler: g++
             target: tournament
-          # Release target exclude: compiler clang++ evallearn/gensfen
+          # Release target exclude: compiler clang++ evallearn
           - compiler: clang++
             target: evallearn
-          - compiler: clang++
-            target: gensfen
           # Release target exclude: archcpu ZEN3,AVXVNNI,OTHER
           # `-march=cascadelake`: LLVM8, GCC9 support (AVX512VNNI)
           # `-march=alderlake` : LLVM12, GCC11 support (AVX-VNNI)
@@ -59,25 +56,14 @@ jobs:
             archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
           - target: evallearn
             archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
-          - target: gensfen
-            archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
           # 以下のエディションには機械学習の実装が存在しない
           # There is no machine learning implementation for the following editions
-          - edition: YANEURAOU_ENGINE_MATERIAL*
-            target: evallearn
           - edition: YANEURAOU_MATE_ENGINE
             target: evallearn
           - edition: TANUKI_MATE_ENGINE
             target: evallearn
           - edition: USER_ENGINE
             target: evallearn
-          # 以下のエディションはgensfenに対応しない
-          - edition: YANEURAOU_MATE_ENGINE
-            target: gensfen
-          - edition: TANUKI_MATE_ENGINE
-            target: gensfen
-          - edition: USER_ENGINE
-            target: gensfen
           # 以下のエディションは別途build
           - edition: YANEURAOU_ENGINE_MATERIAL*
     steps:
@@ -92,7 +78,7 @@ jobs:
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu pactoys'
-          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -Syuu clang:m lld:m openblas:x openmp:x toolchain:m'
+          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -Syuu clang:m lld:m openblas:x openmp:x toolchain:m base-devel:'
           $ErrorActionPreference = 'Stop'
 
       - name: make
@@ -118,7 +104,7 @@ jobs:
         target:
           - normal
           - tournament
-          - gensfen
+          - evallearn
         archcpu:
           - ZEN3
           - ZEN2
@@ -140,43 +126,26 @@ jobs:
             target: normal
           - compiler: g++
             target: tournament
-          # Release target exclude: compiler clang++ evallearn/gensfen
+          # Release target exclude: compiler clang++ evallearn
           - compiler: clang++
             target: evallearn
-          - compiler: clang++
-            target: gensfen
           # Release target exclude: archcpu 'SSE2,NO_SSE' and target 'tournament,evallearn'
           - target: tournament
             archcpu: SSE2
           - target: evallearn
             archcpu: SSE2
-          - target: gensfen
-            archcpu: SSE2
           - target: tournament
             archcpu: NO_SSE
           - target: evallearn
             archcpu: NO_SSE
-          - target: gensfen
-            archcpu: NO_SSE
           # 以下のエディションには機械学習の実装が存在しない
           # There is no machine learning implementation for the following editions
-          - edition: YANEURAOU_ENGINE_MATERIAL*
-            target: evallearn
-          - edition: "YANEURAOU_ENGINE_MATERIAL,YANEURAOU_ENGINE_MATERIAL9"
-            target: evallearn
           - edition: YANEURAOU_MATE_ENGINE
             target: evallearn
           - edition: TANUKI_MATE_ENGINE
             target: evallearn
           - edition: USER_ENGINE
             target: evallearn
-          # 以下のエディションはgensfenに対応しない
-          - edition: YANEURAOU_MATE_ENGINE
-            target: gensfen
-          - edition: TANUKI_MATE_ENGINE
-            target: gensfen
-          - edition: USER_ENGINE
-            target: gensfen
 
     steps:
       - name: Checkout own repository
@@ -190,7 +159,7 @@ jobs:
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu pactoys'
-          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -Syuu clang:m lld:m openblas:x openmp:x toolchain:m'
+          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -Syuu clang:m lld:m openblas:x openmp:x toolchain:m base-devel:'
           $ErrorActionPreference = 'Stop'
 
       - name: make
@@ -232,7 +201,6 @@ jobs:
         run: |
           MSBuild.exe /t:build /p:Configuration=Release-Deep-ORT-CPU /p:Platform=x64
           MSBuild.exe /t:build /p:Configuration=Release-Deep-ORT-DML /p:Platform=x64
-          MSBuild.exe /t:build /p:Configuration=Release-Deep-ORT-MKL /p:Platform=x64
           MSBuild.exe /t:build /p:Configuration=Release-Deep-ORT-TRT /p:Platform=x64
         working-directory: main
 
@@ -245,7 +213,7 @@ jobs:
   build-android-general:
     # ubuntu-latest = ubuntu-20.04
     # https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners
-    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
     runs-on: ubuntu-20.04
 
     strategy:
@@ -297,6 +265,7 @@ jobs:
           - "YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32,YANEURAOU_ENGINE_NNUE_HALFKPE9,YANEURAOU_ENGINE_NNUE_KP256"
           - "YANEURAOU_ENGINE_KPPT,YANEURAOU_ENGINE_KPP_KKPT"
           - "YANEURAOU_ENGINE_MATERIAL,YANEURAOU_ENGINE_MATERIAL9"
+          - YANEURAOU_ENGINE_DEEP_COREML
           - "YANEURAOU_MATE_ENGINE,TANUKI_MATE_ENGINE"
           #- USER_ENGINE
         compiler:
@@ -305,13 +274,11 @@ jobs:
         target:
           - "normal,tournament"
         archcpu:
-          #- AVX2
-          #- SSE42
           - APPLEAVX2
           - APPLESSE42
           - APPLEM1
         exclude:
-          # M1 Mac向けは g++-11 ではビルドしない
+          # Mac向けは g++-11 ではビルドしない
           - compiler: g++-11
             archcpu: APPLEAVX2
           - compiler: g++-11
@@ -356,6 +323,7 @@ jobs:
               "YANEURAOU_ENGINE_MATERIAL8": "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=8",
               "YANEURAOU_ENGINE_MATERIAL9": "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=9",
               "YANEURAOU_ENGINE_MATERIAL10": "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=10",
+              "YANEURAOU_ENGINE_DEEP_COREML": "YANEURAOU_ENGINE_DEEP_COREML",
               "YANEURAOU_MATE_ENGINE": "YANEURAOU_MATE_ENGINE",
               "TANUKI_MATE_ENGINE": "TANUKI_MATE_ENGINE",
               "USER_ENGINE": "USER_ENGINE",
@@ -378,6 +346,7 @@ jobs:
               "YANEURAOU_ENGINE_MATERIAL8": "MaterialLv8",
               "YANEURAOU_ENGINE_MATERIAL9": "MaterialLv9",
               "YANEURAOU_ENGINE_MATERIAL10": "MaterialLv10",
+              "YANEURAOU_ENGINE_DEEP_COREML": "FukauraOu_CoreML",
               "YANEURAOU_MATE_ENGINE": "YaneuraOu_MATE",
               "TANUKI_MATE_ENGINE": "tanuki_MATE",
               "USER_ENGINE": "USER",
@@ -400,6 +369,7 @@ jobs:
               "YANEURAOU_ENGINE_MATERIAL8": "YaneuraOu_MaterialLv8",
               "YANEURAOU_ENGINE_MATERIAL9": "YaneuraOu_MaterialLv9",
               "YANEURAOU_ENGINE_MATERIAL10": "YaneuraOu_MaterialLv10",
+              "YANEURAOU_ENGINE_DEEP_COREML": "FukauraOu_CoreML",
               "YANEURAOU_MATE_ENGINE": "YaneuraOu_MATE",
               "TANUKI_MATE_ENGINE": "tanuki_MATE",
               "USER_ENGINE": "user",
@@ -466,7 +436,7 @@ jobs:
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Syuu pactoys'
-          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -Syuu clang:m lld:m openblas:x openmp:x toolchain:m'
+          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -Syuu clang:m lld:m openblas:x openmp:x toolchain:m base-devel:'
           $ErrorActionPreference = 'Stop'
 
       - name: suisho5 embedded_nnue
@@ -493,7 +463,7 @@ jobs:
   build-android-suisho:
     # ubuntu-latest = ubuntu-20.04
     # https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners
-    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
     runs-on: ubuntu-20.04
 
     strategy:
@@ -643,7 +613,7 @@ jobs:
   build-wasm:
     # ubuntu-latest = ubuntu-20.04
     # https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners
-    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
     runs-on: ubuntu-20.04
 
     strategy:
@@ -680,7 +650,7 @@ jobs:
   build-wasm-suisho:
     # ubuntu-latest = ubuntu-20.04
     # https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners
-    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
     runs-on: ubuntu-20.04
 
     strategy:
@@ -710,7 +680,7 @@ jobs:
   build-wasm-suishopetite:
     # ubuntu-latest = ubuntu-20.04
     # https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners
-    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
     runs-on: ubuntu-20.04
 
     strategy:
@@ -1184,7 +1154,7 @@ jobs:
       - archive-wasm-suishopetite
     # ubuntu-latest = ubuntu-20.04
     # https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners
-    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-README.md
+    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
     runs-on: ubuntu-20.04
     steps:
       - name: Set version
@@ -1339,43 +1309,48 @@ jobs:
             - [${{ steps.version.outputs.filename }}-windows.7z](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-windows.7z) (${{ steps.archive_size.outputs.windows_7z }})
               - 1.2.3.5.6.の実行ファイルWindows版 各CPU向け(ZEN3/ZEN2/ZEN1/AVX512VNNI/AVXVNNI/AVX512/AVX2/SSE4.2/SSE4.1/SSSE3/SSE2/32bit環境用)
               - 1.2.3.5.6.のトーナメントWindows版 (ZEN3/ZEN2/ZEN1/AVX512VNNI/AVXVNNI/AVX512/AVX2/SSE4.2)
-              - 1.2.3.の教師生成用実行ファイルWindows版 (ZEN3/ZEN2/ZEN1/AVX512VNNI/AVXVNNI/AVX512/AVX2/SSE4.2)
               - 1.2.3.の学習用実行ファイルWindows版 (ZEN3/ZEN2/ZEN1/AVX512VNNI/AVXVNNI/AVX512/AVX2/SSE4.2)
             - [${{ steps.version.outputs.filename }}-windows-material.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-windows-material.zip) (${{ steps.archive_size.outputs.windows_material_zip }})
             - [${{ steps.version.outputs.filename }}-windows-material.7z](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-windows-material.7z) (${{ steps.archive_size.outputs.windows_material_7z }})
               - 4.の実行ファイルWindows版 各CPU向け(ZEN3/ZEN2/ZEN1/AVX2/SSE4.2/SSE2/32bit環境用)
               - 4.のトーナメントWindows版 (ZEN3/ZEN2/ZEN1/AVX2/SSE4.2)
-              - 4.の教師生成用実行ファイルWindows版 (ZEN3/ZEN2/ZEN1/AVX2/SSE4.2)
+              - 4.の学習用実行ファイルWindows版 (ZEN3/ZEN2/ZEN1/AVX2/SSE4.2)
             - [${{ steps.version.outputs.filename }}-deep-windows.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-deep-windows.zip) (${{ steps.archive_size.outputs.deep_windows_zip }})
             - [${{ steps.version.outputs.filename }}-deep-windows.7z](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-deep-windows.7z) (${{ steps.archive_size.outputs.deep_windows_7z }})
               - 7.の実行ファイルWindows版 (AVX2)
                 - ONNX Runtime (ORT) 版の実行には、Visual C++の実行ランタイムが別途必要です。エンジン実行時に「`VCRUNTIME140_1.dll`が見つからないため、コードの実行を続行できません。」のようなエラーが表示される場合、別途 [Microsoft Visual C++ 2015-2022 Redistributable (x64), `VC_redist.x64.exe`](https://aka.ms/vs/17/release/VC_redist.x64.exe) をダウンロード・実行してインストールして下さい。
-                - ORT-CPU : ONNX Runtime (ORT) のデフォルト、CPU向け。（MKL向けの設定を別途適切に行えば、おそらくORT-MKLのが高速）
-                - ORT-MKL : Intel(R) Math Kernel Library (MKL) を使用、CPU向け。
+                - ORT-CPU : ONNX Runtime (ORT) のデフォルト、CPU向け。
                   cf. [ONNX Runtimeを使ってみる その2(性能測定)](https://tadaoyamaoka.hatenablog.com/entry/2020/06/06/190259)
                 - ORT-DML : Windows 10 DirectML (DML) 対応のGPU向け。（対応環境であればおそらくORT-TRT や TensorRTのが高速）
                   cf. [DirectML の概要](https://docs.microsoft.com/ja-jp/windows/win32/direct3d12/dml-intro)
                 - ORT-TRT : NVIDIA TensorRT 対応のGPU向け。CUDA, cuDNN, TensorRT の導入も必要です。
-                  - CUDA (開発環境は 11.6.2)
+                  - CUDA (開発環境は 11.7.0)
                     - [Latest CUDA Toolkit Download](https://developer.nvidia.com/cuda-downloads)
                     - [CUDA Toolkit Archive](https://developer.nvidia.com/cuda-toolkit-archive)
                     - [CUDA Installation Guide for Microsoft Windows (CUDAインストール手順, CUDA 最新版)](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html)
-                    - CUDA Toolkit 11.6.2 の場合の導入例:
-                      - [Local Installer (2.5GB)](https://developer.download.nvidia.com/compute/cuda/11.6.2/local_installers/cuda_11.6.2_511.65_windows.exe) もしくは [Network Installer (33.6MB)](https://developer.download.nvidia.com/compute/cuda/11.6.2/network_installers/cuda_11.6.2_windows_network.exe) をダウンロード・実行してインストール
-                  - cuDNN (開発環境は [v8.2.4 (Archive)](https://developer.nvidia.com/rdp/cudnn-archive))
-                    - [cuDNN Download](https://developer.nvidia.com/rdp/cudnn-download) (要ログイン)
-                    - (注: Windows版では現状、v8.3.x 系は非推奨。過去のバージョンは [cuDNN Archive](https://developer.nvidia.com/rdp/cudnn-archive) (要ログイン) を参照。)
+                    - CUDA Toolkit 11.7.0 の場合の導入例:
+                      - [Local Installer (2.5GB)](https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda_11.7.0_516.01_windows.exe) もしくは [Network Installer (34.7MB)](https://developer.download.nvidia.com/compute/cuda/11.7.0/network_installers/cuda_11.7.0_windows_network.exe) をダウンロード・実行してインストール
+                  - cuDNN (開発環境は v8.4.0)
+                    - [cuDNN Download (最新のバージョン)](https://developer.nvidia.com/rdp/cudnn-download) (要ログイン)
+                    - [cuDNN Archive (過去のバージョン)](https://developer.nvidia.com/rdp/cudnn-archive) (要ログイン)
                     - [Installing cuDNN On Windows (cuDNNインストール手順)](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html#install-windows)
-                    - cuDNN v8.2.4 (`cudnn-11.4-windows-x64-x64-v8.2.4.15.zip`) の場合の導入例:
-                      - ダウンロードした `cudnn-11.4-windows-x64-x64-v8.2.4.15.zip` を右クリック → 「すべて展開」 → 展開時に展開されたファイルを表示する
-                      - `cudnn-11.4-windows-x64-x64-v8.2.4.15/cuda/bin` フォルダ階層を選択して表示
+                    - cuDNN v8.4.0 (`cudnn-windows-x86_64-8.4.0.27_cuda11.6-archive.zip`) の場合の導入例:
+                      - ダウンロードした `cudnn-windows-x86_64-8.4.0.27_cuda11.6-archive.zip` を右クリック → 「すべて展開」 → 展開時に展開されたファイルを表示する
+                      - `cudnn-windows-x86_64-8.4.0.27_cuda11.6-archive/bin` フォルダ階層を選択して表示
                       - `cudnn_adv_infer64_8.dll`, `cudnn_cnn_infer64_8.dll`, `cudnn_ops_infer64_8.dll`, `cudnn64_8.dll` (種類: アプリケーション拡張) の4つのファイルを選択し、`YaneuraOu-Deep-ORT-TRT.exe` と同じフォルダにコピー
-                  - TensorRT (開発環境は 8.2 GA Update 2)
+                  - ZLIB DLL (`zlibwapi.dll`)
+                    - [ZLIB DLL](http://www.winimage.com/zLibDll/zlib123dllx64.zip)
+                    - [NVIDIA cuDNN Documentation - Installing zlib](https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html#install-zlib-windows)
+                    - cuDNN v8.4.0 は、動作に `zlibwapi.dll` が必要。
+                      - [ダウンロードした `zlib123dllx64.zip`](http://www.winimage.com/zLibDll/zlib123dllx64.zip) を右クリック → 「すべて展開」 → 展開時に展開されたファイルを表示する
+                      - `zlib123dllx64/dll_x64` フォルダ階層を選択して表示
+                      - `zlibwapi.dll` (種類: アプリケーション拡張) の4つのファイルを選択し、`YaneuraOu-Deep-ORT-TRT.exe` と同じフォルダにコピー
+                  - TensorRT (開発環境は 8.2 GA Update 4)
                     - [NVIDIA TensorRT Download](https://developer.nvidia.com/nvidia-tensorrt-download) (要ログイン)
                     - [Installing TensorRT (TensorRTインストール手順)](https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html#installing-zip)
-                    - TensorRT 8.2 GA Update 3 (`TensorRT-8.2.4.2.Windows10.x86_64.cuda-11.4.cudnn8.2.zip`) の場合の導入例:
-                      - ダウンロードした `TensorRT-8.2.4.2.Windows10.x86_64.cuda-11.4.cudnn8.2.zip` を右クリック → 「すべて展開」 → 展開時に展開されたファイルを表示する
-                      - `TensorRT-8.2.4.2/lib` フォルダ階層を選択して表示
+                    - TensorRT 8.2 GA Update 4 (`TensorRT-8.2.5.1.Windows10.x86_64.cuda-11.4.cudnn8.2.zip`) の場合の導入例:
+                      - ダウンロードした `TensorRT-8.2.5.1.Windows10.x86_64.cuda-11.4.cudnn8.2.zip` を右クリック → 「すべて展開」 → 展開時に展開されたファイルを表示する
+                      - `TensorRT-8.2.5.1/lib` フォルダ階層を選択して表示
                       - `nvinfer.dll`, `nvinfer_builder_resource.dll`, `nvinfer_plugin.dll`, `nvonnxparser.dll`, `nvparsers.dll` (種類: アプリケーション拡張) の5つのファイルを選択し、`YaneuraOu-Deep-ORT-TRT.exe` と同じフォルダにコピー
                   - [警告: 以下のような変更があった場合は、古いエンジンやプロファイルのキャッシュファイル(`.engine`, `.profile`)をクリーンアップしてください。](https://onnxruntime.ai/docs/execution-providers/TensorRT-ExecutionProvider.html#environment-variables)
                     - モデルの変更（モデルのトポロジー、opsetのバージョン、演算子などに変更があった場合）
@@ -1388,7 +1363,7 @@ jobs:
             - [${{ steps.version.outputs.filename }}-android.7z](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-android.7z) (${{ steps.archive_size.outputs.android_7z }})
               - 1.2.3.4.5.6.の実行ファイルAndroid版 (arm64-v8a/armeabi-v7a/x86_64/x86)
             - [${{ steps.version.outputs.filename }}-macos.tar.xz](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-macos.tar.xz) (${{ steps.archive_size.outputs.macos_tar_xz }})
-              - 1.2.3.4.5.6.の実行ファイルMacOS版 (AVX2/SSE42/APPLEM1) (testing)
+              - 1.2.3.4.5.6.7.の実行ファイルMacOS版 (AVX2/SSE42/APPLEM1) (testing)
             - [${{ steps.version.outputs.filename }}-wasm.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-wasm.zip) (${{ steps.archive_size.outputs.wasm_zip }})
             - [${{ steps.version.outputs.filename }}-wasm.7z](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-wasm.7z) (${{ steps.archive_size.outputs.wasm_7z }})
               - 1.2.3.4.5.6.の実行ファイルWebAssembly版 (testing)

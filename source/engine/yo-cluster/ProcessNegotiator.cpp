@@ -1,6 +1,7 @@
 ﻿#include "../../config.h"
 #if defined(USE_YO_CLUSTER) && (defined(YANEURAOU_ENGINE_DEEP) || defined(YANEURAOU_ENGINE_NNUE))
 
+#include "ClusterCommon.h"
 #include "ProcessNegotiator.h"
 #include "../../misc.h"
 
@@ -12,13 +13,12 @@
 // → redefineになる環境があるな。std::max()を(std::max)()にように書いて回避することにする。
 #include <Windows.h>
 
+// ↓これを↑Windows.hより先にやるとWindows.hのinclude中に警告が出るから駄目。
 using namespace std;
+using namespace YaneuraouTheCluster;
 
 struct ProcessNegotiatorImpl : public IProcessNegotiator
 {
-	// あとで何とかするかも。(しないかも)
-	void DebugMessageCommon(const std::string& message){}
-
 	// 子プロセスの実行
 	// workingDirectory : エンジンを実行する時の作業ディレクトリ("engines/"相対で指定)
 	// app_path         : エンジンの実行ファイルのpath (.batファイルでも可) workingDirectory相対で指定。
@@ -139,6 +139,8 @@ struct ProcessNegotiatorImpl : public IProcessNegotiator
 				if (success && dwRead != 0)
 				{
 					chBuf[dwRead] = '\0'; // 終端マークを書いてstringに連結する。
+					// バッファを先行して確保したほうがresize()の発生が少ない
+					read_buffer.reserve(read_buffer.size() + dwRead + 1);
 					read_buffer  += chBuf;
 					total        -= dwRead;
 				}
@@ -274,6 +276,7 @@ protected:
 #include <sys/wait.h> // waitpid
 
 using namespace std;
+using namespace YaneuraouTheCluster;
 
 // Linuxのpipeのwrapper
 
@@ -360,6 +363,8 @@ public:
                 return s;
             // 末尾に'\0'を付与して文字連結してしまう。
             buf[read_bytes] = '\0';
+			// バッファを先行して確保したほうがresize()の発生が少ない
+			s.reserve(s.size() + (size_t)read_bytes + 1);
             s += buf;
         }
     }
@@ -380,8 +385,6 @@ protected:
 class ProcessNegotiatorImpl : public IProcessNegotiator
 {
 public:
-	// あとで何とかするかも。(しないかも)
-	void DebugMessageCommon(const std::string& message){}
 
 	// workingDirectory : エンジンの作業フォルダ
     // app_path         : 起動するエンジンのpath。同じフォルダにあるならLinuxの場合、"./YO_engine.out"のように"./"をつけてやる必要があるが、
@@ -586,4 +589,4 @@ ProcessNegotiator::ProcessNegotiator()
 	ptr = std::make_unique<ProcessNegotiatorImpl>();
 }
 
-#endif //defined(USE_YO_CLUSTER) && (defined(YANEURAOU_ENGINE_DEEP) || defined(YANEURAOU_ENGINE_NNUE)) && defined(_WIN32)
+#endif //defined(USE_YO_CLUSTER) && (defined(YANEURAOU_ENGINE_DEEP) || defined(YANEURAOU_ENGINE_NNUE))
