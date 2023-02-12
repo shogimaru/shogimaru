@@ -10,7 +10,6 @@
 #include <QPainter>
 #include <QPointF>
 #include <QRect>
-#include <QThread>
 
 constexpr int NUM_ROWS = 9;
 

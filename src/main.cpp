@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QTranslator>
 #include <locale>
+#include <cstdlib>
 
 
 int main(int argc, char *argv[])
@@ -53,5 +54,6 @@ int main(int argc, char *argv[])
     control.show();
 
     int ret = app.exec();
+    std::exit(ret);
     return ret;
 }

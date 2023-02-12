@@ -106,10 +106,9 @@ private:
     QString _name;
     QString _author;
     QVariantMap _options;  // カスタムオプション
+    QMap<QString, Option> _usiDefaultOptions;  // デフォルトオプション
 #ifdef Q_OS_WASM
-    static QMap<QString, Option> _currentOptions;  // WASMでは初回1回のみ正しい
-#else
-    QMap<QString, Option> _currentOptions;  // デフォルトオプション
+    static EngineInfo wasmEngineInfo;  // WASMではデフォルトオプションをstaticに保持
 #endif
     int _level {20};
     State _state {NotRunning};

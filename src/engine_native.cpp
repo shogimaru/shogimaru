@@ -44,3 +44,19 @@ void Engine::closeContext()
     _engineContext = nullptr;
     Command::setEngine(nullptr);
 }
+
+
+Engine::EngineInfo Engine::getEngineInfo(const QString &path)
+{
+    Engine::EngineInfo info;
+    auto engine = new Engine;
+    if (engine->open(path)) {
+        info.name = engine->name();
+        info.path = path;
+        info.author = engine->author();
+        info.options = engine->_usiDefaultOptions;
+    }
+    engine->close();
+    delete engine;
+    return info;
+}

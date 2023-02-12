@@ -106,8 +106,8 @@ bool Engine::open(const QString &path)
                         option.value = option.defaultValue;  // 最初は現在値と初期値は同じ
                         option.max = nextWord(items, "max").toLongLong();
                         option.min = nextWord(items, "min").toLongLong();
-                        _currentOptions.insert(items[0], option);
-                        //qDebug() << "insert:" << option.defaultValue;
+                        _usiDefaultOptions.insert(items[0], option);
+                        //qInfo() << "insert:" << option.defaultValue;
                     }
                 }
             }
@@ -115,8 +115,16 @@ bool Engine::open(const QString &path)
         return false;
     };
 
-    if (_currentOptions.isEmpty()) {
-        if (!parseUsi()) {
+    if (_usiDefaultOptions.isEmpty()) {
+        if (parseUsi()) {
+#ifdef Q_OS_WASM
+            if (wasmEngineInfo.options.isEmpty()) {
+                wasmEngineInfo.name = _name;
+                wasmEngineInfo.author = _author;
+                wasmEngineInfo.options = _usiDefaultOptions;
+            }
+#endif
+        } else {
             qCritical() << "Error response";
             emit errorOccurred();
             return false;
@@ -139,7 +147,7 @@ void Engine::close()
 {
     closeContext();
 #ifndef Q_OS_WASM
-    _currentOptions.clear();
+    _usiDefaultOptions.clear();
     _options.clear();
 #endif
     _state = NotRunning;
@@ -165,7 +173,7 @@ void Engine::sendOptions(const QVariantMap &options)
     QString value;
 
     for (auto it = options.begin(); it != options.end(); ++it) {
-        auto &opt = _currentOptions[it.key()];
+        auto &opt = _usiDefaultOptions[it.key()];
 #if QT_VERSION < 0x060000
         int type = it.value().type();
 #else
@@ -561,30 +569,14 @@ void Engine::getResponse()
 }
 
 
-Engine::EngineInfo Engine::getEngineInfo(const QString &path)
-{
-    Engine::EngineInfo info;
-    auto engine = new Engine;
-    if (engine->open(path)) {
-        info.name = engine->name();
-        info.path = path;
-        info.author = engine->author();
-        info.options = engine->_currentOptions;
-    }
-    engine->close();
-    delete engine;
-    return info;
-}
-
-
 bool Engine::hasSkillLevelOption() const
 {
-    return !_currentOptions.value("SkillLevel").defaultValue.isNull();
+    return !_usiDefaultOptions.value("SkillLevel").defaultValue.isNull();
 }
 
 // Type of the option
 QMetaType::Type Engine::type(const QString &option) const
 {
-    auto optionData = _currentOptions.value(option);
+    auto optionData = _usiDefaultOptions.value(option);
     return optionData.type;
 }

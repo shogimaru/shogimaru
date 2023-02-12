@@ -2,7 +2,7 @@
 #include "enginethread.h"
 #include <QDebug>
 
-QMap<QString, Engine::Option> Engine::_currentOptions;
+Engine::EngineInfo Engine::wasmEngineInfo;
 
 
 Engine::Engine(QObject *parent) :
@@ -40,4 +40,18 @@ void Engine::closeContext()
         }
     }
     _engineContext = nullptr;
+}
+
+
+Engine::EngineInfo Engine::getEngineInfo(const QString &path)
+{
+    // メモリ使用量を抑えるために何度もエンジンを起動しない
+
+    if (wasmEngineInfo.options.isEmpty()) {
+        auto engine = new Engine;
+        engine->open(path);
+        engine->close();
+        delete engine;
+    }
+    return wasmEngineInfo;
 }
