@@ -15,12 +15,6 @@ INCLUDEPATH += src
 wasm {
   CONFIG +=
   LIBS = engines/YaneuraOu/source/YaneuraOu.wasm
-  QMAKE_LFLAGS += --preload-file assets/
-  QMAKE_LFLAGS += -lidbfs.js
-  QMAKE_LFLAGS += -sASYNCIFY=1 -sASSERTIONS
-  QMAKE_LFLAGS += -sALLOW_MEMORY_GROWTH=1
-  QT_WASM_PTHREAD_POOL_SIZE=32
-  QT_WASM_INITIAL_MEMORY=1000MB
   SOURCES += src/maincontroller_wasm.cpp
   SOURCES += src/file_wasm.cpp
   SOURCES += src/engine_wasm.cpp
