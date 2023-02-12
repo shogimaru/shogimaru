@@ -9,7 +9,7 @@ set SHOGIMARU_VERSION=1.4.1
 set BASEDIR=%~dp0
 set TARGET=shogimaru-%SHOGIMARU_VERSION%
 
-call "C:\Qt\6.2.3\msvc2019_64\bin\qtenv2.bat"
+call "C:\Qt\6.4.2\msvc2019_64\bin\qtenv2.bat"
 
 set VSVER=2019
 set ARCH=amd64

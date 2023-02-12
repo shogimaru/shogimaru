@@ -29,7 +29,9 @@ bool Engine::open(const QString &path)
     }
 
     // Starts engine
-    openContext(path);
+    if (!openContext(path)) {
+        return false;
+    }
     Command::instance().request("usi");
 
     auto parseUsi = [this]() {
