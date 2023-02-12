@@ -7,7 +7,7 @@
 オープンソースの将棋 GUI を C++ で作っています。
 思考エンジンと通信するための USI プロトコルに対応しており、次の特徴があります。
 
-- クロスプラットフォーム - Windows, macOS, Linux, WebAssembly
+- マルチプラットフォーム - Windows, macOS, Linux, WebAssembly
 - MultiPV 表示
 - UI は Qt ベース
 - 棋譜の解析モード
@@ -22,7 +22,7 @@
 
   - [Emscripten](https://emscripten.org/)
   - [Qt for WebAssembly (multithread)](https://www.qt.io/)  
-    Qt Company が提供している WebAssembly 向けバイナリはシングルスレッド版です（2022 年 1 月現在）。マルチスレッド版はソースからビルドする必要があります。
+    Qt Company が提供している WebAssembly 向けバイナリはシングルスレッド版です（2023 年 1 月現在）。マルチスレッド版はソースからビルドする必要があります。
 
 - デスクトップ版 - Windows, macOS, Linux
   - コンパイラ （gcc や clang など）
@@ -48,8 +48,8 @@
 
 3. 将棋丸をコンパイル
 
-- WebAssembly  
-  Emscripten(2.0.6)環境を有効にした上で次のコマンドを実行する。
+- WebAssembly（マルチスレッド版）
+  Emscripten(3.1.14)環境を有効にした上で次のコマンドを実行する。
 
 ```
  $ qmake -spec wasm-emscripten CONFIG+=release && make
