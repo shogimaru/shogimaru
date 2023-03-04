@@ -231,14 +231,15 @@ void RecordDialog::parseJsonArray()
 
 void RecordDialog::loadItem(QListWidgetItem *item)
 {
-    const QString Url("https://api.shogidb2.com/eval/%1/default.json");
+    const QString Url("https://shogidb2.com/games/%1");
 
     auto obj = item->data(Qt::UserRole).toJsonObject();
-    int id = obj.value("id").toInt();
-    // HTTP request
-    request(Url.arg(id), &RecordDialog::parseRecordJson);
-    //qDebug() << Url.arg(id);
-    _ui->listWidget->setEnabled(false);
+    QString hash = obj.value("hash").toString();
+    if (!hash.isEmpty()) {
+        // HTTP request
+        request(Url.arg(hash), &RecordDialog::parseRecordJson);
+        _ui->listWidget->setEnabled(false);
+    }
 }
 
 
@@ -257,45 +258,32 @@ void RecordDialog::parseRecordJson()
     }
 
     auto body = reply->readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(body);
-    auto array = doc.object().value("evals").toArray();
+    const QRegularExpression re("<script>var data =(.*);</script>");
+    auto match = re.match(body);
+    if (!match.hasMatch()) {
+        return;
+    }
+
+    qDebug() << match.captured(1);
+    QJsonDocument doc = QJsonDocument::fromJson(match.captured(1).toUtf8());
+    QJsonObject json = doc.object();
+    auto array = json.value("moves").toArray();
     if (array.count() == 0) {
         MessageBox::information(tr("Error"), tr("Failed to retrieve the Shogi game record."));
         return;
     }
 
     QString csa;
+    csa += QLatin1String("$EVENT:");
+    csa += json.value("tournament_detail").toString();
+    csa += "\n";
+
     for (auto it = array.begin(); it != array.end(); ++it) {
         auto obj = it->toObject();
-        int idx = obj.value("index").toInt();
-        if (idx == 0) {
-            // 棋戦名を取得
-            static const QString word = QString::fromUtf8(u8"棋戦:");
-            auto descriptions = obj.value("descriptions").toArray();
-
-            for (auto it = descriptions.begin(); it != descriptions.end(); ++it) {
-                auto desc = it->toString();
-                if (desc.startsWith(word)) {
-                    auto event = desc.mid(word.length()).split("\n").value(0).trimmed();
-                    if (!event.isEmpty()) {
-                        csa += QLatin1String("$EVENT:");
-                        csa += event;
-                        csa += "\n";
-                    }
-                }
-            }
-            continue;
-
-        } else if (idx > 0) {
-            // 指し手
-            QString str = obj.value("csa").toString();
-            if (str.isEmpty()) {
-                csa += "%TORYO\n";
-                break;
-            }
-            csa += str;
-            csa += "\n";
-        }
+        // 指し手
+        QString str = obj.value("csa").toString();
+        csa += str;
+        csa += "\n";
     }
 
     if (validate(csa)) {
