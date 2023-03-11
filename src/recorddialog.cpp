@@ -231,7 +231,11 @@ void RecordDialog::parseJsonArray()
 
 void RecordDialog::loadItem(QListWidgetItem *item)
 {
+#ifndef Q_OS_WASM
     const QString Url("https://shogidb2.com/games/%1");
+#else
+    const QString Url("https://shogimaru.com/rd/?u=https://shogidb2.com/games/%1");
+#endif
 
     auto obj = item->data(Qt::UserRole).toJsonObject();
     QString hash = obj.value("hash").toString();
@@ -264,7 +268,7 @@ void RecordDialog::parseRecordJson()
         return;
     }
 
-    qDebug() << match.captured(1);
+    //qDebug() << match.captured(1);
     QJsonDocument doc = QJsonDocument::fromJson(match.captured(1).toUtf8());
     QJsonObject json = doc.object();
     auto array = json.value("moves").toArray();
