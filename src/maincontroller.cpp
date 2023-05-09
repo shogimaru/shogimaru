@@ -1947,3 +1947,9 @@ void MainController::showLastPosition()
         break;
     }
 }
+
+
+void MainController::showUrlRecord(const QString &hash)
+{
+    _recordDialog->readRecord(hash);
+}

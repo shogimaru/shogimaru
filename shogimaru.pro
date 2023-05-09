@@ -19,6 +19,7 @@ wasm {
   SOURCES += src/file_wasm.cpp
   SOURCES += src/engine_wasm.cpp
   SOURCES += src/command_wasm.cpp
+  SOURCES += src/commandlineparser_wasm.cpp
   SOURCES += src/sound_sdl.cpp
   HEADERS += src/stringconverter.h
   SOURCES += src/stringconverter_iconv.cpp
@@ -31,6 +32,7 @@ wasm {
   SOURCES += src/file.cpp
   SOURCES += src/engine_native.cpp
   SOURCES += src/command_native.cpp
+  SOURCES += src/commandlineparser_native.cpp
   SOURCES += src/sound_native.cpp
   HEADERS += src/engineprocess.h
   SOURCES += src/engineprocess.cpp
@@ -113,6 +115,7 @@ HEADERS += \
         src/sound.h \
         src/evaluationgraph.h \
         src/operationbuttongroup.h \
+        src/commandlineparser.h \
         src/maincontroller.h
 
 FORMS += \

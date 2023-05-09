@@ -60,6 +60,7 @@ public:
     bool isIllegalMove();
     void showAnalyzingMoves(const QVector<ScoreItem> &scores, const QByteArray &sfen);
     void clear();
+    void showUrlRecord(const QString &hash);
 
 public slots:
     void newRatingGame();

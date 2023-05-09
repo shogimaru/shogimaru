@@ -1,8 +1,8 @@
 #include "file.h"
 #include "global.h"
 #include "maincontroller.h"
+#include "commandlineparser.h"
 #include <QApplication>
-#include <QCommandLineParser>
 #include <QDebug>
 #include <QDir>
 #include <QFontDatabase>
@@ -17,10 +17,12 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("Shogimaru");
     QCoreApplication::setApplicationVersion(maru::SHOGIMARU_VERSION_STR);
 
-    QCommandLineParser parser;
+    CommandLineParser parser;
     parser.setApplicationDescription("Shogi GUI supporting USI protocol");
     parser.addHelpOption();
     parser.addVersionOption();
+    QCommandLineOption showRecord(QStringList() << "s" << "show-record", "Shows a shogi record of ShogiDB2.", "hash");
+    parser.addOption(showRecord);
     parser.process(QCoreApplication(argc, argv));
 
     //-------------------------------------------
@@ -52,6 +54,11 @@ int main(int argc, char *argv[])
 
     MainController control;
     control.show();
+
+    auto hash = parser.value(showRecord);
+    if (!hash.isEmpty()) {
+        control.showUrlRecord(hash);
+    }
 
     int ret = app.exec();
     std::exit(ret);

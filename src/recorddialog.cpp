@@ -231,14 +231,20 @@ void RecordDialog::parseJsonArray()
 
 void RecordDialog::loadItem(QListWidgetItem *item)
 {
+    auto obj = item->data(Qt::UserRole).toJsonObject();
+    QString hash = obj.value("hash").toString();
+    readRecord(hash);
+}
+
+
+void RecordDialog::readRecord(const QString &hash)
+{
 #ifndef Q_OS_WASM
     const QString Url("https://shogidb2.com/games/%1");
 #else
     const QString Url("https://shogimaru.com/rd/?u=https://shogidb2.com/games/%1");
 #endif
 
-    auto obj = item->data(Qt::UserRole).toJsonObject();
-    QString hash = obj.value("hash").toString();
     if (!hash.isEmpty()) {
         // HTTP request
         request(Url.arg(hash), &RecordDialog::parseRecordJson);
@@ -262,7 +268,7 @@ void RecordDialog::parseRecordJson()
     }
 
     auto body = reply->readAll();
-    const QRegularExpression re("<script>var data =(.*);</script>");
+    const QRegularExpression re("<script>\\s*var\\s*data\\s*=([^;]*);\\s*</script>");
     auto match = re.match(body);
     if (!match.hasMatch()) {
         return;
@@ -291,10 +297,7 @@ void RecordDialog::parseRecordJson()
     }
 
     if (validate(csa)) {
-        if (_ui->listWidget->currentItem()) {
-            auto obj = _ui->listWidget->currentItem()->data(Qt::UserRole).toJsonObject();
-            _sfen.setPlayers(obj.value("player1").toString(), obj.value("player2").toString());
-        }
+        _sfen.setPlayers(json.value("player1").toString(), json.value("player2").toString());
         accept();
     } else {
         MessageBox::information(tr("Notation Error"), tr("Load Error"));

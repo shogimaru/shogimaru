@@ -19,6 +19,7 @@ public:
     ~RecordDialog();
 
     void open();
+    void openRecord(const QString &hash);
     Sfen result() const { return _sfen; }
     void loadRecord();
     void loadUrlRecord();
@@ -28,6 +29,7 @@ public:
     void parseJsonArray();
     void parseRecordJson();
     void loadItem(QListWidgetItem *item);
+    void readRecord(const QString &hash);
 
 signals:
     void saveFileSelected(const QString &filePath);
