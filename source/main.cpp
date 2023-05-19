@@ -7,11 +7,6 @@
 #include "usi.h"
 #include "misc.h"
 
-int abs(int j)
-{
-    return (j < 0) ? -j : j;
-}
-
 // ファイルの中身を出力する。
 void print_file(const std::string& path)
 {

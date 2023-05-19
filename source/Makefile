@@ -19,8 +19,8 @@
 # YANEURAOU_MATE_ENGINE          : やねうら王 詰将棋solver (2020/12/29～)
 # USER_ENGINE                    : USER定義エンジン
 
-YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
-#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
+#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
+YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKPE9
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_KPPT
@@ -52,7 +52,7 @@ YO_CLUSTER = OFF
 # --- Intel/AMD系 (x86/x64 Platform)
 #TARGET_CPU = AVX512VNNI
 #TARGET_CPU = AVX512
-TARGET_CPU = AVX2
+#TARGET_CPU = AVX2
 #TARGET_CPU = SSE42
 #TARGET_CPU = SSE41
 #TARGET_CPU = SSSE3
@@ -65,7 +65,7 @@ TARGET_CPU = AVX2
 # -- ARMとか
 #TARGET_CPU = OTHER
 #TARGET_CPU = GRAVITON2
-#TARGET_CPU = WASM
+TARGET_CPU = WASM
 
 
 # デバッガーを使用するか (debugger)
@@ -76,8 +76,8 @@ DEBUG = OFF
 # 使用するコンパイラ (compiler)
 # ※ clangでコンパイルしたほうがgccより数%速いっぽい。
 #COMPILER = g++
-COMPILER = clang++
-#COMPILER = em++
+#COMPILER = clang++
+COMPILER = em++
 
 
 # エンジンの表示名 (engine displayname)
@@ -92,12 +92,15 @@ COMPILER = clang++
 
 
 # 標準的なコンパイルオプション (standard compile options)
-CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -MMD -MP -fpermissive
+#CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -MMD -MP -fpermissive
+#CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -O2 -s USE_PTHREADS=1 -s TOTAL_MEMORY=1GB -s INITIAL_MEMORY=1GB -DPOSIXALIGNEDALLOC
+CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -DPOSIXALIGNEDALLOC -msimd128
 NVCC_CPPFLAGS = -std=c++17 -x cu -maxrregcount=0 --machine 64 --compile -cudart static -DNDEBUG -Xcompiler "-Ofast"
 WCPPFLAGS  =
 LDFLAGS  = $(EXTRA_LDFLAGS)
 LIBS     =
-INCLUDE  = # -I../include
+INCLUDE  = -I../../../src
+AR       = emar cq
 
 # makeするときにCPPFLAGSを追加で指定したいときはこれを用いる。
 EXTRA_CPPFLAGS =
@@ -171,34 +174,34 @@ else
 		# LDFLAGS += -lstdc++fs
 	endif
 	ifneq (,$(findstring em++,$(COMPILER)))
-		EM_EXPORT_NAME=YaneuraOu
-		EM_INITIAL_MEMORY_SIZE=$(shell if [ $(MATERIAL_LEVEL) -ge 5 ]; then echo 385875968; else echo 138412032; fi)
+		#EM_EXPORT_NAME=YaneuraOu
+		#EM_INITIAL_MEMORY_SIZE=$(shell if [ $(MATERIAL_LEVEL) -ge 5 ]; then echo 385875968; else echo 138412032; fi)
 		CPPFLAGS += -Wno-unused-parameter
-		CPPFLAGS += -DUSE_WASM_SIMD -msimd128
-		CPPFLAGS += -DUSE_SSE42 -msse4.2
-		CPPFLAGS += -march=wasm32
+		#CPPFLAGS += -DUSE_WASM_SIMD -msimd128
+		#CPPFLAGS += -DUSE_SSE42 -msse4.2
+		#CPPFLAGS += -march=wasm32
 		# CPPFLAGS += -march=corei7
 		CPPFLAGS += -s USE_PTHREADS=1
-		CPPFLAGS += -s STRICT=1
-		LDFLAGS += --pre-js wasm_pre.js
+		#CPPFLAGS += -s STRICT=1
+		#LDFLAGS += --pre-js wasm_pre.js
 		# LDFLAGS += --preload-file eval/nn.bin
-		LDFLAGS += -s MODULARIZE=1 -s EXPORT_NAME="$(EM_EXPORT_NAME)" -s ENVIRONMENT=web,worker,node
+		#LDFLAGS += -s MODULARIZE=1 -s EXPORT_NAME="$(EM_EXPORT_NAME)" -s ENVIRONMENT=web,worker,node
 		LDFLAGS += -s PTHREAD_POOL_SIZE=32
 		# -s PTHREAD_POOL_SIZE_STRICT=32
-		LDFLAGS += -s FILESYSTEM=1 -s EXIT_RUNTIME=0 -s "EXPORTED_RUNTIME_METHODS=['FS','ccall']"
-		LDFLAGS += -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=$(EM_INITIAL_MEMORY_SIZE) -s MAXIMUM_MEMORY=4294967296
-		LDFLAGS += -s TOTAL_STACK=67108864
-		LDFLAGS += -s LLD_REPORT_UNDEFINED
+		#LDFLAGS += -s FILESYSTEM=1 -s EXIT_RUNTIME=0 -s "EXPORTED_RUNTIME_METHODS=['FS','ccall']"
+		#LDFLAGS += -s ALLOW_MEMORY_GROWTH=1 -s INITIAL_MEMORY=$(EM_INITIAL_MEMORY_SIZE) -s MAXIMUM_MEMORY=4294967296
+		#LDFLAGS += -s TOTAL_STACK=67108864
+		#LDFLAGS += -s LLD_REPORT_UNDEFINED
 		# LDFLAGS += -s PROXY_TO_PTHREAD
 		# LDFLAGS += -s ALLOW_UNIMPLEMENTED_SYSCALLS
 		# LDFLAGS += -s ASSERTIONS
-		LDFLAGS += -s --closure 1
+		#LDFLAGS += -s --closure 1
 	endif
 endif
 
 TARGETDIR = .
 ifneq (,$(findstring em++,$(COMPILER)))
-	TARGET = $(TARGETDIR)/yaneuraou.js
+	TARGET = $(TARGETDIR)/YaneuraOu.wasm
 else
 	ifeq ($(OS),Windows_NT)
 		CPPFLAGS += $(WCPPFLAGS)
@@ -223,7 +226,7 @@ ifneq (,$(findstring clang++,$(COMPILER)))
 endif
 
 # wstringを使うためにこのシンボル定義が必要。
-CPPFLAGS  += -DUNICODE
+#CPPFLAGS  += -DUNICODE
 
 # em++ では strip: -Wl,-s の指定はしない
 ifeq (,$(findstring em++,$(COMPILER)))
@@ -603,8 +606,10 @@ DEPENDS  = $(OBJECTS:.o=.d)
 all: clean $(TARGET)
 .PHONY : all normal evallearn tournament prof profgen profuse pgo clean
 
-$(TARGET): $(OBJECTS) $(CUDA_OBJECTS) $(OBJC_OBJECTS)
-	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CPPFLAGS) $(LIBS)
+#$(TARGET): $(OBJECTS) $(CUDA_OBJECTS) $(OBJC_OBJECTS)
+#	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CPPFLAGS) $(LIBS)
+$(TARGET): $(OBJECTS) $(LIBS)
+	$(AR) $@ $^
 
 $(OBJDIR)/%.o: %.cpp
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
