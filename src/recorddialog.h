@@ -41,4 +41,5 @@ private:
 
     Ui::RecordDialog *_ui {nullptr};
     Sfen _sfen;
+    int _errorCount {0};
 };

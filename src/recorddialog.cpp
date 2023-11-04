@@ -82,7 +82,6 @@ void RecordDialog::parseRecord()
         return;
     }
 
-    reply->deleteLater();
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << reply->errorString();
         return;
@@ -166,23 +165,31 @@ bool RecordDialog::validate(const QString &record)
 template <typename Func>
 void RecordDialog::request(const QString &url, Func slot)
 {
-    QUrl reqestUrl(url);
     auto *manager = new QNetworkAccessManager(this);
-    auto *reply = manager->get(QNetworkRequest(reqestUrl));
-    connect(manager, &QNetworkAccessManager::finished, manager, &QNetworkAccessManager::deleteLater);
+    auto *reply = manager->get(QNetworkRequest(QUrl(url)));
+    connect(reply, &QNetworkReply::errorOccurred, [this, url, slot, reply] {
+        qCritical() << "Network reply error " << reply->errorString();
+        if (_errorCount++ < 1) {
+            // 1回だけリトライ
+            request(url, slot);
+        }
+    });
     connect(reply, &QNetworkReply::finished, this, slot);
+    connect(manager, &QNetworkAccessManager::finished, reply, &QNetworkReply::deleteLater);
+    connect(manager, &QNetworkAccessManager::finished, manager, &QNetworkAccessManager::deleteLater);
 }
 
 
 void RecordDialog::open()
 {
     constexpr int NUM_RECORDS = 50;
-    const QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
+    QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
+#ifdef Q_OS_WASM
+    ShogiDbUrl.prepend("https://shogimaru.com/rd/?u=");
+#endif
 
-    if (_ui->listWidget->count() == 0) {
-        // HTTP request
-        request(ShogiDbUrl.arg(NUM_RECORDS), &RecordDialog::parseJsonArray);
-    }
+    // HTTP request
+    request(ShogiDbUrl.arg(NUM_RECORDS), &RecordDialog::parseJsonArray);
 
     _ui->textEdit->clear();
     _sfen.clear();
@@ -195,20 +202,20 @@ void RecordDialog::parseJsonArray()
 {
     QNetworkReply *reply = dynamic_cast<QNetworkReply *>(sender());
     if (!reply) {
+        qCritical() << "Logic Error " << __FILE__ << __LINE__;
         return;
     }
 
-    reply->deleteLater();
-    if (reply->error() != QNetworkReply::NoError) {
-        qCritical() << reply->errorString();
-        return;
-    }
-
+    _errorCount = 0;
     _ui->listWidget->clear();
-
     auto body = reply->readAll();
     QJsonDocument doc = QJsonDocument::fromJson(body);
     auto array = doc.array();
+
+    if (doc.isEmpty()) {
+        qCritical() << "JSON empty " << __FILE__ << __LINE__;
+        return;
+    }
 
     for (auto it = array.begin(); it != array.end(); ++it) {
         auto obj = it->toObject();
@@ -239,10 +246,9 @@ void RecordDialog::loadItem(QListWidgetItem *item)
 
 void RecordDialog::readRecord(const QString &hash)
 {
-#ifndef Q_OS_WASM
-    const QString Url("https://shogidb2.com/games/%1");
-#else
-    const QString Url("https://shogimaru.com/rd/?u=https://shogidb2.com/games/%1");
+    QString Url("https://shogidb2.com/games/%1");
+#ifdef Q_OS_WASM
+    Url.prepend("https://shogimaru.com/rd/?u=");
 #endif
 
     if (!hash.isEmpty()) {
@@ -257,11 +263,12 @@ void RecordDialog::parseRecordJson()
 {
     QNetworkReply *reply = dynamic_cast<QNetworkReply *>(sender());
     if (!reply) {
+        qCritical() << "Logic Error " << __FILE__ << __LINE__;
         return;
     }
 
+    _errorCount = 0;
     _ui->listWidget->setEnabled(true);
-    reply->deleteLater();
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << reply->errorString();
         return;
@@ -271,6 +278,7 @@ void RecordDialog::parseRecordJson()
     const QRegularExpression re("<script>\\s*var\\s*data\\s*=([^;]*);\\s*</script>");
     auto match = re.match(body);
     if (!match.hasMatch()) {
+        qCritical() << "Not match script tag " << __FILE__ << __LINE__;
         return;
     }
 

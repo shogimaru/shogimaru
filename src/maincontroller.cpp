@@ -531,7 +531,7 @@ void MainController::startGame()
         // 初期局面から開始
         Engine::instance().setStartPosition(Sfen::defaultPostion());
         if (!_board->startGame(Sfen::defaultPostion())) {
-            qCritical() << "start game error" << __FILE__ << __LINE__;
+            qCritical() << "start game error " << __FILE__ << __LINE__;
         }
         _recorder->setFirstPosition(Sfen::defaultPostion());
         showSpinner();  // スピナー表示
