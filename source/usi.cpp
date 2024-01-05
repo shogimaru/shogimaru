@@ -152,7 +152,7 @@ namespace USI
 	// --------------------
 
 	// depth : iteration深さ
-	std::string pv(const Position& pos, Depth depth, Value alpha, Value beta)
+	std::string pv(const Position& pos, Depth depth)
 	{
 #if defined(YANEURAOU_ENGINE_DEEP)
 		// ふかうら王では、この関数呼び出さないからまるっと要らない。
@@ -171,7 +171,7 @@ namespace USI
 #endif
 		const auto& rootMoves = pos.this_thread()->rootMoves;
 		size_t pvIdx = pos.this_thread()->pvIdx;
-		size_t multiPV = std::min((size_t)Options["MultiPV"], rootMoves.size());
+		size_t multiPV = std::min(size_t(Options["MultiPV"]), rootMoves.size());
 
 		uint64_t nodes_searched = Threads.nodes_searched();
 
@@ -186,7 +186,7 @@ namespace USI
 
 			// 1より小さな探索depthで出力しない。
 			Depth d = updated ? depth : std::max(1, depth - 1);
-			Value v = updated ? rootMoves[i].score : rootMoves[i].previousScore;
+			Value v = updated ? rootMoves[i].usiScore : rootMoves[i].previousScore;
 
 			// multi pv時、例えば3個目の候補手までしか評価が終わっていなくて(PVIdx==2)、このとき、
 			// 3,4,5個目にあるのは前回のiterationまでずっと評価されていなかった指し手であるような場合に、
@@ -210,21 +210,17 @@ namespace USI
 				;
 
 			// これが現在探索中の指し手であるなら、それがlowerboundかupperboundかは表示させる
-			if (i == pvIdx)
-				ss << (v >= beta ? " lowerbound" : v <= alpha ? " upperbound" : "");
+	        if (i == pvIdx && /*!tb &&*/ updated) // tablebase- and previous-scores are exact
+				ss << (rootMoves[i].scoreLowerbound ? " lowerbound" : (rootMoves[i].scoreUpperbound ? " upperbound" : ""));
 
 			// 将棋所はmultipvに対応していないが、とりあえず出力はしておく。
 			if (multiPV > 1)
 				ss << " multipv " << (i + 1);
 
 			ss << " nodes " << nodes_searched
-			   << " nps "   << nodes_searched * 1000 / elapsed;
-
-			// 置換表使用率。経過時間が短いときは意味をなさないので出力しない。
-			if (elapsed > 1000)
-				ss << " hashfull " << TT.hashfull();
-
-			ss << " time " << elapsed
+			   << " nps "   << nodes_searched * 1000 / elapsed
+			   << " hashfull " << TT.hashfull()
+			   << " time " << elapsed
 			   << " pv";
 
 
@@ -262,7 +258,7 @@ namespace USI
 
 					// まず、rootMoves.pvを辿れるところまで辿る。
 					// rootMoves[i].pv[0]は宣言勝ちの指し手(MOVE_WIN)の可能性があるので注意。
-					if (ply < rootMoves[i].pv.size())
+					if (ply < int(rootMoves[i].pv.size()))
 						m = rootMoves[i].pv[ply];
 					else
 					{
@@ -307,6 +303,12 @@ namespace USI
 
 					moves[ply] = m;
 					ss << " " << m;
+
+					// 注)
+					// このdo_moveで Position::nodesが加算されるので探索ノード数に影響が出る。
+					// benchコマンドで探索ノード数が一致しない場合、これが原因。
+					// → benchコマンドでは、ConsiderationMode = falseにすることで
+					// 　PV表示のためにdo_move()を呼び出さないようにした。
 
 					pos_->do_move(m, si[ply]);
 					++ply;
@@ -591,6 +593,8 @@ void getoption_cmd(istringstream& is)
 		sync_cout << "No such option: " << name << sync_endl;
 }
 
+// Called when the engine receives the "go" UCI command. The function sets the
+// thinking time and other parameters from the input string then stars with a search
 
 // go()は、思考エンジンがUSIコマンドの"go"を受け取ったときに呼び出される。
 // この関数は、入力文字列から思考時間とその他のパラメーターをセットし、探索を開始する。
@@ -959,6 +963,7 @@ void usi_cmdexec(Position& pos, StateListPtr& states, string& cmd)
 				filename += ".txt";
 				sync_cout << "USI Commands from File = " << filename << sync_endl;
 				vector<string> lines;
+
 				SystemIO::ReadAllLines(filename, lines);
 				for (auto& line : lines)
 					std_input.push(line);
@@ -1146,30 +1151,53 @@ namespace {
 }
 
 #if defined(USE_PIECE_VALUE)
+/// Turns a Value to an integer centipawn number,
+/// without treatment of mate and similar special scores.
+// 詰みやそれに類似した特別なスコアの処理なしに、Valueを整数のセントポーン数に変換します、
+int USI::to_cp(Value v) {
+
+  return 100 * v / USI::NormalizeToPawnValue;
+}
+
+// cpからValueへ。⇑の逆変換。
+Value USI::cp_to_value(int v)
+{
+	return Value((std::abs(v) < VALUE_MATE_IN_MAX_PLY) ? (USI::NormalizeToPawnValue * v / 100) : v);
+}
+
 // スコアを歩の価値を100として正規化して出力する。
 // USE_PIECE_VALUEが定義されていない時は正規化しようがないのでこの関数は呼び出せない。
 std::string USI::value(Value v)
 {
 	ASSERT_LV3(-VALUE_INFINITE < v && v < VALUE_INFINITE);
 
-	std::stringstream s;
+	std::stringstream ss;
 
 	// 置換表上、値が確定していないことがある。
 	if (v == VALUE_NONE)
-		s << "none";
-	else if (abs(v) < VALUE_MATE_IN_MAX_PLY)
-		s << "cp " << v * 100 / int(Eval::PawnValue);
+		ss << "none";
+	else if (std::abs(v) < VALUE_MATE_IN_MAX_PLY)
+		//s << "cp " << v * 100 / int(Eval::PawnValue);
+		ss << "cp " << USI::to_cp(v);
+	/*
+    else if (abs(v) <= VALUE_TB)
+    {
+        const int ply = VALUE_TB - std::abs(v);  // recompute ss->ply
+        ss << "cp " << (v > 0 ? 20000 - ply : -20000 + ply);
+    }
+	*/
 	else if (v == -VALUE_MATE)
 		// USIプロトコルでは、手数がわからないときには "mate -"と出力するらしい。
 		// 手数がわからないというか詰んでいるのだが…。これを出力する方法がUSIプロトコルで定められていない。
 		// ここでは"-0"を出力しておく。
 		// ※　ShogiGUIだと、これで"+詰"と出力されるようである。
-		s << "mate -0";
+		ss << "mate -0";
 	else
-		s << "mate " << (v > 0 ? VALUE_MATE - v : -VALUE_MATE - v);
+		ss << "mate " << (v > 0 ? VALUE_MATE - v : -VALUE_MATE - v);
 
-	return s.str();
+	return ss.str();
 }
+
 #endif
 
 // Square型をUSI文字列に変換する

@@ -23,6 +23,9 @@ std::string SFEN_HIRATE = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGK
 namespace Zobrist {
 	HASH_KEY zero;							// ゼロ(==0)
 	HASH_KEY side;							// 手番(==1)
+#if defined(ENABLE_PAWN_HISTORY)
+	HASH_KEY noPawns;                       // 歩の陣形に関して盤上に歩が一枚もない時のhash key
+#endif
 	HASH_KEY psq[SQ_NB_PLUS1][PIECE_NB];	// 駒pcが盤上sqに配置されているときのZobrist Key
 	HASH_KEY hand[COLOR_NB][PIECE_HAND_NB];	// c側の手駒prが一枚増えるごとにこれを加算するZobristKey
 	HASH_KEY depth[MAX_PLY];				// 深さも考慮に入れたHASH KEYを作りたいときに用いる(実験用)
@@ -34,19 +37,14 @@ namespace Zobrist {
 
 // 王手情報の初期化
 template <bool doNullMove , Color Us>
-void Position::set_check_info(StateInfo* si) const {
+void Position::set_check_info() const {
 
-	//: si->blockersForKing[WHITE] = slider_blockers(pieces(BLACK), square<KING>(WHITE),si->pinners[WHITE]);
-	//: si->blockersForKing[BLACK] = slider_blockers(pieces(WHITE), square<KING>(BLACK),si->pinners[BLACK]);
-
-	// ↓Stockfishのこの部分の実装、将棋においては良くないので、以下のように変える。
-	// ※　将棋においては駒の動きが上下対称ではないので手番を引数で渡す必要がある。
-
+	// null moveのときは前の局面でこの情報は設定されているので更新する必要がない。
+	// ※　やねうら王独自の改良
 	if (!doNullMove)
 	{
-		// null moveのときは前の局面でこの情報は設定されているので更新する必要がない。
-		si->blockersForKing[WHITE] = slider_blockers(BLACK, king_square(WHITE), si->pinners[WHITE]);
-		si->blockersForKing[BLACK] = slider_blockers(WHITE, king_square(BLACK), si->pinners[BLACK]);
+		update_slider_blockers(WHITE);
+		update_slider_blockers(BLACK);
 	}
 
 	constexpr Color Them = ~Us;
@@ -61,27 +59,27 @@ void Position::set_check_info(StateInfo* si) const {
 	Bitboard occ = pieces();
 
 	// この指し手が二歩でないかは、この時点でテストしない。指し手生成で除外する。なるべくこの手のチェックは遅延させる。
-	si->checkSquares[PAWN]   = pawnEffect<Them>  (ksq);
-	si->checkSquares[KNIGHT] = knightEffect<Them>(ksq);
-	si->checkSquares[SILVER] = silverEffect<Them>(ksq);
-	si->checkSquares[BISHOP] = bishopEffect      (ksq, occ);
-	si->checkSquares[ROOK]   = rookEffect        (ksq, occ);
-	si->checkSquares[GOLD]   = goldEffect<Them>  (ksq);
+	st->checkSquares[PAWN]   = pawnEffect<Them>  (ksq);
+	st->checkSquares[KNIGHT] = knightEffect<Them>(ksq);
+	st->checkSquares[SILVER] = silverEffect<Them>(ksq);
+	st->checkSquares[BISHOP] = bishopEffect      (ksq, occ);
+	st->checkSquares[ROOK]   = rookEffect        (ksq, occ);
+	st->checkSquares[GOLD]   = goldEffect<Them>  (ksq);
 
 	// 香で王手になる升は利きを求め直さずに飛車で王手になる升を香のstep effectでマスクしたものを使う。
-	si->checkSquares[LANCE]  = si->checkSquares[ROOK] & lanceStepEffect<Them>(ksq);
+	st->checkSquares[LANCE]  = st->checkSquares[ROOK] & lanceStepEffect<Them>(ksq);
 
 	// 王を移動させて直接王手になることはない。それは自殺手である。
-	si->checkSquares[KING]   = Bitboard(ZERO);
+	st->checkSquares[KING]   = Bitboard(ZERO);
 
 	// 成り駒。この初期化は馬鹿らしいようだが、gives_check()は指し手ごとに呼び出されるので、その処理を軽くしたいので
 	// ここでの初期化は許容できる。(このコードはdo_move()に対して1回呼び出されるだけなので)
-	si->checkSquares[PRO_PAWN]   = si->checkSquares[GOLD];
-	si->checkSquares[PRO_LANCE]  = si->checkSquares[GOLD];
-	si->checkSquares[PRO_KNIGHT] = si->checkSquares[GOLD];
-	si->checkSquares[PRO_SILVER] = si->checkSquares[GOLD];
-	si->checkSquares[HORSE]      = si->checkSquares[BISHOP] | kingEffect(ksq);
-	si->checkSquares[DRAGON]     = si->checkSquares[ROOK]   | kingEffect(ksq);
+	st->checkSquares[PRO_PAWN]   = st->checkSquares[GOLD];
+	st->checkSquares[PRO_LANCE]  = st->checkSquares[GOLD];
+	st->checkSquares[PRO_KNIGHT] = st->checkSquares[GOLD];
+	st->checkSquares[PRO_SILVER] = st->checkSquares[GOLD];
+	st->checkSquares[HORSE]      = st->checkSquares[BISHOP] | kingEffect(ksq);
+	st->checkSquares[DRAGON]     = st->checkSquares[ROOK]   | kingEffect(ksq);
 }
 
 // ----------------------------------
@@ -112,6 +110,11 @@ void Position::init() {
 
 	for (int i = 0; i < MAX_PLY; ++i)
 		SET_HASH(Zobrist::depth[i], rng.rand<Key>() & ~1ULL, rng.rand<Key>(), rng.rand<Key>(), rng.rand<Key>());
+
+
+#if defined(ENABLE_PAWN_HISTORY)
+	Zobrist::noPawns = Zobrist::zero;
+#endif
 }
 
 // depthに応じたZobrist Hashを得る。depthを含めてhash keyを求めたいときに用いる。
@@ -289,7 +292,7 @@ void Position::set(std::string sfen , StateInfo* si , Thread* th)
 
 	// --- StateInfoの更新
 
-	set_state(st);
+	set_state();
 
 	// 現局面で王手がかかっているならst->continuous_check[them] = 1にしないと
 	// 連続王手の千日手の判定が不正確な気がするが、どのみち2回目の出現を負け扱いしているのでまあいいか..
@@ -390,15 +393,115 @@ const std::string Position::sfen(int gamePly_) const
 		}
 
 	// 手駒がない場合はハイフンを出力
-	ss << (found ? " " : "- ");
+	if (!found)
+		ss << '-';
 
 	// --- 初期局面からの手数
-	ss << gamePly_;
+
+	// ※　裏技 : gamePlyが負なら、sfen文字列末尾の手数を出力しない。
+	if (gamePly_ >= 0)
+		ss << ' ' << gamePly_;
 
 	return ss.str();
 }
 
-void Position::set_state(StateInfo* si) const {
+// 盤面を先後反転させた時のsfen文字列を取得する。
+const std::string Position::flipped_sfen(int gamePly_) const
+{
+	std::ostringstream ss;
+
+	// --- 盤面
+	int emptyCnt;
+	for (Rank r = RANK_9; r >= RANK_1; --r)
+	{
+		for (File f = FILE_1; f <= FILE_9; ++f)
+		{
+			// それぞれの升に対して駒がないなら
+			// その段の、そのあとの駒のない升をカウントする
+			for (emptyCnt = 0; f <= FILE_9 && piece_on(f | r) == NO_PIECE; ++f)
+				++emptyCnt;
+
+			// 駒のなかった升の数を出力
+			if (emptyCnt)
+				ss << emptyCnt;
+
+			// 駒があったなら、それに対応する駒文字列を出力
+			if (f <= FILE_9)
+				// ※　flippedなのでこの駒、先後逆にしないといけないので PIECE_WHITEのbitを反転させる。
+				ss << Piece(piece_on(f | r) ^ PIECE_WHITE);
+		}
+
+		// 最下段以外では次の行があるのでセパレーターである'/'を出力する。
+		if (r > RANK_1)
+			ss << '/';
+	}
+
+	// --- 手番
+	// ※　flippedなのでsideToMoveの逆を出力
+	ss << (~sideToMove == WHITE ? " w " : " b ");
+
+	// --- 手駒(UCIプロトコルにはないがUSIプロトコルにはある)
+	int n;
+	bool found = false;
+	for (Color c = BLACK; c <= WHITE; ++c)
+		for (int pn = 0 ; pn < 7; ++ pn)
+		{
+			// 手駒の出力順はUSIプロトコルでは規定されていないが、
+			// USI原案によると、飛、角、金、銀、桂、香、歩の順である。
+			// sfen文字列を一意にしておかないと定跡データーをsfen文字列で書き出したときに
+			// 他のソフトで文字列が一致しなくて困るので、この順に倣うことにする。
+
+			const PieceType USI_Hand[7] = { ROOK,BISHOP,GOLD,SILVER,KNIGHT,LANCE,PAWN };
+			auto p = USI_Hand[pn];
+
+			// その種類の手駒の枚数
+			// ※ flippedなので、ここをcではなく~c側を見ればflipしたことになる。
+			n = hand_count(hand[~c], p);
+			// その種類の手駒を持っているか
+			if (n != 0)
+			{
+				// 手駒が1枚でも見つかった
+				found = true;
+
+				// その種類の駒の枚数。1ならば出力を省略
+				if (n != 1)
+					ss << n;
+
+				ss << PieceToCharBW[make_piece(c, p)];
+			}
+		}
+
+	// 手駒がない場合はハイフンを出力
+	if (!found)
+		ss << '-';
+
+	// --- 初期局面からの手数
+
+	// ※　裏技 : gamePlyが負なら、sfen文字列末尾の手数を出力しない。
+	if (gamePly_ >= 0)
+		ss << ' ' << gamePly_;
+
+	return ss.str();
+}
+
+// sfen文字列をflip(先後反転)したsfen文字列に変換する。
+const std::string Position::sfen_to_flipped_sfen(std::string sfen)
+{
+#if 1
+	Position pos;
+	StateInfo si;
+	pos.set(sfen,&si,Threads.main());
+	return pos.flipped_sfen();
+#else
+	// この局面クラスを利用せず文字列操作だけで求めて返す。
+	// https://yaneuraou.yaneu.com/2023/12/15/chatgpt-wrote-a-program-to-flip-a-shogi-board/
+
+	// 文字列操作だけで書く。あとで書くかも。
+#endif
+}
+
+
+void Position::set_state() const {
 
 	// --- bitboard
 
@@ -406,22 +509,33 @@ void Position::set_state(StateInfo* si) const {
 	st->checkersBB = attackers_to(~sideToMove, king_square(sideToMove));
 
 	// 王手情報の初期化
-	set_check_info<false>(si);
+	set_check_info<false>();
 
 	// --- hash keyの計算
-	si->board_key_ = sideToMove == BLACK ? Zobrist::zero : Zobrist::side;
-	si->hand_key_ = Zobrist::zero;
+	st->board_key_ = sideToMove == BLACK ? Zobrist::zero : Zobrist::side;
+	st->hand_key_  = Zobrist::zero;
+#if defined(ENABLE_PAWN_HISTORY)
+	st->pawnKey_   = Zobrist::noPawns;
+#endif
 	for (auto sq : pieces())
 	{
 		auto pc = piece_on(sq);
-		si->board_key_ += Zobrist::psq[sq][pc];
+		st->board_key_ += Zobrist::psq[sq][pc];
+
+#if defined(ENABLE_PAWN_HISTORY)
+        if (type_of(pc) == PAWN)
+            st->pawnKey_ ^= Zobrist::psq[sq][pc];
+#endif
 	}
 	for (auto c : COLOR)
 		for (PieceType pr = PAWN; pr < PIECE_HAND_NB; ++pr)
-			si->hand_key_ += Zobrist::hand[c][pr] * (int64_t)hand_count(hand[c], pr); // 手駒はaddにする(差分計算が楽になるため)
+			st->hand_key_ += Zobrist::hand[c][pr] * (int64_t)hand_count(hand[c], pr); // 手駒はaddにする(差分計算が楽になるため)
+
+	// pawnKeyは、手駒の歩も考慮したほうがいいんだろうけど手駒に応じた更新が面倒なので端折っておく。
+	// TODO : あとで実装するかも。
 
 	// --- hand
-	si->hand = hand[sideToMove];
+	st->hand = hand[sideToMove];
 
 }
 
@@ -525,58 +639,64 @@ std::string Position::moves_from_start(bool is_pretty) const
 //      ある升へ利いている駒など
 // ----------------------------------
 
-// Position::slider_blockers() は、c側の長い利きを持つ駒(sliders)から、升sへの利きを
-// 遮っている先後の駒の位置をBitboardで返す。ただし、２重に遮っている場合はそれらの駒は返さない。
-// もし、この関数のこの返す駒を取り除いた場合、升sに対してsliderによって利きがある状態になる。
-// 升sにある玉に対してこの関数を呼び出した場合、それはpinされている駒と両王手の候補となる駒である。
-// また、升sにある玉は~c側のKINGであるとする。
+void Position::update_slider_blockers(Color c) const
+{
+	Square ksq =  king_square(c);
 
-Bitboard Position::slider_blockers(Color c, Square s , Bitboard& pinners) const {
+	st->blockersForKing[ c] = ZERO;
+	st->pinners        [~c] = ZERO;
 
-	Bitboard blockers(ZERO);
+	// Snipers are sliders that attack 's' when a piece and other snipers are removed
+	// snipersとは、pinされている駒が取り除かれたときに王の升に利きが発生する大駒である。
 
-	// pinnersは返し値。
-	pinners = Bitboard(ZERO);
-	
+	// Bitboard snipers = (  (attacks_bb<  ROOK>(ksq) & pieces(QUEEN, ROOK))
+	//                    | (attacks_bb<BISHOP>(ksq) & pieces(QUEEN, BISHOP))) & pieces(~c);
+
 	// cが与えられていないと香の利きの方向を確定させることが出来ない。
 	// ゆえに将棋では、この関数は手番を引数に取るべき。(チェスとはこの点において異なる。)
 
-	// snipersとは、pinされている駒が取り除かれたときに升sに利きが発生する大駒である。
 	Bitboard snipers =
-		( (pieces(ROOK_DRAGON)  & rookStepEffect(s))
-		| (pieces(BISHOP_HORSE) & bishopStepEffect(s))
-		// 香に関しては攻撃駒が先手なら、玉より下側をサーチして、そこにある先手の香を探す。
-		| (pieces(LANCE) & lanceStepEffect(~c, s))
-		) & pieces(c);
+		(
+		    (pieces(ROOK_DRAGON ) & rookStepEffect(ksq    ))
+		  | (pieces(BISHOP_HORSE) & bishopStepEffect(ksq  ))
+		  // 香に関しては先手玉へのsniperなら、玉より上側をサーチして、そこにある後手の香を探す必要がある。
+		  | (pieces(LANCE       ) & lanceStepEffect(c, ksq))
+		) & pieces(~c);
 
-	//Bitboard occupancy = pieces() ^ snipers;
+	// snipersを取り除いた障害物(駒)
+	Bitboard occupancy = pieces() ^ snipers;
 
-	// ↑このStockfishの元のコード、snipersを除いた盤上の駒で考えているが、
-	// ^王 歩 角 飛
-	// このような状況で飛車に対して角を取り除いてから敵玉への射線を考えるので、
-	// 歩がslider_blocker扱いになってしまう。つまり、このコードは間違っているのでは？
-	
+	// 1.
+	//   王 歩 ^角 ^飛
+	//   のようなケースはない(王から見て斜め方向にいる角しか列挙していないのでsnipersのbitboardは王の横方向に角がいることはない。)
+
+	// 2.
+	//    王 歩 ^飛 ^飛
+	//  のようなケースにおいては、この両方の飛車がpinnersとして列挙されて欲しい。(SEEの処理でこういう列挙がなされて欲しいので)
+
 	while (snipers)
 	{
 		Square sniperSq = snipers.pop();
-		Bitboard b = between_bb(s, sniperSq) & pieces() /* occupancy */;
+		Bitboard b = between_bb(ksq, sniperSq) & occupancy;
 
 		// snipperと玉との間にある駒が1個であるなら。
 		if (b && !b.more_than_one())
 		{
-			blockers |= b;
-			if (b & pieces(~c))
-				// sniperと玉に挟まれた駒が玉と同じ色の駒であるなら、pinnerに追加。
-				pinners |= sniperSq;
+			st->blockersForKing[c] |= b;
+			if (b & pieces(c))
+				st->pinners[~c] |= sniperSq;
 		}
 	}
-	return blockers;
 }
 
+// Computes a bitboard of all pieces which attack a given square.
+// Slider attacks use the occupied bitboard to indicate occupancy.
 
 // sに利きのあるc側の駒を列挙する。先後両方。
 // (occが指定されていなければ現在の盤面において。occが指定されていればそれをoccupied bitboardとして)
-// sq == SQ_NBでの呼び出しは合法。Bitboard(ZERO)が返る。
+//
+// また、sq == SQ_NBでの呼び出しは合法。この時、Bitboard(ZERO)が返る。
+//
 Bitboard Position::attackers_to(Square sq, const Bitboard& occ) const
 {
 	ASSERT_LV3(sq <= SQ_NB);
@@ -1156,6 +1276,12 @@ void Position::do_move_impl(Move m, StateInfo& new_st, bool givesCheck)
 		h -= Zobrist::hand[Us][pr];
 		k += Zobrist::psq[to][pc];
 
+#if defined(ENABLE_PAWN_HISTORY)
+		// 打ち歩なら、pawnKeyの更新が必要
+		if (pr == PAWN)
+			st->pawnKey_ ^= Zobrist::psq[to][pc];
+#endif
+
 		// なるべく早い段階でのTTに対するprefetch
 		// 駒打ちのときはこの時点でTT entryのアドレスが確定できる
 		const HASH_KEY key = k + h;
@@ -1272,6 +1398,12 @@ void Position::do_move_impl(Move m, StateInfo& new_st, bool givesCheck)
 			k -= Zobrist::psq[to][to_pc];
 			h += Zobrist::hand[Us][pr];
 
+#if defined(ENABLE_PAWN_HISTORY)
+			// 歩を捕獲したならば、その歩をpawnKeyから除去。
+			if (type_of(to_pc)==PAWN)
+				st->pawnKey_ ^= Zobrist::psq[to][to_pc];
+#endif
+
 			// 捕獲した駒をStateInfoに保存しておく。(undo_moveのため)
 			st->capturedPiece = to_pc;
 
@@ -1321,6 +1453,18 @@ void Position::do_move_impl(Move m, StateInfo& new_st, bool givesCheck)
 		// fromにあったmoved_pcがtoにmoved_after_pcとして移動した。
 		k -= Zobrist::psq[from][moved_pc];
 		k += Zobrist::psq[to][moved_after_pc];
+
+#if defined(ENABLE_PAWN_HISTORY)
+		// 歩の移動ならば移動元の歩を除去
+		if (type_of(moved_pc)==PAWN)
+		{
+			st->pawnKey_ ^= Zobrist::psq[from][moved_pc];
+
+			// 成ってないなら移動先に歩を配置
+			if (!is_promote(m))
+				st->pawnKey_ ^= Zobrist::psq[to][moved_pc];
+		}
+#endif
 
 		// 駒打ちでないときはprefetchはこの時点まで延期される。
 		const HASH_KEY key = k + h;
@@ -1397,12 +1541,114 @@ void Position::do_move_impl(Move m, StateInfo& new_st, bool givesCheck)
 
 	// 更新されたhash keyをStateInfoに書き戻す。
 	st->board_key_ = k;
-	st->hand_key_ = h;
+	st->hand_key_  = h;
 
 	st->hand = hand[Them];
 
 	// このタイミングで王手関係の情報を更新しておいてやる。
-	set_check_info<false>(st);
+	set_check_info<false>();
+
+	// Calculate the repetition info. It is the ply distance from the previous
+    // occurrence of the same position, negative in the 3-fold case, or zero
+    // if the position was not repeated.
+
+	// 繰り返し情報を計算します。これは、同じ局面の前回の発生からの手数で(1,2回目)、
+	// 3回繰り返しの場合は負の値、または局面が繰り返されていない場合はゼロです。
+	// ⇨　要するに千日手成立時にだけ負。つまり、やねうら王では、1,2,3回目は正、4回目を負。
+
+#if !defined(ENABLE_QUICK_DRAW)
+    st->repetition       = 0;
+	st->repetition_times = 0;
+	st->repetition_type  = REPETITION_NONE;
+
+	//int end        = std::min(st->rule50, st->pliesFromNull);
+	int end          = std::min(max_repetition_ply/*16*/, st->pliesFromNull); // 遡り最大16手
+
+	// ※　チェスは終局までの平均手数が100手程度らしいが、将棋AIの対局では平均手数は160手以上で
+	// 　長い手数の対局では300手以上になることも珍しくはないので、初手まで千日手判定のために遡ると
+	//   ここで非常に時間がかかり、R40程度弱くなってしまう。
+
+	// 最低でも4手はないと同一局面に戻ってこない。
+	if (end >= 4)
+    {
+		StateInfo* stp = st->previous->previous;
+        for (int i = 4; i <= end; i += 2)
+        {
+            stp = stp->previous->previous;
+            if (stp->board_key() == st->board_key())
+            {
+				// 手駒が一致するなら同一局面である。(2手ずつ遡っているので手番は同じである)
+				if (stp->hand == st->hand)
+				{
+					// 同一局面が見つかった。
+
+					// 以下、Stockfishのコードは利用せず、将棋風に書き換えてある。
+
+					// 繰り返し回数のカウント
+					st->repetition_times = stp->repetition_times + 1;
+
+					// (同一局面の)3回目までは正(4回目以降は負)の手数にする。
+					// ※　st->repetition_timesは、4回目の時点において、3になっている。
+					// これにより、
+					//  if (st->repetition && st->repetition < ply)
+					// のようなif式は必ず成立するようになる。(plyはrootからの手数とする)
+					// 
+					st->repetition       = st->repetition_times >= 3 ? -i : i;
+
+					// 自分が王手をしている連続王手の千日手なのか？
+					// 相手が王手をしている連続王手の千日手なのか？
+					st->repetition_type =  (i <= st->continuousCheck[ sideToMove]) ? REPETITION_LOSE
+										 : (i <= st->continuousCheck[~sideToMove]) ? REPETITION_WIN
+										 : REPETITION_DRAW;
+
+					// 途中が連続王手でない場合、4回目の同一局面で連続王手の千日手は成立せず、普通の千日手となる。
+					// 
+					// よって、例えば、3..4回目までの間が連続王手であっても、前回(2..3回目までの間)がREPETITION_DRAW
+					// であれば、今回をREPETITION_DRAWとして扱わなければならない。
+					//
+					// これは、『将棋ガイドブック』P.14に以下のように書かれている。
+					// 
+					// > 一局中同一局面の最初と4回目出現の局面の間の一方の指し手が王手の連続であった時、
+					// > 連続王手をしていた側にとって4回目の同一局面が出現した時
+
+					// 同様の理屈により、1..2回目が先手の連続王手で、2..3回目が後手の連続王手のような場合も、
+					// このまま4回目に達した場合、これは普通の千日手局面である。
+					// ゆえに、3回目以降の同一局面の出現において、
+					// 前回のrepetition_typeと今回のrepetition_typeが異なるならば、今回のrepetition_typeを
+					// 普通の千日手(REPETITION_DRAW)として扱わなければならない。
+
+					if (stp->repetition_times && st->repetition_type != stp->repetition_type)
+						st->repetition_type = REPETITION_DRAW;
+
+					break;
+
+	            } else {
+
+					// 盤上の駒は一致したが、手駒が一致しないケース。
+
+					// 優等局面か劣等局面であるか。(手番が相手番になっている場合はいま考えない)
+
+					if (hand_is_equal_or_superior(st ->hand, stp->hand))
+					{
+						st->repetition_type = REPETITION_SUPERIOR;
+						st->repetition      = i;
+						// 劣等局面かつ千日手局面とかもありうるのだが、超レアケースなので考えないことにする。
+						break;
+					}
+
+					if (hand_is_equal_or_superior(stp->hand, st ->hand))
+					{
+						st->repetition_type = REPETITION_INFERIOR;
+						st->repetition      = i;
+						break;
+					}
+
+					// 上記のどちらにも該当しない場合は、盤上の駒がたまたま一致しただけの局面。
+				}
+			}
+        }
+    }
+#endif
 
 	//ASSERT_LV5(evalList.is_valid(*this));
 
@@ -1436,7 +1682,7 @@ HASH_KEY Position::hash_key_after(Move m) const {
 
 		// Zobrist keyの更新
 		h -= Zobrist::hand[Us][pr];
-		k += Zobrist::psq[to][pc];
+		k += Zobrist::psq [to][pc];
 	}
 	else
 	{
@@ -1597,6 +1843,8 @@ void Position::undo_move_impl(Move m)
 
 	// ASSERT_LV5(evalList.is_valid(*this));
 	//evalList.is_valid(*this);
+
+	//ASSERT(pos_is_ok());
 }
 
 // do_move()を先後分けたdo_move_impl<>()を呼び出す。
@@ -1662,12 +1910,25 @@ void Position::do_null_move(StateInfo& newSt) {
 
 	sideToMove = ~sideToMove;
 
-	set_check_info<true>(st);
+	set_check_info<true>();
 
-	//st->repetition = 0;
+	// 手番が変わるので手番側の手駒情報であるst->handの更新が必要。
+	st->hand = hand[sideToMove];
 
-	//assert(pos_is_ok());
+	// 現局面には王手はかかっていないので、直前には王手はされていない、すなわちこの関数が呼び出された時の
+	// 非手番側(いまのsideToMove)である
+	//   st->continuousCheck[sideToMove] == 0
+	// が言える。連続王手の千日手の誤判定を防ぐためにこの関数が呼び出された時の手番側(~sideToMove)も
+	// 0にリセットする必要がある。
+	ASSERT_LV3(st->continuousCheck[sideToMove] == 0);
+	st->continuousCheck[~sideToMove] = 0;
 
+#if !defined(ENABLE_QUICK_DRAW)
+	st->repetition       = 0;
+	st->repetition_times = 0;
+#endif
+
+	//ASSERT(pos_is_ok());
 }
 
 void Position::undo_null_move()
@@ -1681,220 +1942,246 @@ void Position::undo_null_move()
 
 #if defined (USE_SEE)
 
-namespace {
-
-	using namespace Eval;
-	using namespace Effect8;
-
-	// min_attacker()はsee_ge()で使われるヘルパー関数であり、(目的升toに利く)
-	// 手番側の最も価値の低い攻撃駒の場所を特定し、その見つけた駒をビットボードから取り除き
-	// その背後にあった遠方駒をスキャンする。(あればstmAttackersに追加する)
-
-	// またこの関数はmin_attacker<PAWN>()として最初呼び出され、PAWNの攻撃駒がなければ次に
-	// KNIGHTの..というように徐々に攻撃駒をアップグレードしていく。
-
-	// occupied = 駒のある場所のbitboard。今回発見された駒は取り除かれる。
-	// stmAttackers = 手番側の攻撃駒
-	// attackers = toに利く駒(先後両方)。min_attacker(toに利く最小の攻撃駒)を見つけたら、その駒を除去して
-	//  その影にいたtoに利く攻撃駒をattackersに追加する。
-	// uncapValue = 最後にこの駒が取れなかったときにこの駒が「成り」の指し手だった場合、その価値分の損失が
-	// 出るのでそれが返る。
-
-	// 返し値は今回発見されたtoに利く最小の攻撃駒。これがtoの地点において成れるなら成ったあとの駒を返すべき。
-
-	PieceType min_attacker(const Position& pos, const Square& to
-		, const Bitboard& stmAttackers, Bitboard& occupied, Bitboard& attackers
-	) {
-
-		// 駒種ごとのbitboardのうち、攻撃駒の候補を調べる
-	//:      Bitboard b = stmAttackers & bb[Pt];
-
-		// 歩、香、桂、銀、金(金相当の駒)、角、飛、馬、龍…の順で取るのに使う駒を調べる。
-		// 金相当の駒については、細かくしたほうが良いかどうかは微妙。
-
-		Bitboard b;
-		b = stmAttackers & pos.pieces(PAWN);   if (b) goto found;
-		b = stmAttackers & pos.pieces(LANCE);  if (b) goto found;
-		b = stmAttackers & pos.pieces(KNIGHT); if (b) goto found;
-		b = stmAttackers & pos.pieces(SILVER); if (b) goto found;
-		b = stmAttackers & pos.pieces(GOLDS);  if (b) goto found;
-		b = stmAttackers & pos.pieces(BISHOP); if (b) goto found;
-		b = stmAttackers & pos.pieces(ROOK);   if (b) goto found;
-		b = stmAttackers & pos.pieces(HORSE);  if (b) goto found;
-		b = stmAttackers & pos.pieces(DRAGON); if (b) goto found;
-
-		// 攻撃駒があるというのが前提条件だから、以上の駒で取れなければ、最後は玉でtoの升に移動出来て駒を取れるはず。
-		// 玉を移動させた結果、影になっていた遠方駒によってこの王が取られることはないから、
-		// sqに利く遠方駒が追加されることはなく、このままreturnすれば良い。
-
-		return KING;
-
-	found:;
-
-		// bにあった駒を取り除く
-
-		Square sq = b.pop();
-		occupied ^= sq;
-
-		// このときpinされているかの判定を入れられるなら入れたほうが良いのだが…。
-		// この攻撃駒の種類によって場合分け
-
-		// sqにあった駒が消えるので、toから見てsqの延長線上にある駒を追加する。
-
-		auto dirs = directions_of(to, sq);
-		if (dirs) switch(pop_directions(dirs))
-		{
-		// 斜め方向なら斜め方向の升をスキャンしてその上にある角・馬を足す
-		case DIRECT_RU: attackers |= rayEffect<DIRECT_RU>(to, occupied) & pos.pieces<BISHOP_HORSE>(); break;
-		case DIRECT_LD: attackers |= rayEffect<DIRECT_LD>(to, occupied) & pos.pieces<BISHOP_HORSE>(); break;
-		case DIRECT_RD: attackers |= rayEffect<DIRECT_RD>(to, occupied) & pos.pieces<BISHOP_HORSE>(); break;
-		case DIRECT_LU: attackers |= rayEffect<DIRECT_LU>(to, occupied) & pos.pieces<BISHOP_HORSE>(); break;
-
-		// 上方向に移動した時の背後の駒によってtoの地点に利くのは、後手の香 + 先後の飛車
-		case DIRECT_U : attackers |= rayEffect<DIRECT_U >(to, occupied) & (pos.pieces<ROOK_DRAGON>() | pos.pieces<WHITE, LANCE>()); break;
-
-		// 下方向に移動した時の背後の駒によってtoの地点に利くのは、先手の香 + 先後の飛車
-		case DIRECT_D : attackers |= rayEffect<DIRECT_D >(to, occupied) & (pos.pieces<ROOK_DRAGON>() | pos.pieces<BLACK, LANCE>()); break;
-
-		// 左右方向に移動した時の背後の駒によってtoの地点に利くのは、飛車・龍。
-		case DIRECT_L : attackers |= rayEffect<DIRECT_L> (to, occupied) & pos.pieces<ROOK_DRAGON>(); break;
-		case DIRECT_R : attackers |= rayEffect<DIRECT_R> (to, occupied) & pos.pieces<ROOK_DRAGON>(); break;
-
-		default: UNREACHABLE; break;
-		}
-		else {
-			// DIRECT_MISC
-			ASSERT_LV3(!(bishopStepEffect(to) & sq));
-			ASSERT_LV3(!((rookStepEffect(to) & sq)));
-		}
-
-		// toに利く攻撃駒は、occupiedのその升が1になっている駒に限定する。
-		// 処理した駒はoccupiedのその升が0になるので自動的に除外される。
-		attackers &= occupied;
-
-		// この駒が成れるなら、成りの値を返すほうが良いかも。
-		// ※　最後にこの地点に残る駒を返すべきなのか。相手が取る/取らないを選択するので。
-		return type_of(pos.piece_on(sq));
-	}
-
-} // namespace
+// Tests if the SEE (Static Exchange Evaluation)
+// value of move is greater or equal to the given threshold. We'll use an
+// algorithm similar to alpha-beta pruning with a null window.
 
 
-/// Position::see() is a static exchange evaluator: It tries to estimate the
-/// material gain or loss resulting from a move.
-
-// Position::see()は静的交換評価器(SEE)である。これは、指し手による駒による得失の結果
-// を見積ろうと試みる。
-
-// 最初に動かす駒側の手番から見た値が返る。
-
+// Position::see()は指し手のSEE(静的交換評価)の値が、与えられたthreshold(しきい値)以上であるかをテストする。
+// null windowの時のalpha-beta法に似たアルゴリズムを用いる。
+//
 // ※　SEEの解説についてはググれ。
 //
 // ある升での駒の取り合いの結果、どれくらい駒得/駒損するかを評価する。
 // 最初に引数として、指し手mが与えられる。この指し手に対して、同金のように取り返され、さらに同歩成のように
-// 取り返していき、最終的な結果(評価値のうちの駒割りの部分の増減)を返すのが本来のSEE。
-
+// (価値の低い駒を優先して用いて)取り返していき、最終的な結果(評価値のうちの駒割りの部分の増減)を返すのが本来のSEE。
+//
 // ただし、途中の手順では、同金とした場合と同金としない場合とで、(そのプレイヤーは自分が)得なほうを選択できるものとする。
-
+//
 // ※　KINGを敵の利きに移動させる手は非合法手なので、ここで与えられる指し手にはそのような指し手は含まないものとする。
 // また、SEEの地点(to)の駒をKINGで取る手は含まれるが、そのKINGを取られることは考慮しなければならない。
 // 最後になった駒による成りの上昇値は考えない。
-
-// このseeの最終的な値が、vを以上になるかどうかを判定する。
-// こういう設計にすることで早期にvを超えないことが確定した時点でreturn出来る。
+//
+// このseeの最終的な値が、しきい値threshold以上になるかどうかを判定するのがsee_ge()である。
+// こういう設計にすることで早期にthresholdを超えないことが確定した時点でreturn出来る。
 
 bool Position::see_ge(Move m, Value threshold) const
 {
-	// null windowのときのαβ探索に似たアルゴリズムを用いる。
+	ASSERT_LV3(is_ok(m));
 
-	// 少し無駄ではあるが、Stockfishの挙動をなるべく忠実に再現する。
+    //// Only deal with normal moves, assume others pass a simple SEE
+    //if (type_of(m) != NORMAL)
+    //    return VALUE_ZERO >= threshold;
 
 	bool drop = is_drop(m);
-	// 駒の移動元(駒打ちの場合は)、移動先
+
+	// 以下、Stockfishの挙動をなるべく忠実に再現する。
+
+	// 駒の移動元(駒打ちの場合は)と移動先。
 	// dropのときにはSQ_NBにしておくことで、pieces() ^ fromを無効化するhack
+	// ※　piece_on(SQ_NB)で NO_PIECE が返ることは保証されている。
 	Square from = drop ? SQ_NB : from_sq(m);
-	Square to = to_sq(m);
+	Square to   = to_sq(m);
 
-	// 次にtoの升で捕獲される駒
-	// 成りなら成りを評価したほうが良い可能性があるが、このあとの取り合いで指し手の成りを評価していないので…。
-	PieceType nextVictim = drop ? move_dropped_piece(m) : type_of(piece_on(from));
+	// → 将棋だと、駒打ちで、SEE > 0になることはないので(打った駒を取られてマイナスになることはあっても)
+	//  threshold > 0なら、即座に falseが返せる。
+	//if (drop && threshold > 0)
+	//	return false;
+	// → この判定、以下の条件式が含むから、無駄。
 
-	// 以下のwhileで想定している手番。
-	// 移動させる駒側の手番から始まるものとする。
-	// 次に列挙すべきは、この駒を取れる敵の駒なので、相手番に。
-	// ※「stm」とは"side to move"(手番側)を意味する用語。
-	Color us = color_of(moved_piece_after(m));
-	Color stm = ~us;
+	// toの地点にある駒の価値がthreshold以上ではない。
+	// この場合、取り返されなかったとしても、条件を満たすことはないので即座にfalseを返せる。
 
-	// 取り合いにおける収支。取った駒の価値と取られた駒の価値の合計。
-	// いまthresholdを超えるかどうかが問題なので、この分だけbiasを加えておく。
-	Value balance = (Value)Eval::CapturePieceValue[piece_on(to)] - threshold;
+	//int swap = PieceValue[piece_on(to)] - threshold;
+	// →　StockfishのPieceValueは負の値は返ってこないが、やねうら王では後手の駒の価値は負の値になっているので、
+	//    type_of()を用いて先手の駒に変換してからPieceValueを用いる必要があることに注意。
+    int swap = Eval::PieceValue[type_of(piece_on(to))] - threshold;
+	if (swap < 0)
+        return false;
 
-	// この時点でマイナスになっているので早期にリターン。
-	if (balance < VALUE_ZERO)
-		return false;
+	// この時点で、
+	//   PieceValue[piece_on(to)] - 最初に動かす駒の価値 >= threshold
+	// なら、取り返されたところですでにしきい値以上になることは確定しているのでtrueが返せる。
 
-	// nextVictim == Kingの場合もある。玉が取られる指し手は考えなくて良いので
-	// この場合プラス収支と考えてよく、CapturePieceValue[KING] == 0が格納されているので
-	// 以下の式によりtrueが返る。
+	//swap = PieceValue[piece_on(from)] - swap;
 
-	balance -= (Value)Eval::CapturePieceValue[nextVictim];
+	// →　駒打ちの時は、移動元にその駒がないので、これを復元してやる必要がある。
+	PieceType from_pt = drop ? move_dropped_piece(m) : type_of(piece_on(from));
+    swap = Eval::PieceValue[from_pt] - swap;
 
-	if (balance >= VALUE_ZERO)
-		return true;
+	if (swap <= 0)
+        return true;
 
-	// 相手側の手番ならtrue、自分側の手番であるならfalse
-	bool relativeStm = true;
+    //assert(color_of(piece_on(from)) == sideToMove);
+    ASSERT_LV3(drop || color_of(piece_on(from)) == sideToMove);
 
-	// いま、以下のwhileのなかで想定している手番側の、sqの地点に利く駒
-	Bitboard stmAttackers;
+    Bitboard occupied  = pieces() ^ from ^ to;  // xoring to is important for pinned piece logic
+    Color    stm       = sideToMove;
+    Bitboard attackers = attackers_to(to, occupied);
+    Bitboard stmAttackers, bb;
+    int      res = 1;
 
-	// 盤上の駒(取り合いしていくうちにここから駒が無くなっていく)
-	// すでにfromとtoの駒は取られたはずなので消しておく。
-	Bitboard occupied = pieces() ^ from ^ to;
+    while (true)
+    {
+        stm = ~stm;
+        attackers &= occupied;
 
-	// すべてのattackerを列挙する。
-	Bitboard attackers = attackers_to(to, occupied) & occupied;
+        // If stm has no more attackers then give up: stm loses
+		// 手番側がtoに利く駒が尽きたなら、お手上げ。(see_geの判定は)手番側の負け。
+        if (!(stmAttackers = attackers & pieces(stm)))
+            break;
 
-	while (true)
-	{
-		stmAttackers = attackers & pieces(stm);
+        // Don't allow pinned pieces to attack as long as there are
+        // pinners on their original square.
+        if (pinners(~stm) & occupied)
+        {
+            stmAttackers &= ~blockers_for_king(stm);
 
-		// pinnersが元の升にいる限りにおいては、pinされた駒から王以外への移動は許さない。
+            if (!stmAttackers)
+                break;
+        }
 
-		if (!(st->pinners[~stm] & occupied))
-			stmAttackers &= ~st->blockersForKing[stm];
+        res ^= 1;
 
-		// 手番側のtoに利いている駒がもうないなら、手番側の負けである。
-		if (!stmAttackers)
-			break;
+        // Locate and remove the next least valuable attacker, and add to
+        // the bitboard 'attackers' any X-ray attackers behind it.
 
-		// 次に価値の低い攻撃駒を調べて取り除く。
+		// 歩で取れるなら、まず歩で取る。
+        if ((bb = stmAttackers & pieces(PAWN)))
+        {
+			// この時点で、歩で取れることは確定した。
 
-		nextVictim = min_attacker(*this, to, stmAttackers, occupied, attackers);
+			// この時点でPawnValue以上に得しているなら、この歩を取り返されたところで、手抜いてthresholdを下回らないので、returnできる。
+            if ((swap = Eval::PawnValue - swap) < res)
+                break;
 
-		stm = ~stm; // 相手番に
+            //occupied ^= least_significant_square_bb(bb);
+            //attackers |= attacks_bb<BISHOP>(to, occupied) & pieces(BISHOP, QUEEN);
+			// →　チェスではPAWNで取る時、PAWNが斜めに移動するので、toの斜め(X-ray)にある駒を
+			//    attackersとして追加する必要があるが、将棋の場合は、歩の背後にいる香・飛車を追加する必要がある。
+        }
 
-		// Negamax the balance with alpha = balance, beta = balance+1 and
-		// add nextVictim's value.
-		//
-		//      (balance, balance+1) -> (-balance-1, -balance)
-		//
-		ASSERT_LV3(balance < VALUE_ZERO);
+		// 香を試す(将棋only)
+        else if ((bb = stmAttackers & pieces(LANCE)))
+        {
+            if ((swap = Eval::LanceValue - swap) < res)
+                break;
+        }
 
-		balance = -balance - 1 - CapturePieceValue[nextVictim];
+        else if ((bb = stmAttackers & pieces(KNIGHT)))
+        {
+            if ((swap = Eval::KnightValue - swap) < res)
+                break;
+            occupied ^= least_significant_square_bb(bb);
 
-		// もしbalanceがnextVictimを取り去っても依然として非負(0か正)であるなら、これをもって勝利である。
-		// ただし最後に玉が残って、相手側がまだattackerを持っているときはstmを反転しないといけないので注意。
-		if (balance >= VALUE_ZERO)
+			// 桂で取ったところでその背後にある駒がattckersに追加されることはないので、whileに戻る。
+			continue;
+        }
+
+		// 銀を試す(将棋only)
+        else if ((bb = stmAttackers & pieces(SILVER)))
+        {
+            if ((swap = Eval::SilverValue - swap) < res)
+                break;
+        }
+		// 金を試す(将棋only)
+        else if ((bb = stmAttackers & pieces(GOLDS)))
+        {
+			// ここ、今回捕獲する金相当の駒の価値にすべきかも知れないが、
+			// この時点ではまだ今回動かす駒の移動元が得られていないので、その処理書きにくい。
+            if ((swap = Eval::GoldValue - swap) < res)
+                break;
+        }
+
+		else if ((bb = stmAttackers & pieces(BISHOP)))
+        {
+            if ((swap = Eval::BishopValue - swap) < res)
+                break;
+            //occupied ^= least_significant_square_bb(bb);
+            //attackers |= attacks_bb<BISHOP>(to, occupied) & pieces(BISHOP, QUEEN);
+        }
+
+        else if ((bb = stmAttackers & pieces(ROOK)))
+        {
+            if ((swap = Eval::RookValue - swap) < res)
+                break;
+            //occupied ^= least_significant_square_bb(bb);
+            //attackers |= attacks_bb<ROOK>(to, occupied) & pieces(ROOK, QUEEN);
+        }
+
+		// 馬を試す(将棋only)
+		else if ((bb = stmAttackers & pieces(HORSE)))
+        {
+            if ((swap = Eval::HorseValue - swap) < res)
+                break;
+            //occupied ^= least_significant_square_bb(bb);
+            //attackers |= attacks_bb<BISHOP>(to, occupied) & pieces(BISHOP, QUEEN);
+        }
+
+		// 竜を試す(将棋only)
+        else if ((bb = stmAttackers & pieces(DRAGON)))
+        {
+            if ((swap = Eval::DragonValue - swap) < res)
+                break;
+            //occupied ^= least_significant_square_bb(bb);
+            //attackers |= attacks_bb<ROOK>(to, occupied) & pieces(ROOK, QUEEN);
+        }
+
+#if 0
+        else if ((bb = stmAttackers & pieces(QUEEN)))
+        {
+            if ((swap = QueenValue - swap) < res)
+                break;
+            occupied ^= least_significant_square_bb(bb);
+            attackers |= (attacks_bb<BISHOP>(to, occupied) & pieces(BISHOP, QUEEN))
+                       | (attacks_bb<ROOK>(to, occupied) & pieces(ROOK, QUEEN));
+        }
+#endif
+        else  // KING
+              // If we "capture" with the king but the opponent still has attackers,
+              // reverse the result.
+            return (attackers & ~pieces(stm)) ? res ^ 1 : res;
+
+
+		// 今回移動させてtoの駒を取るための駒の移動元の升
+		Square sq = bb.pop();
+		// bbにあった駒を取り除く
+		occupied ^= sq;
+
+		// sqにあった駒が消えるので、toから見てsqの延長線上にある駒を追加する。
+
+		auto dirs = directions_of(to, sq);
+
+		// 桂以外の移動なので8方向であるはず。
+		ASSERT_LV3(dirs);
+
+		switch(pop_directions(dirs))
 		{
-			if (nextVictim == KING && (attackers & pieces(stm)))
-				stm = ~stm;
-			break;
+		// 斜め方向なら斜め方向の升をスキャンしてその上にある角・馬を足す
+		case DIRECT_RU: attackers |= rayEffect<DIRECT_RU>(to, occupied) & pieces<BISHOP_HORSE>(); break;
+		case DIRECT_LD: attackers |= rayEffect<DIRECT_LD>(to, occupied) & pieces<BISHOP_HORSE>(); break;
+		case DIRECT_RD: attackers |= rayEffect<DIRECT_RD>(to, occupied) & pieces<BISHOP_HORSE>(); break;
+		case DIRECT_LU: attackers |= rayEffect<DIRECT_LU>(to, occupied) & pieces<BISHOP_HORSE>(); break;
+
+		// 上方向に移動した時の背後の駒によってtoの地点に利くのは、後手の香 + 先後の飛車
+		case DIRECT_U : attackers |= rayEffect<DIRECT_U >(to, occupied) & (pieces<ROOK_DRAGON>() | pieces<WHITE, LANCE>()); break;
+
+		// 下方向に移動した時の背後の駒によってtoの地点に利くのは、先手の香 + 先後の飛車
+		case DIRECT_D : attackers |= rayEffect<DIRECT_D >(to, occupied) & (pieces<ROOK_DRAGON>() | pieces<BLACK, LANCE>()); break;
+
+		// 左右方向に移動した時の背後の駒によってtoの地点に利くのは、飛車・龍。
+		case DIRECT_L : attackers |= rayEffect<DIRECT_L> (to, occupied) & pieces<ROOK_DRAGON>(); break;
+		case DIRECT_R : attackers |= rayEffect<DIRECT_R> (to, occupied) & pieces<ROOK_DRAGON>(); break;
+
+		default: UNREACHABLE; break;
 		}
-		ASSERT_LV3(nextVictim != KING);
+
+		// SEEって、最後、toの地点で成れるなら、その成ることによる価値上昇分も考慮すべきだと思うのだが、
+		// そうすると早期枝刈りができないことになるので、とりあえず、このままでいいや。
+
 	}
-	return us != stm; // 上のループは、手番側のtoへの利きがある駒が尽きたときに抜ける
+
+    return bool(res);
 }
 
 #endif // defined (USE_SEE)
@@ -1903,33 +2190,56 @@ bool Position::see_ge(Move m, Value threshold) const
 //      千日手判定
 // ----------------------------------
 
-// 連続王手の千日手等で引き分けかどうかを返す
-RepetitionState Position::is_repetition(int repPly /* = 16 */) const
-{
-	// repPlyまで遡る
-	// 現在の局面と同じhash keyを持つ局面があれば、それは千日手局面であると判定する。
+#if 0
+// Tests whether the position is drawn by 50-move rule
+// or by repetition. It does not detect stalemates.
+// この処理は、局面が50手ルールまたは繰り返しによって
+// 引き分けになっているかどうかをテストします。ステイルメイトは検出されません。
+bool Position::is_draw(int ply) const {
 
-	// 　rootより遡るなら、2度出現する(3度目の同一局面である)必要がある。
-	//   rootより遡らないなら、1度目(2度目の同一局面である)で千日手と判定する。
+    if (st->rule50 > 99 && (!checkers() || MoveList<LEGAL>(*this).size()))
+        return true;
+
+    // Return a draw score if a position repeats once earlier but strictly
+    // after the root, or repeats twice before or at the root.
+    return st->repetition && st->repetition < ply;
+}
+#endif
+
+// 連続王手の千日手等で引き分けかどうかを返す
+RepetitionState Position::is_repetition(int ply) const
+{
+#if !defined(ENABLE_QUICK_DRAW)
+
+	// Return a draw score if a position repeats once earlier but strictly
+    // after the root, or repeats twice before or at the root.
+	// ルートより厳密に後である場合に局面が一度繰り返された場合、
+	// またはルートの前またはルートで局面が2回繰り返された場合に、引き分けのスコアを返します。
+	// ⇨　将棋では、「2回」ではなく「3回」。(現局面を含めると4回目の同一局面の出現)
+
 	// cf.
 	//   Don't score as an immediate draw 2-fold repetitions of the root position
 	//   https://github.com/official-stockfish/Stockfish/commit/6d89d0b64a99003576d3e0ed616b43333c9eca01
 
-	// チェスだと千日手は同一局面3回(将棋だと4回)である。
-	// root以降で同一局面が2度出現した場合は、それを千日手として扱うのは妥当である。
-	// root以前の局面と現在の局面が一致している場合は、即座に千日手成立として扱うのは無理があるという判断のもと、
-	// 千日手確定のときのみ千日手とする処理がStockfishにはある。
-	// しかし、将棋では千日手成立には同一局面が4回出現する必要があるので、この場合、root以前に3回同じ局面が出現して
-	// いるかチェックする必要があるが、そこまでする必要があるとは思えない。ゆえに、このチェックを省略する。
+	// ※　基本的にrootより遡って判定しないのだが、しかし、4回目の同一局面の場合は、強制的に千日手となるため、
+	// 　ここで探索は打ち切られなければならない。よって、4回目の同一局面の場合のみ、plyに関わらず
+	//   REPETITION_NONE以外が返る。
 
-	// 【計測資料 35.】is_repetition() 同一局面をrootより遡って見つけたときに即座に千日手として扱うか。
-	
+    if (st->repetition && st->repetition < ply)
+		return st->repetition_type;
+
+	return REPETITION_NONE;
+#else
 	// pliesFromNullが未初期化になっていないかのチェックのためのassert
 	ASSERT_LV3(st->pliesFromNull >= 0);
 
 	// 遡り可能な手数。
-	// 最大でもrepPly手までしか遡らないことにする。
-	int end = std::min(repPly, st->pliesFromNull);
+	// 最大でも(root以降であっても)16手までしか遡らないことにする。
+	// (これ以上遡っても千日手が見つかることが稀)
+	// ここss->ply(rootからの手数)にするとR5ぐらい弱くなる。
+	// また、root以前にも遡る。こうした方が+R5ぐらい強くなる。
+
+	int end = std::min(16, st->pliesFromNull);
 
 	// 少なくとも4手かけないと千日手にはならないから、4手前から調べていく。
 	if (end < 4)
@@ -1949,7 +2259,7 @@ RepetitionState Position::is_repetition(int repPly /* = 16 */) const
 			if (stp->hand == st->hand)
 			{
 				// 自分が王手をしている連続王手の千日手なのか？
-				if (i <= st->continuousCheck[sideToMove])
+				if (i <= st->continuousCheck[ sideToMove])
 					return REPETITION_LOSE;
 
 				// 相手が王手をしている連続王手の千日手なのか？
@@ -1960,9 +2270,9 @@ RepetitionState Position::is_repetition(int repPly /* = 16 */) const
 			}
 			else {
 				// 優等局面か劣等局面であるか。(手番が相手番になっている場合はいま考えない)
-				if (hand_is_equal_or_superior(st->hand, stp->hand))
+				if (hand_is_equal_or_superior(st ->hand , stp->hand))
 					return REPETITION_SUPERIOR;
-				if (hand_is_equal_or_superior(stp->hand, st->hand))
+				if (hand_is_equal_or_superior(stp->hand , st ->hand))
 					return REPETITION_INFERIOR;
 			}
 		}
@@ -1970,18 +2280,51 @@ RepetitionState Position::is_repetition(int repPly /* = 16 */) const
 
 	// 同じhash keyの局面が見つからなかったので…。
 	return REPETITION_NONE;
+
+#endif
 }
 
-// is_repetition()の、千日手が見つかった時に、原局面から何手遡ったかを返すバージョン。
+#if !defined(ENABLE_QUICK_DRAW)
+// Tests whether there has been at least one repetition
+// of positions since the last capture or pawn move.
+bool Position::has_repeated() const {
+
+    StateInfo* stc = st;
+    //int        end = std::min(st->rule50, st->pliesFromNull);
+    int        end = std::min(max_repetition_ply, st->pliesFromNull);
+    while (end-- >= 4)
+    {
+        if (stc->repetition)
+            return true;
+
+        stc = stc->previous;
+    }
+    return false;
+}
+#endif
+
+// is_repetition()の、千日手が見つかった時に、現局面から何手遡ったかを返すバージョン。
 // found_plyにその値が返ってくる。
-RepetitionState Position::is_repetition(int repPly, int& found_ply) const
+RepetitionState Position::is_repetition(int ply, int& found_ply) const
 {
+#if !defined(ENABLE_QUICK_DRAW)
+	// ただ、ここでply >= 16を指定しても、do_move()の時にmax_repetition_ply(=16)手までしか
+	// 遡っていない。無限に遡りたいなら、set_max_repetition_ply()を用いてこの値を変更しておくこと。
+    if (st->repetition && st->repetition < ply)
+	{
+		// st->repetitionは負もありうるのでabs()が必要。
+		found_ply = abs(st->repetition);
+		return st->repetition_type;
+	}
+
+	return REPETITION_NONE;
+#else
 	// pliesFromNullが未初期化になっていないかのチェックのためのassert
 	ASSERT_LV3(st->pliesFromNull >= 0);
 
 	// 遡り可能な手数。
-	// 最大でもrepPly手までしか遡らないことにする。
-	int end = std::min(repPly, st->pliesFromNull);
+	// 最大でもply手までしか遡らないことにする。
+	int end = std::min(ply, std::min(max_repetition_ply, st->pliesFromNull));
 
 	found_ply = 0;
 
@@ -2003,7 +2346,7 @@ RepetitionState Position::is_repetition(int repPly, int& found_ply) const
 			if (stp->hand == st->hand)
 			{
 				// 自分が王手をしている連続王手の千日手なのか？
-				if (found_ply <= st->continuousCheck[sideToMove])
+				if (found_ply <= st->continuousCheck[ sideToMove])
 					return REPETITION_LOSE;
 
 				// 相手が王手をしている連続王手の千日手なのか？
@@ -2014,9 +2357,9 @@ RepetitionState Position::is_repetition(int repPly, int& found_ply) const
 			}
 			else {
 				// 優等局面か劣等局面であるか。(手番が相手番になっている場合はいま考えない)
-				if (hand_is_equal_or_superior(st->hand, stp->hand))
+				if (hand_is_equal_or_superior(st ->hand, stp->hand))
 					return REPETITION_SUPERIOR;
-				if (hand_is_equal_or_superior(stp->hand, st->hand))
+				if (hand_is_equal_or_superior(stp->hand, st ->hand))
 					return REPETITION_INFERIOR;
 			}
 		}
@@ -2024,8 +2367,8 @@ RepetitionState Position::is_repetition(int repPly, int& found_ply) const
 
 	// 同じhash keyの局面が見つからなかったので…。
 	return REPETITION_NONE;
+#endif
 }
-
 
 // ----------------------------------
 //      入玉判定
@@ -2213,9 +2556,19 @@ Move Position::DeclarationWin() const
 	}
 }
 
+
+
 // ----------------------------------
 //      内部情報の正当性のテスト
 // ----------------------------------
+
+// Performs some consistency checks for the position object
+// and raise an assert if something wrong is detected.
+// This is meant to be helpful when debugging.
+
+// この処理は、局面オブジェクトに対していくつかの整合性チェックを行い、
+// 何かおかしい箇所が検出された場合にassertを発生させます。
+// これはデバッグ時に役立つことを意図しています。
 
 bool Position::pos_is_ok() const
 {
@@ -2241,7 +2594,7 @@ bool Position::pos_is_ok() const
 		}
 	}
 	for (auto c : COLOR)
-		for (Piece pr = PIECE_HAND_ZERO; pr < PIECE_HAND_NB; ++pr)
+		for (PieceType pr = PIECE_HAND_ZERO; pr < PIECE_HAND_NB; ++pr)
 		{
 			int ct = hand_count(hand[c], pr);
 			count += ct;
@@ -2256,20 +2609,23 @@ bool Position::pos_is_ok() const
 		if (ptc[pt] != ptc0[pt])
 			return false;
 #endif
+	// 3) st->handは手番側の駒でなければならない。
+	if (st->hand != hand[sideToMove])
+		return false;
 
-	// 3) 王手している駒
+	// 4) 王手している駒
 	if (st->checkersBB != attackers_to(~sideToMove, king_square(sideToMove)))
 		return false;
 
-	// 4) 相手玉が取れるということはないか
+	// 5) 相手玉が取れるということはないか
 	if (effected_to(sideToMove, king_square(~sideToMove)))
 		return false;
 
-	// 5) occupied bitboardは合っているか
+	// 6) occupied bitboardは合っているか
 	if ((pieces() != (pieces(BLACK) | pieces(WHITE))) || (pieces(BLACK) & pieces(WHITE)))
 		return false;
 
-	// 6) 王手している駒は敵駒か
+	// 7) 王手している駒は敵駒か
 	if (checkers() & pieces(side_to_move()))
 		return false;
 
@@ -2348,7 +2704,7 @@ void Position::UnitTest(Test::UnitTester& tester)
 
 		// is_ok(m) == falseな指し手に対して、to_move()がその指し手をそのまま返すことを保証する。
 		tester.test("MOVE_NONE", pos.to_move(MOVE_NONE) == MOVE_NONE);
-		tester.test("MOVE_WIN" , pos.to_move(MOVE_WIN) == MOVE_WIN);
+		tester.test("MOVE_WIN" , pos.to_move(MOVE_WIN ) == MOVE_WIN );
 		tester.test("MOVE_NULL", pos.to_move(MOVE_NULL) == MOVE_NULL);
 
 		// 88の角を22に不成で移動。(非合法手) 移動後の駒は先手の角。
@@ -2385,10 +2741,13 @@ void Position::UnitTest(Test::UnitTester& tester)
 		m = pos.to_move(m16);
 		tester.test("make_move(SQ_77, SQ_76) is pseudo_legal == true", pos.pseudo_legal(m) == true);
 
+#if 0
 		// 後手の駒の場合、現在の手番の駒ではないので、pseudo_legalではない。(pseudo_legalは手番側の駒であることを保証する)
 		m16 = make_move16(SQ_83, SQ_84);
 		m = pos.to_move(m16);
+		// →　pos.to_move()で現在の手番側の駒ではないからMOVE_NONEが返るか…。このテスト、意味ないな。
 		tester.test("make_move(SQ_83, SQ_84) is pseudo_legal == false", pos.pseudo_legal(m) == false);
+#endif
 
 		// 88の先手の角を22に移動。これは途中に駒があって移動できないのでpseudo_legalではない。
 		// (pseudo_legalは、その駒が移動できる(移動先の升にその駒の利きがある)ことを保証する)
@@ -2428,6 +2787,40 @@ void Position::UnitTest(Test::UnitTester& tester)
 		auto rep = pos.is_repetition(16, found_ply);
 
 		tester.test("REPETITION_DRAW", rep == REPETITION_DRAW && found_ply == 4);
+
+		StateInfo s[512];
+		// 初期局面から先手の飛車が46,後手玉が54に移動している局面。
+		// ここから56飛(46)→44玉(54)→46飛(56)→54玉(44)で先手の反則負け
+		pos_init("lnsg1gsnl/1r5b1/ppppppppp/4k4/9/5R3/PPPPPPPPP/1B7/LNSGKGSNL b - 1");
+
+		m = pos.to_move(make_move16(SQ_46,SQ_56));
+		pos.do_move(m,s[0]);
+		m = pos.to_move(make_move16(SQ_54,SQ_44));
+		pos.do_move(m,s[1]);
+		m = pos.to_move(make_move16(SQ_56,SQ_46));
+		pos.do_move(m,s[2]);
+		m = pos.to_move(make_move16(SQ_44,SQ_54));
+		pos.do_move(m,s[3]);
+
+		// いま先手番であり、先手の反則負けが確定しているはず。
+		auto draw_value = pos.is_repetition();
+		tester.test("REPETITION_LOSE", draw_value == REPETITION_LOSE);
+
+		// 初期局面から先手の飛車が56,後手玉が54に移動している局面。(王手がかかっていて後手番)
+		// ここから44玉(54)→46飛(56)→54玉(44)→56飛(46)で(後手番において)先手の反則負け
+		pos_init("lnsg1gsnl/1r5b1/ppppppppp/4k4/9/4R4/PPPPPPPPP/1B7/LNSGKGSNL w - 1");
+
+		m = pos.to_move(make_move16(SQ_54,SQ_44));
+		pos.do_move(m,s[0]);
+		m = pos.to_move(make_move16(SQ_56,SQ_46));
+		pos.do_move(m,s[1]);
+		m = pos.to_move(make_move16(SQ_44,SQ_54));
+		pos.do_move(m,s[2]);
+		m = pos.to_move(make_move16(SQ_46,SQ_56));
+		pos.do_move(m,s[3]);
+
+		draw_value = pos.is_repetition();
+		tester.test("REPETITION_WIN", draw_value == REPETITION_WIN);
 	}
 
 	// 入玉のテスト
@@ -2500,46 +2893,13 @@ void Position::UnitTest(Test::UnitTester& tester)
 	}
 
 	{
-		// 深いdepthのperftのテストが通っていれば、利きの計算、指し手生成はおおよそ間違っていないと言える。
-
-		auto section2 = tester.section("Perft");
-
-		{
-			auto section3 = tester.section("hirate");
-			hirate_init();
-			const s64 p_nodes[] = { 0 , 30 , 900, 25470, 719731, 19861490, 547581517 };
-
-			for (Depth d = 1; d <= 6; ++d)
-			{
-				u64 nodes = perft(pos, d);
-				u64 pn = p_nodes[d];
-				tester.test("depth " + to_string(d) + " = " + to_string(pn), nodes == pn);
-			}
-		}
-
-		{
-			auto section3 = tester.section("matsuri");
-			matsuri_init();
-
-			const s64 p_nodes[] = { 0 , 207 , 28684, 4809015, 516925165};
-
-			for (Depth d = 1; d <= 4; ++d)
-			{
-				u64 nodes = perft(pos, d);
-				u64 pn = p_nodes[d];
-				tester.test("depth " + to_string(d) + " = " + to_string(nodes), nodes == pn);
-			}
-		}
-	}
-
-	{
 		// 指し手生成のテスト
 		auto section2 = tester.section("GenMove");
 
 		{
 			// 23歩不成ができ、かつ、23歩不成では駒の捕獲にはならない局面。
 			pos_init("lnsgk1snl/1r4g2/p1ppppb1p/6pP1/7R1/2P6/P2PPPP1P/1SG6/LN2KGSNL b BP2p 21");
-			Move move1 = make_move(SQ_24, SQ_23,B_PAWN);
+			Move move1 = make_move        (SQ_24, SQ_23,B_PAWN);
 			Move move2 = make_move_promote(SQ_24, SQ_23,B_PAWN);
 
 			ExtMove move_buf[MAX_MOVES] , *move_last;
@@ -2577,55 +2937,203 @@ void Position::UnitTest(Test::UnitTester& tester)
 			all &= !find_move(move1);
 			all &=  find_move(move2);
 
+			move_last = generateMoves<CAPTURES_PRO_PLUS_ALL>(pos, move_buf);
+			all &=  find_move(move1); // 歩の不成はこちらに含めることになった。(movegenの実装の修正が難しいので)
+			all &=  find_move(move2);
+
 			move_last = generateMoves<NON_CAPTURES_PRO_MINUS>(pos, move_buf);
 			all &= !find_move(move1);
 			all &= !find_move(move2);
 
+			move_last = generateMoves<NON_CAPTURES_PRO_MINUS_ALL>(pos, move_buf);
+			all &= !find_move(move1); // 歩の不成はこちらには含まれていないので注意。
+			all &= !find_move(move2);
+
 			tester.test("pawn's unpromoted move", all);
+
+			// 23角不成で5手詰め
+			// https://github.com/yaneurao/YaneuraOu/issues/257
+			pos_init("5B1n1/8k/6Rpp/9/9/9/1+p7/9/K8 b rb4g4s3n4l15p 1");
+			// 23角不成(41)と23角成(41)
+			move1 = make_move        (SQ_41, SQ_23, B_BISHOP);
+			move2 = make_move_promote(SQ_41, SQ_23, B_BISHOP);
+			all = true;
+
+			move_last = generateMoves<LEGAL_ALL>(pos, move_buf);
+			all &=  find_move(move1);
+			all &=  find_move(move2);
+
+			move_last = generateMoves<CAPTURES_PRO_PLUS>(pos, move_buf);
+			all &= !find_move(move1);
+			all &=  find_move(move2);
+
+			move_last = generateMoves<NON_CAPTURES_PRO_MINUS>(pos, move_buf);
+			all &= !find_move(move1);
+			all &= !find_move(move2);
+
+			move_last = generateMoves<CAPTURES_PRO_PLUS>(pos, move_buf);
+			all &= !find_move(move1);
+			all &=  find_move(move2);
+
+			move_last = generateMoves<NON_CAPTURES_PRO_MINUS_ALL>(pos, move_buf);
+			all &= !find_move(move1);
+			all &= !find_move(move2);
+
+			move_last = generateMoves<CAPTURES_PRO_PLUS_ALL>(pos, move_buf);
+			all &=  find_move(move1);
+			all &=  find_move(move2);
+
+			tester.test("bishop's unpromoted move",all);
 		}
 	}
-
-
-#if 0
-	// ランダムプレイヤーでの対局
+#if defined (USE_SEE)
 	{
-		auto section2 = tester.section("GamesOfRandomPlayer");
+		// see_ge()のテスト
+		auto section = tester.section("see_ge");
+		StateInfo s[512];
 
-		// 対局回数
-		s64 random_player_loop = tester.options["random_player_loop"];
+		// 平手初期化
+		hirate_init();
 
-		// seed固定乱数(再現性ある乱数)
-		PRNG my_rand;
-		StateInfo si[512];
-
-		for (s64 i = 0; i < random_player_loop; ++i)
-		{
-			// 平手初期化
-			hirate_init();
-			bool fail = false;
-
-			// 512手目まで
-			for (int ply = 0; ply < 512; ++ply)
+		// see_geのしきい値がv以下の時だけtrueが返ってくるかをテストする。
+		// つまりはsee値がvであるかをテストする関数。
+		auto see_ge_th = [&](int v)
 			{
-				MoveList<LEGAL_ALL> ml(pos);
+				Value th = Value(v);
+				bool all_ok = true;
+				all_ok &=  pos.see_ge(m,th    );   // see_ge(m, th) == true
+				all_ok &= !pos.see_ge(m,th + 1);   // see_ge(m,  1) == false
+				all_ok &=  pos.see_ge(m,th - 1);   // see_ge(m, -1) == true
+				return all_ok;
+			};
 
-				// 指し手がない == 負け == 終了
-				if (ml.size() == 0)
-					break;
+		// 76歩、34歩の局面を作る。
+		m = pos.to_move(make_move16(SQ_77, SQ_76));
+		pos.do_move(m, s[0]);
+		m = pos.to_move(make_move16(SQ_33, SQ_34));
+		pos.do_move(m, s[1]);
+		// 22角成りの指し手について
+		m = pos.to_move(make_move_promote16(SQ_88, SQ_22));
+		// 角を取るが、see値は、同銀と取り返されて、駒の損得なし。
 
-				Move m = ml.at(size_t(my_rand.rand(ml.size()))).move;
+		tester.test("pos1move", see_ge_th(0));
 
-				pos.do_move(m,si[ply]);
+		pos.do_move(m, s[2]);
+		// 馬を取り返さずにあえて84歩
+		m = pos.to_move(make_move16(SQ_83, SQ_24));
+		pos.do_move(m, s[3]);
 
-				if (!pos.pos_is_ok())
-					fail = true;
-			}
+		// この局面で31馬は、同金とされて、(see値は)馬、銀の交換 = 馬を損して銀を得する
+		m = pos.to_move(make_move16(SQ_22, SQ_31));
+		tester.test("pos2move", see_ge_th( - Eval::HorseValue + Eval::SilverValue ));
 
-			// 今回のゲームのなかでおかしいものがなかったか
-			tester.test(string("game ")+to_string(i+1),!fail);
-		}
+		// この局面で33角打ちは、同桂で同馬。(see値は)角損 + 桂得。
+		m = pos.to_move(make_move_drop16(BISHOP, SQ_33));
+		tester.test("pos2drop", see_ge_th( - Eval::BishopValue + Eval::KnightValue ));
+
+		// この局面で33馬は、同桂でタダ。(see値は)馬損。
+		m = pos.to_move(make_move16(SQ_22, SQ_33));
+		tester.test("pos2move", see_ge_th(- Eval::HorseValue ));
 	}
 #endif
+
+	{
+		// null moveのテスト
+		auto section = tester.section("nullmove");
+		matsuri_init();
+		StateInfo s[512];
+
+		// null moveして、局面情報がおかしくならないかのテスト。
+		pos.do_null_move(s[0]);
+		tester.test("pos_is_ok()",pos.pos_is_ok());
+	}
+
+	{
+		// それ以外のテスト
+		auto section = tester.section("misc");
+		{
+			// 盤面の反転
+
+			// 23歩不成ができ、かつ、23歩不成では駒の捕獲にはならない局面。
+			pos_init("lnsgk1snl/1r4g2/p1ppppb1p/6pP1/7R1/2P6/P2PPPP1P/1SG6/LN2KGSNL b BP2p 21");
+			auto flipped = pos.flipped_sfen();
+			tester.test("flip sfen", flipped=="lnsgk2nl/6gs1/p1pppp2p/6p2/1r7/1pP6/P1BPPPP1P/2G4R1/LNS1KGSNL w 2Pbp 21");
+		}
+	}
+
+	{
+		// 深いdepthのperftのテストが通っていれば、利きの計算、指し手生成はおおよそ間違っていないと言える。
+
+		auto section2 = tester.section("Perft");
+
+		{
+			auto section3 = tester.section("hirate");
+			hirate_init();
+			const s64 p_nodes[] = { 0 , 30 , 900, 25470, 719731, 19861490, 547581517 };
+
+			for (Depth d = 1; d <= 6; ++d)
+			{
+				u64 nodes = perft(pos, d);
+				u64 pn = p_nodes[d];
+				tester.test("depth " + to_string(d) + " = " + to_string(pn), nodes == pn && pos.pos_is_ok());
+			}
+		}
+
+		{
+			auto section3 = tester.section("matsuri");
+			matsuri_init();
+
+			const s64 p_nodes[] = { 0 , 207 , 28684, 4809015, 516925165};
+
+			for (Depth d = 1; d <= 4; ++d)
+			{
+				u64 nodes = perft(pos, d);
+				u64 pn = p_nodes[d];
+				tester.test("depth " + to_string(d) + " = " + to_string(nodes), nodes == pn && pos.pos_is_ok());
+			}
+		}
+	}
+
+	// ランダムプレイヤーでの対局
+	{
+		// 対局回数→0ならskip
+		s64 random_player_loop = tester.options["random_player_loop"];
+		if (random_player_loop)
+		{
+			auto section2 = tester.section("GamesOfRandomPlayer");
+
+			// seed固定乱数(再現性ある乱数)
+			PRNG my_rand;
+			StateInfo s[512];
+
+			for (s64 i = 0; i < random_player_loop; ++i)
+			{
+				// 平手初期化
+				hirate_init();
+				bool fail = false;
+
+				// 512手目まで
+				for (int ply = 0; ply < 512; ++ply)
+				{
+					MoveList<LEGAL_ALL> ml(pos);
+
+					// 指し手がない == 負け == 終了
+					if (ml.size() == 0)
+						break;
+
+					Move m = ml.at(size_t(my_rand.rand(ml.size()))).move;
+
+					pos.do_move(m,s[ply]);
+
+					if (!pos.pos_is_ok())
+						fail = true;
+				}
+
+				// 今回のゲームのなかでおかしいものがなかったか
+				tester.test(string("game ")+to_string(i+1),!fail);
+			}
+		}
+	}
 
 }
 

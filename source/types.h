@@ -21,6 +21,22 @@
 #include <algorithm>    // std::max()を使うので仕方ない
 #include <limits>		// std::numeric_limitsを使うので仕方ない
 
+#if defined(_MSC_VER)
+// Disable some silly and noisy warnings from MSVC compiler
+#pragma warning(disable: 4127) // Conditional expression is constant
+#pragma warning(disable: 4146) // Unary minus operator applied to unsigned type
+#pragma warning(disable: 4800) // Forcing value to bool 'true' or 'false'
+#endif
+
+/// Predefined macros hell:
+///
+/// __GNUC__                Compiler is GCC, Clang or ICX
+/// __clang__               Compiler is Clang or ICX
+/// __INTEL_LLVM_COMPILER   Compiler is ICX
+/// _MSC_VER                Compiler is MSVC
+/// _WIN32                  Building on Windows (any)
+/// _WIN64                  Building on Windows 64 bit
+
 // --------------------
 //  型の最小値・最大値
 // --------------------
@@ -130,6 +146,8 @@ enum Square: int32_t
 
 	// ゼロと末尾
 	SQ_ZERO = 0, SQ_NB = 81,
+	SQUARE_NB = SQ_NB,       // Stockfishとの互換性維持のために定義
+	SQ_NONE = SQ_NB,         // Stockfishとの互換性維持のために定義
 	SQ_NB_PLUS1 = SQ_NB + 1, // 玉がいない場合、SQ_NBに移動したものとして扱うため、配列をSQ_NB+1で確保しないといけないときがあるのでこの定数を用いる。
 
 	// 方角に関する定数。StockfishだとNORTH=北=盤面の下を意味するようだが、
@@ -358,7 +376,7 @@ static bool aligned(Square sq1, Square sq2, Square sq3/* is ksq */)
 constexpr int MAX_PLY = MAX_PLY_NUM;
 
 // 探索深さを表現する型
-typedef int Depth;
+using Depth = int;
 
 enum : int {
 
@@ -404,30 +422,24 @@ enum Value: int32_t
 	// 引き分け時のスコア(千日手のスコアリングなどで用いる)
 	VALUE_DRAW = 0,
 
-	// 0手詰めのスコア(rootで詰んでいるときのscore)
-	// 例えば、3手詰めならこの値より3少ない。
-	VALUE_MATE = 32000,
+	// 無効な値
+	VALUE_NONE = 32002,
 
 	// Valueの取りうる最大値(最小値はこの符号を反転させた値)
 	VALUE_INFINITE = 32001,
 
-	// 無効な値
-	VALUE_NONE = 32002,
-
-	// チェスの終盤DBによって得られた詰みのスコアらしいが、互換性のためにこのシンボルは同様に定義しておく。
-	// Stockfishの元のコードは *2 となっているが、ここは *1 にしておかないと評価値で使える値の範囲が狭まって損。
-	VALUE_TB_WIN_IN_MAX_PLY  =  VALUE_MATE - /*2*/ 1 * MAX_PLY,
-	VALUE_TB_LOSS_IN_MAX_PLY = -VALUE_TB_WIN_IN_MAX_PLY, 
+	// 0手詰めのスコア(rootで詰んでいるときのscore)
+	// 例えば、3手詰めならこの値より3少ない。
+	VALUE_MATE = 32000,
 
 	VALUE_MATE_IN_MAX_PLY  =   VALUE_MATE - MAX_PLY , // MAX_PLYでの詰みのときのスコア。
 	VALUE_MATED_IN_MAX_PLY = -VALUE_MATE_IN_MAX_PLY , // MAX_PLYで詰まされるときのスコア。
 
+	// チェスの終盤DBによって得られた詰みのスコアらしいが、互換性のためにこのシンボルは同様に定義しておく。
+	VALUE_TB                 = VALUE_MATE_IN_MAX_PLY - 1,
+	VALUE_TB_WIN_IN_MAX_PLY  = VALUE_MATE - MAX_PLY,
+	VALUE_TB_LOSS_IN_MAX_PLY = -VALUE_TB_WIN_IN_MAX_PLY, 
 
-	// 勝ち手順が何らか証明されているときのスコア下限値
-	// Stockfishでは10000に設定されているが、あまり低い数字にすると、
-	// 評価値(evaluate()の返し値)がこれを超えてしまい、誤動作する。
-	// やねうら王では、ぎりぎりの値にしておきたい。
-	VALUE_KNOWN_WIN = int(VALUE_MATE_IN_MAX_PLY) - 1000,
 
 	// 千日手による優等局面への突入したときのスコア
 	// これある程度離しておかないと、置換表に書き込んで、相手番から見て、これから
@@ -597,7 +609,12 @@ constexpr bool is_ok(PieceNumber pn) { return pn < PIECE_NUMBER_NB; }
 struct Move16;
 
 // Move16 : 16bit形式の指し手
-//   指し手 bit0..6 = 移動先のSquare、bit7..13 = 移動元のSquare(駒打ちのときは駒種)、bit14..駒打ちか、bit15..成りか
+//   bit0..6  : 移動先のSquare
+//   bit7..13 : 移動元のSquare
+//				駒打ちのときはPieceType。例: 歩打ちの時は、ここのbitは、0001b、香打ちの時は0010b。
+//   bit14    : 駒打ちかのフラグ
+//   bit15    : 成りかのフラグ
+//   
 // Move   : 32bit形式の指し手
 //   上位16bitには、この指し手によってto(移動後の升)に来る駒(先後の区別あり)が格納されている。つまりは Piece(5bit)が上位16bitに来る。
 //   move = move16 + (piece << 16)
@@ -658,9 +675,28 @@ private:
 static std::ostream& operator<<(std::ostream& os, Move m)   { os << to_usi_string(m); return os; }
 static std::ostream& operator<<(std::ostream& os, Move16 m) { os << to_usi_string(m); return os; }
 
+// 指し手がおかしくないかをテストする
+// ただし、盤面のことは考慮していない。MOVE_NULLとMOVE_NONEであるとfalseが返る。
+// これら２つの定数は、移動元と移動先が等しい値になっている。このテストだけをする。
+// MOVE_WIN(宣言勝ちの指し手は)は、falseが返る。
+constexpr bool is_ok(Move m) {
+  // return move_from(m)!=move_to(m);
+  // とやりたいところだが、駒打ちでfromのbitを使ってしまっているのでそれだとまずい。
+  // 駒打ちのbitも考慮に入れるために次のように書く。
+  return (m >> 7) != (m & 0x7f);
+}
+static bool is_ok(Move16 m) { return m.is_ok(); }
+
 // 指し手の移動元の升を返す。
-constexpr Square from_sq(Move   m) { return Square((m          >> 7) & 0x7f); }
-static    Square from_sq(Move16 m) { return Square((m.to_u16() >> 7) & 0x7f); }
+// → ここ、ASSERT使っててconstexpr式として評価できないかも？
+constexpr Square from_sq(Move   m) {
+	ASSERT_LV3(is_ok(m));
+	return Square((m          >> 7) & 0x7f);
+}
+static    Square from_sq(Move16 m) {
+	ASSERT_LV3(is_ok(m));
+	return Square((m.to_u16() >> 7) & 0x7f);
+}
 
 // 指し手の移動先の升を返す。
 constexpr Square to_sq(Move   m) { return Square(m          & 0x7f); }
@@ -672,6 +708,10 @@ static    bool is_drop(Move16 m){ return (m.to_u16() & MOVE_DROP)!=0; }
 
 // fromとtoをシリアライズする。駒打ちのときのfromは普通の移動の指し手とは異なる。
 // この関数は、0 ～ ((SQ_NB+7) * SQ_NB - 1)までの値が返る。
+// ※ is_drop() == trueの時、from_sq(m)は、打つ駒のPieceTypeが返る。NO_PIECE = 0で、ここが空番であることに注意。
+//    ゆえに、is_drop()==trueの時は、from_sq(m)にSQ_NB-1を足して、打つ駒がPAWN(= 1)の時にSQ_NBになるようにしてやる必要がある。
+// 注) 駒打ちに関して、先手の駒と後手の駒の区別はしない。
+// 　　これは、この関数は、MovePickerのButterflyHistoryで使うから必要なのだが、そこでは指し手の手番(Color)を別途持っているから。
 constexpr int from_to(Move   m) { return (int)(from_sq(m) + (is_drop(m) ? (SQ_NB - 1) : 0)) * (int)SQ_NB + (int)to_sq(m); }
 static    int from_to(Move16 m) { return (int)(from_sq(m) + (is_drop(m) ? (SQ_NB - 1) : 0)) * (int)SQ_NB + (int)to_sq(m); }
 
@@ -681,6 +721,8 @@ static    bool is_promote(Move16 m) { return (m.to_u16() & MOVE_PROMOTE)!=0; }
 
 // 駒打ち(is_drop()==true)のときの打った駒
 // 先後の区別なし。PAWN～ROOKまでの値が返る。
+// ※ 打つ駒のPieceTypeはMoveの bit7..13に格納されている。
+// ※ assert(is_drop(m))はあってもいいかも。
 constexpr PieceType move_dropped_piece(Move   m) { return (PieceType)((m          >> 7) & 0x7f); }
 static    PieceType move_dropped_piece(Move16 m) { return (PieceType)((m.to_u16() >> 7) & 0x7f); }
 
@@ -708,18 +750,17 @@ constexpr Move make_move_drop(PieceType pt, Square to , Color us ) { return (Mov
 // また、reverse_move()を用いるならば、ifの条件式に " && !is_drop(move)"が要ると思う。
 static Move16 reverse_move(Move m) { return make_move16(to_sq(m), from_sq(m)); }
 
-// 指し手がおかしくないかをテストする
-// ただし、盤面のことは考慮していない。MOVE_NULLとMOVE_NONEであるとfalseが返る。
-// これら２つの定数は、移動元と移動先が等しい値になっている。このテストだけをする。
-// MOVE_WIN(宣言勝ちの指し手は)は、falseが返る。
-constexpr bool is_ok(Move m) {
-  // return move_from(m)!=move_to(m);
-  // とやりたいところだが、駒打ちでfromのbitを使ってしまっているのでそれだとまずい。
-  // 駒打ちのbitも考慮に入れるために次のように書く。
-  return (m >> 7) != (m & 0x7f);
-}
+// 指し手を反転させる(盤面を180°回転させた指し手にする)
+// 駒打ちもちゃんと考慮する。mがMOVE_NONEでも良い。(MOVE_NONEが返る)
+// ※　この関数はやねうら王独自拡張。
+//   定跡のprobeで180°反転させた盤面にもhitして欲しいのでそのヘルパー関数として追加した。
+static Move16 flip_move(Move16 m) {
 
-static bool is_ok(Move16 m) { return m.is_ok(); }
+	return 
+		is_drop   (m)  ? make_move_drop16   (move_dropped_piece(m), Flip(to_sq(m))):
+        is_promote(m)  ? make_move_promote16(Flip(from_sq(m))     , Flip(to_sq(m))):
+					     make_move16        (Flip(from_sq(m))     , Flip(to_sq(m)));
+}
 
 // 見た目に、わかりやすい形式で表示する
 std::string pretty(Move m);
@@ -784,27 +825,27 @@ constexpr int PIECE_BITS[PIECE_HAND_NB] = { 0, 0 /*歩*/, 8 /*香*/, 12 /*桂*/,
 // PieceType(歩,香,桂,銀,金,角,飛)を手駒に変換するテーブル
 constexpr Hand PIECE_TO_HAND[PIECE_HAND_NB] = {
 	(Hand)0,
-	(Hand)(1 << PIECE_BITS[PAWN])   /*歩*/,
-	(Hand)(1 << PIECE_BITS[LANCE])  /*香*/,
+	(Hand)(1 << PIECE_BITS[PAWN  ]) /*歩*/,
+	(Hand)(1 << PIECE_BITS[LANCE ]) /*香*/,
 	(Hand)(1 << PIECE_BITS[KNIGHT]) /*桂*/,
 	(Hand)(1 << PIECE_BITS[SILVER]) /*銀*/,
 	(Hand)(1 << PIECE_BITS[BISHOP]) /*角*/,
-	(Hand)(1 << PIECE_BITS[ROOK])   /*飛*/,
-	(Hand)(1 << PIECE_BITS[GOLD])   /*金*/
+	(Hand)(1 << PIECE_BITS[ROOK  ]) /*飛*/,
+	(Hand)(1 << PIECE_BITS[GOLD  ]) /*金*/
 };
 
 // その持ち駒を表現するのに必要なbit数のmask(例えば3bitなら2の3乗-1で7)
-constexpr int PIECE_BIT_MASK[PIECE_HAND_NB] = { 0,31/*歩は5bit*/,7/*香は3bit*/,7/*桂*/,7/*銀*/,3/*角*/,3/*飛*/,7/*金*/ };
+constexpr int PIECE_BIT_MASK[PIECE_HAND_NB] = { 0, 31/*歩は5bit*/, 7/*香は3bit*/, 7/*桂*/, 7/*銀*/, 3/*角*/, 3/*飛*/, 7/*金*/ };
 
 constexpr u32 PIECE_BIT_MASK2[PIECE_HAND_NB] = {
 	0,
-	PIECE_BIT_MASK[PAWN]   << PIECE_BITS[PAWN]  ,
-	PIECE_BIT_MASK[LANCE]  << PIECE_BITS[LANCE] ,
+	PIECE_BIT_MASK[PAWN  ] << PIECE_BITS[PAWN  ],
+	PIECE_BIT_MASK[LANCE ] << PIECE_BITS[LANCE ],
 	PIECE_BIT_MASK[KNIGHT] << PIECE_BITS[KNIGHT],
 	PIECE_BIT_MASK[SILVER] << PIECE_BITS[SILVER],
 	PIECE_BIT_MASK[BISHOP] << PIECE_BITS[BISHOP],
-	PIECE_BIT_MASK[ROOK]   << PIECE_BITS[ROOK]  ,
-	PIECE_BIT_MASK[GOLD]   << PIECE_BITS[GOLD]
+	PIECE_BIT_MASK[ROOK  ] << PIECE_BITS[ROOK  ],
+	PIECE_BIT_MASK[GOLD  ] << PIECE_BITS[GOLD  ]
 };
 
 // 駒の枚数が格納されているbitが1となっているMASK。(駒種を得るときに使う)
@@ -890,21 +931,40 @@ constexpr int MAX_MOVES = 600;
 // 生成する指し手の種類
 enum MOVE_GEN_TYPE
 {
-	// LEGAL/LEGAL_ALL以外は自殺手が含まれることがある(pseudo-legal)ので、do_moveの前にPosition::legal()でのチェックが必要。
+	//
+	// 注意)
+	// 指し手生成器で生成される指し手はすべてpseudo-legalであるが、
+	// LEGAL/LEGAL_ALL以外は自殺手が含まれることがある。
+	// (pseudo-legalは自殺手も含むので)
+	// 
+	// そのため、do_moveの前にPosition::legal()でのチェックが必要である。
+	//
 
 	NON_CAPTURES,           // 駒を取らない指し手
 	CAPTURES,               // 駒を取る指し手
 
-	CAPTURES_PRO_PLUS,      // CAPTURES + 価値のかなりあると思われる成り(歩だけ)
+	NON_CAPTURES_ALL,		// NON_CAPTURES + 歩の不成、大駒の不成で駒を取る手
+	CAPTURES_ALL,			// CAPTURES     + 歩の不成、大駒の不成で駒を取る手
+
+	CAPTURES_PRO_PLUS,      // CAPTURES     + 価値のかなりあると思われる成り(歩だけ)
 	NON_CAPTURES_PRO_MINUS, // NON_CAPTURES - 価値のかなりあると思われる成り(歩だけ)
+
+	CAPTURES_PRO_PLUS_ALL,      // CAPTURES_PRO_PLUS      + 歩の不成、大駒の不成で駒を取る手
+	NON_CAPTURES_PRO_MINUS_ALL, // NON_CAPTURES_PRO_MINUS + 歩の不成、大駒の不成で駒を取らない手
+
+	// note : 歩の不成で駒を取らない指し手は後者に含まれるべきだが、指し手生成の実装が難しくなるので前者に含めることにした。
+	//        オーダリング(movepicker)でなんとかするだろうからそこまで悪くはならないだろうし、普段は
+	//		  GenerateAllLegalMovesがオンにして動かさないから良しとする。
 
 	// BonanzaではCAPTURESに銀以外の成りを含めていたが、Aperyでは歩の成り以外は含めない。
 	// あまり変な成りまで入れるとオーダリングを阻害する。
 	// 本ソースコードでは、NON_CAPTURESとCAPTURESは使わず、CAPTURES_PRO_PLUSとNON_CAPTURES_PRO_MINUSを使う。
 
 	// note : NON_CAPTURESとCAPTURESとの生成される指し手の集合は被覆していない。
+	// note : CAPTURES_PRO_PLUSとNON_CAPTURES_PRO_MINUSとの生成される指し手の集合も被覆していない。
+	// note : CAPTURES_PRO_PLUS_ALLとNON_CAPTURES_PRO_MINUS_ALLとの生成される指し手の集合も被覆していない。
 	// →　被覆させないことで、二段階に指し手生成を分解することが出来る。
-	
+
 	EVASIONS,              // 王手の回避(指し手生成元で王手されている局面であることがわかっているときはこちらを呼び出す)
 	EVASIONS_ALL,          // EVASIONS + 歩の不成なども含む。
 
@@ -982,8 +1042,9 @@ private:
 
 // 局面のハッシュキー
 // 盤面(盤上の駒 + 手駒)に対して、Zobrist Hashでそれに対応する値を計算する。
-typedef uint64_t Key;
+using Key = uint64_t;
 
+#if 0
 // 合同法による擬似乱数生成器
 // 探索で、excludedMoveを考慮した局面のhash keyが欲しいので、それを生成するために
 // excludedMoveをseedとする擬似乱数を発生させる必要があり、そこで用いられる。
@@ -996,6 +1057,9 @@ typedef uint64_t Key;
 constexpr Key make_key(uint64_t seed) {
 	return (seed * 6364136223846793005ULL + 1442695040888963407ULL) & ~1ULL;
 }
+
+// →　この関数はStockfish 16で使わなくなった。
+#endif
 
 // --------------------
 //        探索

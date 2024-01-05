@@ -181,6 +181,9 @@
 // ";"で区切って複数指定できる。
 // #define ENGINE_OPTIONS "FV_SCALE=24;BookFile=no_book"
 
+// NNUE評価関数で、推論時のオーバーフローを防ぐ。
+// これオンにすると0.5%ぐらいnpsが低下する。オフで運用できるならオフでいいと思う。
+// #define NNUE_FIX_OVERFLOW
 
 // ---------------------
 //  置換表絡みの設定
@@ -265,8 +268,9 @@
 // #define FOR_TOURNAMENT
 
 // sortが少し高速化されるらしい。
-// 安定ソートではないので並び順が以前のとは異なるから、benchコマンドの探索ノード数は変わる。
-// CPU targetによって実装が変わるのでCPUによってbenchコマンドの探索ノード数は変わる。
+// 注意)
+//  安定ソートではないので並び順が以前のとは異なるから、benchコマンドの探索ノード数は変わる。
+//  CPU targetによって実装が変わるのでCPUによってbenchコマンドの探索ノード数は変わる。
 // #define USE_SUPER_SORT
 
 
@@ -292,7 +296,7 @@
 
 
 // 探索パラメーターのチューニングを行うモード
-// ※　使い方は、"docs/解説.txt" の 「探索パラメーターのチューニングについて」をご覧ください。
+// ※　使い方は、やねうら王Wiki の 「探索パラメーターのチューニングについて」をご覧ください。
 //
 // 実行時に"param/yaneuraou-param.h" からパラメーターファイルを読み込むので
 // "source/engine/yaneuraou-engine/yaneuraou-param.h"をそこに配置すること。
@@ -342,15 +346,14 @@
 // 長い利き(遠方駒の利き)のライブラリを用いるか。
 // 超高速1手詰め判定などではこのライブラリが必要。
 // do_move()のときに利きの差分更新を行なうので、do_move()は少し遅くなる。(その代わり、利きが使えるようになる)
-//#define LONG_EFFECT_LIBRARY
+// #define LONG_EFFECT_LIBRARY
 
 
 // position.hのStateInfoに直前の指し手、移動させた駒などの情報を保存しておくのか
 // これが保存されていると詰将棋ルーチンなどを自作する場合においてそこまでの手順を表示するのが簡単になる。
 // (Position::moves_from_start_pretty()などにより、わかりやすい手順が得られる。
 // ただし通常探索においてはやや遅くなるので思考エンジンとしてリリースするときには無効にしておくこと。
-
-//#define KEEP_LAST_MOVE
+// #define KEEP_LAST_MOVE
 
 
 // GlobalOptionという、EVAL_HASHを有効/無効を切り替えたり、置換表の有効/無効を切り替えたりする
@@ -364,7 +367,7 @@
 
 // "Threads"オプション が 8以下の設定の時でも強制的に bindThisThread()を呼び出して、指定されたNUMAで動作するようにする。
 // "ThreadIdOffset"オプションと併用して、狙ったNUMAで動作することを強制することができる。
-//#define FORCE_BIND_THIS_THREAD
+// #define FORCE_BIND_THIS_THREAD
 
 
 // PVの出力時の千日手に関する出力をすべて"rep_draw"に変更するオプション。
@@ -375,6 +378,16 @@
 // ニコニコ生放送の電王盤用
 // 電王盤はMultiPV非対応なので定跡を送るとき、"multipv"をつけずに1番目の候補手を送信する必要がある。
 // #define NICONICO
+
+
+// Pawn Historyの有効化。これ、計測したら少し弱くなっていたのでデフォルトでは無効化しておくことにした。
+//  ⇨　計測資料 V7.74k1 , V7.74k2
+// #define ENABLE_PAWN_HISTORY
+
+// 千日手検出を簡略化する
+// (これをオフにするとR5～10程度弱くなるが、これをオンにすると優等局面で評価値31111が出力されたりするので、
+// 検討目的なら、これをオンにするのは好ましくない。)
+// #define ENABLE_QUICK_DRAW
 
 // ===============================================================
 // ここ以降では、↑↑↑で設定した内容に基づき必要なdefineを行う。
@@ -435,8 +448,6 @@ constexpr int MAX_PLY_NUM = 246;
 	// 定跡生成絡み
 	#define ENABLE_MAKEBOOK_CMD
 
-	// パラメーターの自動調整絡み
-	#define USE_GAMEOVER_HANDLER
 	//#define LONG_EFFECT_LIBRARY
 
 	// GlobalOptionsは有効にしておく。
@@ -468,6 +479,7 @@ constexpr int MAX_PLY_NUM = 246;
 
 	#if defined(YANEURAOU_ENGINE_NNUE)
 		#define EVAL_NNUE
+		#define NNUE_FIX_OVERFLOW
 
 		// 学習のためにOpenBLASを使う
 		// "../openblas/lib/libopenblas.dll.a"をlibとして追加すること。
@@ -563,6 +575,10 @@ constexpr int MAX_PLY_NUM = 246;
 	#undef ENABLE_TEST_CMD
 	#undef USE_GLOBAL_OPTIONS
 	#undef KEEP_LAST_MOVE
+	#undef NNUE_FIX_OVERFLOW
+
+	// 千日手検出を簡略化する
+	#define ENABLE_QUICK_DRAW
 #endif
 
 // --------------------
@@ -573,6 +589,13 @@ constexpr int MAX_PLY_NUM = 246;
 // 正しく計算できない。そのため、EVAL_HASHを動的に無効化するためのオプションを用意する。
 #if defined(EVAL_LEARN)
 	#define USE_GLOBAL_OPTIONS
+#endif
+
+// パラメーター自動調整を行う時は、結果をファイルに書き出す必要があるので
+// USIの"gameover"に対してそれに対して応答するハンドラを設定してやる必要がある。
+
+#if defined(TUNING_SEARCH_PARAMETERS) && !defined(USE_GAMEOVER_HANDLER)
+	#define USE_GAMEOVER_HANDLER
 #endif
 
 // --------------------
@@ -673,6 +696,8 @@ constexpr bool pretty_jp = false;
 #if !defined(HASH_KEY_BITS)
 #define HASH_KEY_BITS 64
 #endif
+
+// ここ、typedef ではなく usingで書きたいが、現時点でKey64が未定義なので…。
 
 #if HASH_KEY_BITS <= 64
 #define HASH_KEY Key64

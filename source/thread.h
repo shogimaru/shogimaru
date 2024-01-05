@@ -3,14 +3,16 @@
 
 #include <atomic>
 #include <condition_variable>
+//#include <cstddef>
+//#include <cstdint>
 #include <mutex>
-#include <thread>
 #include <vector>
 
 #include "movepick.h"
 #include "position.h"
 #include "search.h"
 #include "thread_win32_osx.h"
+//#include "types.h"
 
 #if defined(EVAL_LEARN)
 // 学習用の実行ファイルでは、スレッドごとに置換表を持ちたい。
@@ -88,9 +90,6 @@ public:
 	// pvLast   : tbRank絡み。将棋では関係ないので用いない。
 	size_t pvIdx /*,pvLast*/;
 
-	//RunningAverage complexityAverage;
-	// →　やねうら王では導入せず
-
 	// nodes     : このスレッドが探索したノード数(≒Position::do_move()を呼び出した回数)
 	// bestMoveChanges : 反復深化においてbestMoveが変わった回数。nodeの安定性の指標として用いる。全スレ分集計して使う。
 	std::atomic<uint64_t> nodes,/* tbHits,*/ bestMoveChanges;
@@ -100,7 +99,6 @@ public:
 	// nmpColor  : null moveの前回の適用Color
 	// state     : 探索で組合せ爆発が起きているか等を示す状態
 	int selDepth, nmpMinPly;
-	Color nmpColor;
 
 	// bestValue :
 	// search()で、そのnodeでbestMoveを指したときの(探索の)評価値
@@ -136,6 +134,9 @@ public:
 	// aspiration searchのrootでの beta - alpha
 	Value rootDelta;
 
+	// ↓Stockfishでは思考開始時に評価関数から設定しているが、やねうら王では使っていないのでコメントアウト。
+	//Value rootSimpleEval;
+
 #if defined(USE_MOVE_PICKER)
 	// 近代的なMovePickerではオーダリングのために、スレッドごとにhistoryとcounter movesなどのtableを持たないといけない。
 	CounterMoveHistory counterMoves;
@@ -144,19 +145,18 @@ public:
 
 	// コア数が多いか、長い持ち時間においては、ContinuationHistoryもスレッドごとに確保したほうが良いらしい。
 	// cf. https://github.com/official-stockfish/Stockfish/commit/5c58d1f5cb4871595c07e6c2f6931780b5ac05b5
-	// 添字の[2][2]は、[inCheck(王手がかかっているか)][captureOrPawnPromotion]
+	// 添字の[2][2]は、[inCheck(王手がかかっているか)][capture_stage]
 	// →　この改造、レーティングがほぼ上がっていない。悪い改造のような気がする。
 	ContinuationHistory continuationHistory[2][2];
+
+#if defined(ENABLE_PAWN_HISTORY)
+	PawnHistory pawnHistory;
+#endif
 
 #endif
 
 	// Stockfish10ではスレッドごとにcontemptを保持するように変わった。
 	//Score contempt;
-
-	// trendは千日手を受け入れるスコア。動的に変更する。(dynamic contempt)
-	// 勝ってるほうは千日手にはしたくないし、負けてるほうは千日手やむなしという…。
-	//Value trend;
-	// →　やねうら王ではこの値、使わないことにする。
 
 	// ------------------------------
 	//   やねうら王、独自追加
@@ -252,7 +252,7 @@ struct MainThread: public Thread
 // Threads(スレッドオブジェクト)はglobalに配置するし、スレッドの初期化の際には
 // スレッドが保持する思考エンジンが使う変数等がすべてが初期化されていて欲しいからである。
 // スレッドの生成はset(options["Threads"])で行い、スレッドの終了はset(0)で行なう。
-struct ThreadPool: public std::vector<Thread*>
+struct ThreadPool
 {
 	// mainスレッドに思考を開始させる。
 	void start_thinking(const Position& pos, StateListPtr& states , const Search::LimitsType& limits , bool ponderMode = false);
@@ -265,7 +265,7 @@ struct ThreadPool: public std::vector<Thread*>
 	void set(size_t requested);
 
 	// mainスレッドを取得する。これはthis[0]がそう。
-	MainThread* main() { return static_cast<MainThread*>(at(0)); }
+	MainThread* main() const { return static_cast<MainThread*>(threads.front()); }
 
 	// 今回、goコマンド以降に探索したノード数
 	// →　これはPosition::do_move()を呼び出した回数。
@@ -287,6 +287,15 @@ struct ThreadPool: public std::vector<Thread*>
 	//                 増えて行ってないなら、同じ深さを再度探索するのに用いる。
 	std::atomic_bool stop , increaseDepth;
 
+	auto cbegin() const noexcept { return threads.cbegin(); }
+	auto begin() noexcept { return threads.begin(); }
+	auto end() noexcept { return threads.end(); }
+	auto cend() const noexcept { return threads.cend(); }
+	auto size() const noexcept { return threads.size(); }
+	auto empty() const noexcept { return threads.empty(); }
+	// thread_pool[n]のようにでアクセスしたいので…。
+	auto operator[](size_t i) const noexcept { return threads[i];}
+
 	// === やねうら王独自拡張 ===
 
 	// main thread以外の探索スレッドがすべて終了しているか。
@@ -298,11 +307,14 @@ private:
 	// 現局面までのStateInfoのlist
 	StateListPtr setupStates;
 
+	// vector<Thread*>からこのclassを継承させるのはやめて、このメンバーとして持たせるようにした。
+	std::vector<Thread*> threads;
+
 	// Threadクラスの特定のメンバー変数を足し合わせたものを返す。
 	uint64_t accumulate(std::atomic<uint64_t> Thread::* member) const {
 
 		uint64_t sum = 0;
-		for (Thread* th : *this)
+		for (Thread* th : threads)
 			sum += (th->*member).load(std::memory_order_relaxed);
 		return sum;
 	}

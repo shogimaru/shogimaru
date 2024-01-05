@@ -60,6 +60,13 @@ struct StateInfo {
 	HASH_KEY board_hash_key()     const { return board_key_            ; }
 	HASH_KEY hand_hash_key()      const { return              hand_key_; }
 
+#if defined(ENABLE_PAWN_HISTORY)
+	// 歩の陣形に対するhash key
+	HASH_KEY pawnKey_;
+	Key      pawn_key()           const { return hash_key_to_key(pawn_hash_key()) >> 1;  }
+	HASH_KEY pawn_hash_key()      const { return pawnKey_;               }
+#endif
+
 	// 現局面で手番側に対して王手をしている駒のbitboard
 	Bitboard checkersBB;
 
@@ -85,17 +92,33 @@ struct StateInfo {
 	// color = 相手側 なら 両王手の候補となる駒。
 
 	// 自玉に対して(敵駒によって)pinされている駒
+	// blockersForKing[c]は、c側の玉に対するpin駒。すなわちc側,~c側、どちらの駒をも含む。
 	Bitboard blockersForKing[COLOR_NB];
 
 	// 自玉に対してpinしている(可能性のある)敵の大駒。
 	// 自玉に対して上下左右方向にある敵の飛車、斜め十字方向にある敵の角、玉の前方向にある敵の香、…
+	// ※ pinners[BLACK]は、BLACKの王に対して(pin駒が移動した時に)王手になる駒だから、WHITE側の駒。
 	Bitboard pinners[COLOR_NB];
 
 	// 自駒の駒種Xによって敵玉が王手となる升のbitboard
 	Bitboard checkSquares[PIECE_TYPE_NB];
 
-//  循環局面の何回目であるか  
-//	int        repetition;
+#if !defined(ENABLE_QUICK_DRAW)
+	//  循環局面であることを示す。
+	//   0    = 循環なし
+	//   ply  = ply前の局面と同じ局面であることを表す。(ply > 0) 3回目までの繰り返し。
+	//  -ply  = ply前の局面と同じ局面であることを示す。4回目の繰り返しに到達していることを示す。
+	int repetition;
+
+	// ※　以下の2つはやねうら王独自拡張。
+
+	//  繰り返された回数 - 1。
+	//  ※ repetition != 0の時に意味をなす。
+	int repetition_times;
+
+	//  その時の繰り返しの種類
+	RepetitionState repetition_type;
+#endif
 
 	// この手番側の連続王手は何手前からやっているのか(連続王手の千日手の検出のときに必要)
 	int continuousCheck[COLOR_NB];
@@ -147,12 +170,16 @@ class Thread;
 // 平手の開始局面
 extern std::string SFEN_HIRATE;
 
+/// A list to keep track of the position states along the setup moves (from the
+/// start position to the position just before the search starts). Needed by
+/// 'draw by repetition' detection. Use a std::deque because pointers to
+/// elements are not invalidated upon list resizing.
 
 // setup moves("position"コマンドで設定される、現局面までの指し手)に沿った局面の状態を追跡するためのStateInfoのlist。
 // 千日手の判定のためにこれが必要。std::dequeを使っているのは、StateInfoがポインターを内包しているので、resizeに対して
 // 無効化されないように。
-typedef std::deque<StateInfo> StateList;
-typedef std::unique_ptr<StateList> StateListPtr;
+using StateList    = std::deque<StateInfo>;
+using StateListPtr = std::unique_ptr<StateList>;
 
 // --------------------
 //       盤面
@@ -161,6 +188,12 @@ typedef std::unique_ptr<StateList> StateListPtr;
 // packされたsfen
 struct PackedSfen {
 	u8 data[32];
+
+	// 手番を返す。
+	Color color() const {
+		// これは、data[0]のbit0に格納されていることは保証されている。
+		return Color(data[0] & 1);
+	}
 
 	// std::unordered_mapで使用できるように==と!=を定義しておく。
 
@@ -225,8 +258,16 @@ public:
 	// ※ USIプロトコルにおいては不要な機能ではあるが、デバッグのために局面を標準出力に出力して
 	// 　その局面から開始させたりしたいときに、sfenで現在の局面を出力出来ないと困るので用意してある。
 	// 引数としてintを取るほうのsfen()は、出力するsfen文字列の末尾の手数を指定できるバージョン。
+	// ※　裏技 : gamePlyが負なら、sfen文字列末尾の手数を出力しない。
 	const std::string sfen() const { return sfen(game_ply()); }
 	const std::string sfen(int gamePly) const;
+
+	// sfen()のflip(先後反転 = 盤面を180度回転)させた時のsfenを返す。
+	const std::string flipped_sfen() const { return flipped_sfen(game_ply()); }
+	const std::string flipped_sfen(int gamePly) const;
+
+	// sfen文字列をflip(先後反転)したsfen文字列に変換する。
+	static const std::string sfen_to_flipped_sfen(std::string sfen);
 
 	// 平手の初期盤面を設定する。
 	// siについては、上記のset()にある説明を読むこと。
@@ -245,6 +286,7 @@ public:
 	Thread* this_thread() const { return thisThread; }
 
 	// 盤面上の駒を返す。
+	// ※ sq == SQ_NBの時、NO_PIECEが返ることは保証されている。
 	Piece piece_on(Square sq) const { ASSERT_LV3(sq <= SQ_NB); return board[sq]; }
 
 	// ある升に駒がないならtrueを返す。
@@ -311,31 +353,47 @@ public:
 	// ※　mの移動元の駒が現在の手番の駒でなければ、MOVE_NONEが返ることは保証される。
 	// ※  mの移動元に駒がない場合も、MOVE_NONEが返ることは保証される。
 	Move to_move(Move16 m) const;
-	
+
+	// 1. ENABLE_QUICK_DRAWがdefineされている時
+	//		この関数は無視される。
+	//
+	// 2. ENABLE_QUICK_DRAWがdefineされていない時
+	// 　　is_repetition() , has_repeted()で最大で何手前からの千日手をチェックするか。デフォルト16手。
+	// 
+	// ※　これを MAX_PLY に設定すると初手からのチェックになるが、将棋はチェスと異なり
+	// 　　終局までの平均手数がわりと長いので、そこまでするとスピードダウンしてR40ほど弱くなる。
+	void set_max_repetition_ply(int ply){ max_repetition_ply = ply;}
+
 	// 普通の千日手、連続王手の千日手等を判定する。
 	// そこまでの局面と同一局面であるかを、局面を遡って調べる。
-	// rep_ply         : 遡る手数。デフォルトでは16手。あまり大きくすると速度低下を招く。
-	RepetitionState is_repetition(int rep_ply = 16) const;
+	// 
+	// 1. ENABLE_QUICK_DRAWがdefineされている時(大会用に少しでも強くしたい時)
+	// plyは無視される。遡る手数は16手固定。
+	//
+	// 2. ENABLE_QUICK_DRAWがdefineされていない時(正確に千日手の判定を行いたい時)
+	// 遡る手数は、set_max_repetition_ply()で設定された手数だけ遡る。
+	// ply         : rootからの手数。3回目の同一局面の出現まではrootよりは遡って千日手と判定しない。4回目は判定する。
+	RepetitionState is_repetition(int ply = 16) const;
 
-	// is_repetition()の、千日手が見つかった時に、原局面から何手遡ったかを返すバージョン。
+	// is_repetition()の、千日手が見つかった時に、現局面から何手遡ったかを返すバージョン。
 	// REPETITION_NONEではない時は、found_plyにその値が返ってくる。	// ※　定跡生成の時にしか使わない。
-	RepetitionState is_repetition(int rep_ply , int& found_ply) const;
+	RepetitionState is_repetition(int ply , int& found_ply) const;
+
+#if !defined(ENABLE_QUICK_DRAW)
+	// Tests whether there has been at least one repetition
+	// of positions since the last capture or pawn move.
+	bool has_repeated() const;
+#endif
 
 	// --- Bitboard
 
-	// 先手か後手か、いずれかの駒がある場所が1であるBitboardが返る。
-	Bitboard pieces() const { return byTypeBB[ALL_PIECES]; }
-
 	// c == BLACK : 先手の駒があるBitboardが返る
 	// c == WHITE : 後手の駒があるBitboardが返る
-	Bitboard pieces(Color c) const { ASSERT_LV3(is_ok(c)); return byColorBB[c]; }
-
+	Bitboard pieces(Color c) const;
+	
 	// ↑のtemplate版
 	template<Color C>
 	Bitboard pieces() const { ASSERT_LV3(is_ok(C)); return byColorBB[C]; }
-
-	// 駒がない升が1になっているBitboardが返る
-	Bitboard empties() const { return pieces() ^ Bitboard(1); }
 
 	// 駒に対応するBitboardを得る。
 	// ・引数でcの指定がないものは先後両方の駒が返る。
@@ -343,28 +401,24 @@ public:
 	//		PieceTypeの GOLDS(金相当の駒) , HDK(馬・龍・玉) , BISHOP_HORSE(角・馬) , ROOK_DRAGON(飛車・龍)などが指定できる。
 	//   ※　詳しくは、PieceTypeの定義を見ること。
 	// ・引数でPieceTypeを複数取るものはそれらの駒のBitboardを合成したものが返る。
+	// ・pr として ALL_PIECESを指定した場合、先手か後手か、いずれかの駒がある場所が1であるBitboardが返る。
 
-	Bitboard pieces(PieceType pr) const { ASSERT_LV3(pr < PIECE_BB_NB); return byTypeBB[pr]; }
-	Bitboard pieces(PieceType pr1, PieceType pr2) const { return pieces(pr1) | pieces(pr2); }
-	Bitboard pieces(PieceType pr1, PieceType pr2, PieceType pr3) const { return pieces(pr1) | pieces(pr2) | pieces(pr3); }
-	Bitboard pieces(PieceType pr1, PieceType pr2, PieceType pr3, PieceType pr4) const { return pieces(pr1) | pieces(pr2) | pieces(pr3) | pieces(pr4); }
-	Bitboard pieces(PieceType pr1, PieceType pr2, PieceType pr3, PieceType pr4, PieceType pr5) const { return pieces(pr1) | pieces(pr2) | pieces(pr3) | pieces(pr4) | pieces(pr5); }
+	Bitboard pieces(PieceType pr = ALL_PIECES) const { ASSERT_LV3(pr < PIECE_BB_NB); return byTypeBB[pr]; }
+	template<typename ...PieceTypes> Bitboard pieces(PieceType pt, PieceTypes... pts) const;
 
 	// ↑のtemplate版
 	template <PieceType PR>
 	Bitboard pieces() const { ASSERT_LV3(PR < PIECE_BB_NB); return byTypeBB[PR]; }
-
-	Bitboard pieces(Color c, PieceType pr) const { return pieces(pr) & pieces(c); }
-	Bitboard pieces(Color c, PieceType pr1, PieceType pr2) const { return pieces(pr1, pr2) & pieces(c); }
-	Bitboard pieces(Color c, PieceType pr1, PieceType pr2, PieceType pr3) const { return pieces(pr1, pr2, pr3) & pieces(c); }
-	Bitboard pieces(Color c, PieceType pr1, PieceType pr2, PieceType pr3, PieceType pr4) const { return pieces(pr1, pr2, pr3, pr4) & pieces(c); }
-	Bitboard pieces(Color c, PieceType pr1, PieceType pr2, PieceType pr3, PieceType pr4, PieceType pr5) const { return pieces(pr1, pr2, pr3, pr4, pr5) & pieces(c); }
+	template<typename ...PieceTypes> Bitboard pieces(Color c, PieceTypes... pts) const;
 
 	// ↑のtemplate版
 	template<Color C>
 	Bitboard pieces(PieceType pr) const { return pieces(pr) & pieces(C); }
 	template<Color C,PieceType PR>
 	Bitboard pieces() const { return pieces(PR) & pieces(C); }
+
+	// 駒がない升が1になっているBitboardが返る
+	Bitboard empties() const { return pieces() ^ Bitboard(1); }
 
 	// --- 王手
 
@@ -382,7 +436,9 @@ public:
 	Bitboard check_squares(PieceType pt) const { ASSERT_LV3(pt!= NO_PIECE_TYPE && pt < PIECE_TYPE_NB); return st->checkSquares[pt]; }
 
 	// c側の玉に対してpinしている駒
-	//Bitboard pinners(Color c) const;
+	// ※ pinされているではなく、pinしているということに注意。
+	// 　すなわち、pinされている駒が移動した時に、この大駒によって王が素抜きにあう。
+	Bitboard pinners(Color c) const { return st->pinners[c]; }
 
 	// c側の玉に対して、指し手mが空き王手となるのか。
 	bool is_discovery_check_on_king(Color c, Move m) const { return st->blockersForKing[c] & from_sq(m); }
@@ -420,11 +476,21 @@ public:
 	}
 #endif
 
-	// 升sに対して、c側の大駒に含まれる長い利きを持つ駒の利きを遮っている駒のBitboardを返す(先後の区別なし)
-	// ※　Stockfishでは、sildersを渡すようになっているが、大駒のcolorを渡す実装のほうが優れているので変更。
-	// [Out] pinnersとは、pinされている駒が取り除かれたときに升sに利きが発生する大駒である。これは返し値。
-	// また、升sにある玉は~c側のKINGであるとする。
-	Bitboard slider_blockers(Color c, Square s, Bitboard& pinners) const;
+
+	/// update_slider_blockers() calculates st->blockersForKing[c] and st->pinners[~c],
+	/// which store respectively the pieces preventing king of color c from being in check
+	/// and the slider pieces of color ~c pinning pieces of color c to the king.
+
+	// update_slider_blockers()はst->blockersForKing[c]およびst->pinners[~c]を計算します。
+	// これらはそれぞれ、色cの王が王手状態になるのを防ぐ駒と、色cの駒を王にピン留めする手番~cの
+	// スライダー駒を格納しています。
+	// ※　「ピン留め」とは、移動させた時に開き王手となること。
+	// 
+	// 注意)
+	// 	 王 歩 ^飛 ^飛
+	//  のようなケースにおいては、この両方の飛車がpinnersとして列挙される。(SEEの処理でこういう列挙がなされて欲しいので)
+
+	void update_slider_blockers(Color c) const;
 
 	// c側の駒Ptの利きのある升を表現するBitboardを返す。(MovePickerで用いている。)
 	template<Color C , PieceType Pt> Bitboard attacks_by() const;
@@ -539,6 +605,12 @@ public:
 	Key      key_after     (Move m) const;
 	HASH_KEY hash_key_after(Move m) const;
 
+#if defined(ENABLE_PAWN_HISTORY)
+	// 歩の陣形に対するhash key
+	// やねうら王ではbit0を手番に用いているので、ここを使わないように >> 1して値を返す。
+	Key pawn_key() const { return st->pawn_key() >> 1; }
+#endif
+
 	// --- misc
 
 	// 現局面で王手がかかっているか
@@ -621,12 +693,38 @@ public:
 	// 捕獲する指し手であるか。
 	bool capture(Move m) const { return !is_drop(m) && piece_on(to_sq(m)) != NO_PIECE; }
 
+
+	// Stockfishにはcapture_stage()というメソッドが追加された。下記のコード。
+	// これは、捕獲する指し手かQUEENにpromoteする指し手かのどちらかであるかを判定する。
+	// 将棋で言うとcapture_or_valuable_promotion()みたいなもの。
+
+	//// returns true if a move is generated from the capture stage
+	//// having also queen promotions covered, i.e. consistency with the capture stage move generation
+	//// is needed to avoid the generation of duplicate moves.
+	//bool capture_stage(Move m) const {
+	//  assert(is_ok(m));
+	//  return  capture(m) || promotion_type(m) == QUEEN;
+	//}
+
+	// →　互換性維持のために、capture_stageを定義。
+	bool capture_stage(Move m) const
+	{
+		//return capture_or_valuable_promotion(m);
+		//return capture_or_pawn_promotion(m);
+
+		// →　V7.73y3とy4,y5の比較。
+		// 単にcapture()にするのが一番良かった。
+
+		return capture(m);
+	}
+
 	// 入玉時の宣言勝ち
 	// Search::Limits.enteringKingRuleに基いて、宣言勝ちを行なう。
 	// 条件を満たしているとき、MOVE_WINや、玉を移動する指し手(トライルール時)が返る。さもなくば、MOVE_NONEが返る。
 	// mate1ply()から内部的に呼び出す。(そうするとついでに処理出来て良い)
 	// 32bit Moveが返る。
 	Move DeclarationWin() const;
+
 
 	// -- sfen化ヘルパ
 #if defined(USE_SFEN_PACKER)
@@ -690,18 +788,26 @@ public:
 	static void UnitTest(Test::UnitTester&);
 
 private:
-	// StateInfoの初期化(初期化するときに内部的に用いる)
-	void set_state(StateInfo* si) const;
+
+	/// Position::set_state() computes the hash keys of the position, and other
+	/// data that once computed is updated incrementally as moves are made.
+	/// The function is only used when a new position is set up
+
+	// Position::set_state()は、局面のハッシュキーおよび、
+	// 一度計算されると手が指されるたびに差分更新されるその他のデータを計算します。
+	// この関数は、新しい局面が設定されたときのみ使用されます。
+
+	void set_state() const;
 
 	// 王手になるbitboard等を更新する。set_state()とdo_move()のときに自動的に行われる。
 	// null moveのときは利きの更新を少し端折れるのでフラグを渡すことに。
 	template <bool doNullMove,Color Us>
-	void set_check_info(StateInfo* si) const;
+	void set_check_info() const;
 
 	template <bool doNullMove>
-	void set_check_info(StateInfo* si) const
+	void set_check_info() const
 	{
-		sideToMove == BLACK ? set_check_info<doNullMove, BLACK>(si) : set_check_info<doNullMove, WHITE>(si);
+		sideToMove == BLACK ? set_check_info<doNullMove, BLACK>() : set_check_info<doNullMove, WHITE>();
 	}
 
 	// do_move()の先後分けたもの。内部的に呼び出される。
@@ -806,11 +912,28 @@ private:
 	// undo_move()で前の局面に戻るときはStateInfo::previousから辿って戻る。
 	StateInfo* st;
 
+	// set_max_repetition_ply()で設定される、千日手の最大遡り手数
+	int max_repetition_ply = 16;
+
 #if defined(USE_EVAL_LIST)
 	// 評価関数で用いる駒のリスト
 	Eval::EvalList evalList;
 #endif
 };
+
+template<typename ...PieceTypes>
+inline Bitboard Position::pieces(PieceType pt, PieceTypes... pts) const {
+  return pieces(pt) | pieces(pts...);
+}
+
+inline Bitboard Position::pieces(Color c) const {
+  return byColorBB[c];
+}
+
+template<typename ...PieceTypes>
+inline Bitboard Position::pieces(Color c, PieceTypes... pts) const {
+  return pieces(c) & pieces(pts...);
+}
 
 // sに利きのあるc側の駒を列挙する。
 // (occが指定されていなければ現在の盤面において。occが指定されていればそれをoccupied bitboardとして)

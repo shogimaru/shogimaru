@@ -17,6 +17,8 @@ using namespace std;
 //  USI拡張コマンド "bench"(ベンチマーク)
 // ----------------------------------
 
+namespace {
+
 // benchmark用デフォルトの局面集
 const vector<string> BenchSfen =
 {
@@ -34,6 +36,21 @@ const vector<string> BenchSfen =
 	// cf. http://d.hatena.ne.jp/ak11/20110508/p1
 	"sfen l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w RGgsn5p 1",
 };
+
+} // namespace
+
+/// setup_bench() builds a list of UCI commands to be run by bench. There
+/// are five parameters: TT size in MB, number of search threads that
+/// should be used, the limit value spent for each position, a file name
+/// where to look for positions in FEN format, and the type of the limit:
+/// depth, perft, nodes and movetime (in milliseconds). Examples:
+///
+/// bench                            : search default positions up to depth 13
+/// bench 64 1 15                    : search default positions up to depth 15 (TT = 64MB)
+/// bench 64 1 100000 default nodes  : search default positions for 100K nodes each
+/// bench 64 1 20 default depth      : search default positions for depth 20
+/// bench 64 4 5000 current movetime : search current position with 4 threads for 5 sec
+/// bench 16 1 5 blah perft          : run a perft 5 on positions in file "blah"
 
 void bench_cmd(Position& current, istringstream& is)
 {
@@ -113,14 +130,17 @@ void bench_cmd(Position& current, istringstream& is)
 	if (Options.count("BookFile"))
 		Options["BookFile"] = string("no_book");
 
-	// ベンチマークモードにしておかないとPVの出力のときに置換表を漁られて探索に影響がある。
-	limits.bench = true;
-
 	// すべての合法手を生成するのか
 	limits.generate_all_legal_moves = Options["GenerateAllLegalMoves"];
 
 	// Optionsの影響を受けると嫌なので、その他の条件を固定しておく。
 	limits.enteringKingRule = EKR_NONE;
+
+	// ConsiderationModeをオフにしておかないとPV出力の時に置換表を漁るのでその時にdo_move()をして
+	// 探索ノード数が加算されてしまい、depth固定のbenchなのに探索ノード数が変化することがある。
+	limits.consideration_mode = false;
+	// 探索部でこっち⇓のオプションの値を見てlimits.consideration_modeに反映させるようなコードが書いてあるかも知れないので両方。
+	Options["ConsiderationMode"] = false;
 
 	// テスト用の局面
 	// "default"=デフォルトの局面、"current"=現在の局面、それ以外 = ファイル名とみなしてそのsfenファイルを読み込む
@@ -132,10 +152,12 @@ void bench_cmd(Position& current, istringstream& is)
 		SystemIO::ReadAllLines(fenFile, fens);
 
 	// 評価関数の読み込み等
-	is_ready();
+	// 
+	// 備考)
+	// is_ready()でSearch::clear()が呼び出されて、やねうら王探索部のSearch::clear()でTT::clear()と、Thread::clear()が呼び出されて、
+	// そのなかでhistory tableなどすべてのテーブルがクリアされることは保証されている。
 
-//	TT.clear();
-	// → is_ready()のなかでsearch::clear()が呼び出されて、そのなかでTT.clear()しているのでこの初期化は不要。
+	is_ready();
 
 	// トータルの探索したノード数
 #if !defined(YANEURAOU_ENGINE_DEEP)

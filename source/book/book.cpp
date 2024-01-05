@@ -124,8 +124,8 @@ namespace Book
 
 		// 起動時なので変換に要するオーバーヘッドは最小化したいので合法かのチェックはしない。
 
-		move = (move_str == "none" || move_str == "resign") ? MOVE_NONE : USI::to_move16(move_str);
-		ponder = (ponder_str == "none" || ponder_str == "resign") ? MOVE_NONE : USI::to_move16(ponder_str);
+		move   = (move_str   == "none" || move_str   == "None" || move_str   == "resign") ? MOVE_NONE : USI::to_move16(move_str  );
+		ponder = (ponder_str == "none" || ponder_str == "None" || ponder_str == "resign") ? MOVE_NONE : USI::to_move16(ponder_str);
 
 		return BookMove(move,ponder,value,depth,move_count);
 	}
@@ -157,6 +157,16 @@ namespace Book
 		sorted = false; // sort関係が崩れたのでフラグをfalseに戻しておく。
 	}
 
+	// [ASYNC] 他のbookをmergeする。
+	void MemoryBook::merge(MemoryBook& book2)
+	{
+		std::lock_guard<std::recursive_mutex> lock(mutex_);
+		book2.foreach([&](const std::string& sfen, const Book::BookMovesPtr book_moves)
+		{
+			this->append(sfen, book_moves);
+		});
+	}
+
 	// [ASYNC] このクラスの持つ指し手集合に対して、それぞれの局面を列挙する時に用いる
 	void BookMoves::foreach(std::function<void(BookMove&)> f)
 	{
@@ -186,7 +196,7 @@ namespace Book
 	}
 
 	// [ASYNC] このクラスの持つ定跡DBに対して、それぞれの局面を列挙する時に用いる
-	void MemoryBook::foreach(std::function<void(std::string /*sfen*/, BookMovesPtr)> f)
+	void MemoryBook::foreach(std::function<void(const std::string& /*sfen*/, const BookMovesPtr)> f)
 	{
 		std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -394,10 +404,10 @@ namespace Book
 		if (writer.Open(filename).is_not_ok())
 			return Tools::Result(Tools::ResultCode::FileOpenError);
 
-		cout << endl << "write " + filename << endl;
+		cout << "write " + filename << endl;
 
 		// バージョン識別用文字列
-		writer.WriteLine("#YANEURAOU-DB2016 1.00");
+		writer.WriteLine(BookDBHeader2016_100);
 
 		vector<pair<string, BookMovesPtr> > vectored_book;
 
@@ -503,12 +513,178 @@ namespace Book
 	// [ASYNC] メモリに保持している定跡に局面を一つ追加する。
 	//   book_body[sfen] = ptr;
 	// と等価。
-	void MemoryBook::append(const std::string& sfen, const Book::BookMovesPtr& ptr)
+	void MemoryBook::append(const std::string& sfen, const Book::BookMovesPtr ptr)
 	{
 		std::lock_guard<std::recursive_mutex> lock(mutex_);
 		book_body[sfen] = ptr;
 	}
 
+	// 反転された指し手を登録した新規エントリーを作成するヘルパー関数。
+	BookMovesPtr make_flipped_bookmoves(BookMovesPtr pt)
+	{
+		BookMovesPtr entry(new BookMoves());
+		pt->foreach([&](BookMove& bm)
+			{
+				// 盤面を反転させた指し手として設定する。
+				// ponderがMOVE_NONEでもflip_move()がうまく動作することは保証されている。
+				BookMove flip_book_move(flip_move(bm.move), flip_move(bm.ponder), bm.value , bm.depth , bm.move_count);
+				entry->push_back(flip_book_move);
+			}
+		);
+		entry->sort_moves();
+		return entry;
+	};
+
+	// sfenで指定された局面の情報を定跡DBファイルにon the flyで探して、それを返す。
+	BookMovesPtr MemoryBook::find_bookmoves_on_the_fly(string sfen)
+	{
+		// ディスクから読み込むなら、いずれにせよ、新規エントリーを作成してそれを返す必要がある。
+		BookMovesPtr pml_entry(new BookMoves());
+
+		// IgnoreBookPlyのときは末尾の手数は取り除いておく。
+		// read_book()で取り除くと、そのあと書き出すときに手数が消失するのでまずい。(気がする)
+		sfen = trim(sfen);
+
+		// ファイル自体はオープンされてして、ファイルハンドルはfsだと仮定して良い。
+
+		// ファイルサイズ取得
+		// C++的には未定義動作だが、これのためにsys/stat.hをincludeしたくない。
+		// ここでfs.clear()を呼ばないとeof()のあと、tellg()が失敗する。
+		fs.clear();
+		fs.seekg(0, std::ios::beg);
+		auto file_start = fs.tellg();
+
+		fs.clear();
+		fs.seekg(0, std::ios::end);
+
+		// ファイルサイズ
+		auto file_size = s64(fs.tellg() - file_start);
+
+		// 与えられたseek位置から"sfen"文字列を探し、それを返す。どこまでもなければ""が返る。
+		// hackとして、seek位置は-2しておく。(1行読み捨てるので、seek_fromぴったりのところに
+		// "sfen"から始まる文字列があるとそこを読み捨ててしまうため。-2してあれば、そこに
+		// CR+LFがあるはずだから、ここを読み捨てても大丈夫。)
+
+		// last_posには、現在のファイルポジションが返ってくる。
+		// ※　実際の位置より改行コードのせいで少し手前である可能性はある。
+		// ftell()を用いると、MSYS2 + g++ 環境でtellgが嘘を返す(getlineを呼び出した時に内部的に
+		// bufferingしているため(?)、かなり先のファイルポジションを返す)ので自前で計算する。
+		auto next_sfen = [&](s64 seek_from , s64& last_pos)
+		{
+			string line;
+
+			seek_from = std::max( s64(0), seek_from - 2);
+
+			// 前回のgetline()でファイル末尾までいくとeofフラグが立つのでこれをクリアする必要がある。
+			fs.clear();
+			fs.seekg(seek_from , fstream::beg);
+
+			// --- 1行読み捨てる
+
+			// seek_from == 0の場合も、ここで1行読み捨てられるが、1行目は
+			// ヘッダ行であり、問題ない。
+			getline(fs, line);
+
+			last_pos = seek_from + (s64)line.size() + 1;
+			// 改行コードが1文字はあるはずだから、+1しておく。
+
+			// getlineはeof()を正しく反映させないのでgetline()の返し値を用いる必要がある。
+			while (getline(fs, line))
+			{
+				last_pos += s64(line.size()) + 1;
+
+				if (!line.compare(0, 4, "sfen"))
+				{
+					// ios::binaryつけているので末尾に'\r'が付与されている。禿げそう。
+					// →　trim()で吸収する。(trimがStringExtension::trim_number()を呼び出すがそちらで吸収される)
+					return trim(line.substr(5));
+					// "sfen"という文字列は取り除いたものを返す。
+					// IgnoreBookPly == trueのときは手数の表記も取り除いて比較したほうがいい。
+				}
+			}
+			return string();
+		};
+
+		// バイナリサーチ
+		//
+		// 区間 [s,e) で解を求める。現時点での中間地点がm。
+		// 解とは、探しているsfen文字列が書いてある行の先頭のファイルポジションのことである。
+		//
+		// next_sfen()でm以降にある"sfen"で始まる行を読み込んだ時、そのあとのファイルポジションがlast_pos。
+
+		s64 s = 0, e = file_size, m , last_pos;
+		// s,eは無符号型だと、s - 2のような式が負にならないことを保証するのが面倒くさい。
+		// こういうのを無符号型で扱うのは筋が悪い。
+
+		while (true)
+		{
+			m = (s + e) / 2;
+
+			auto sfen2 = next_sfen(m, last_pos);
+			if (sfen2 == "" || sfen < sfen2) {
+
+				// 左(それより小さいところ)を探す
+				e = m;
+
+			} else if (sfen > sfen2) {
+
+				// 右(それより大きいところ)を探す
+
+				// next_sfen()のなかでgetline()し終わった時の位置より後ろに解がある。
+				// ここでftell()を使いたいが、上に書いた理由で嘘が返ってくるようだ。
+				s = last_pos;
+
+			} else {
+				// 見つかった！
+				break;
+			}
+
+			// 40バイトより小さなsfenはありえないので、この範囲に２つの"sfen"で始まる文字列が
+			// 入っていないことは保証されている。
+			// ゆえに、探索範囲がこれより小さいならsの先頭から調べて("sfen"と書かれている文字列を探して)終了。
+			if (s + 40 > e)
+			{
+				if ( next_sfen(s, last_pos) == sfen)
+					// 見つかった！
+					break;
+
+				// 見つからなかった
+				return BookMovesPtr();
+			}
+
+		}
+		// 見つけた処理
+
+		// read_bookとほとんど同じ読み込み処理がここに必要。辛い。
+
+		// sfen文字列が合致したところまでは確定しており、そこまでfileのseekは完了している。
+		// その直後に指し手が書かれているのでそれをgetline()で読み込めば良い。
+
+		while (!fs.eof())
+		{
+			string line;
+			getline(fs, line);
+
+			// バージョン識別文字列(とりあえず読み飛ばす)
+			if (line.length() >= 1 && line[0] == '#')
+				continue;
+
+			// コメント行(とりあえず読み飛ばす)
+			if (line.length() >= 2 && line.substr(0, 2) == "//")
+				continue;
+
+			// 次のsfenに遭遇したらこれにて終了。
+			if (  (line.length() >= 5 && line.substr(0, 5) == "sfen ")
+				|| line.length() == 0 /* 空行かeofか.. */)
+			{
+				break;
+			}
+
+			pml_entry->push_back(BookMove::from_string(line));
+		}
+		pml_entry->sort_moves();
+		return pml_entry;
+	}
 
 	BookMovesPtr MemoryBook::find(const Position& pos)
 	{
@@ -577,147 +753,19 @@ namespace Book
 
 			if (on_the_fly)
 			{
-				// ディスクから読み込むなら、いずれにせよ、新規エントリーを作成してそれを返す必要がある。
-				BookMovesPtr pml_entry(new BookMoves());
-
-				// IgnoreBookPlyのときは末尾の手数は取り除いておく。
-				// read_book()で取り除くと、そのあと書き出すときに手数が消失するのでまずい。(気がする)
-				sfen = trim(sfen);
-
-				// ファイル自体はオープンされてして、ファイルハンドルはfsだと仮定して良い。
-
-				// ファイルサイズ取得
-				// C++的には未定義動作だが、これのためにsys/stat.hをincludeしたくない。
-				// ここでfs.clear()を呼ばないとeof()のあと、tellg()が失敗する。
-				fs.clear();
-				fs.seekg(0, std::ios::beg);
-				auto file_start = fs.tellg();
-
-				fs.clear();
-				fs.seekg(0, std::ios::end);
-
-				// ファイルサイズ
-				auto file_size = s64(fs.tellg() - file_start);
-
-				// 与えられたseek位置から"sfen"文字列を探し、それを返す。どこまでもなければ""が返る。
-				// hackとして、seek位置は-2しておく。(1行読み捨てるので、seek_fromぴったりのところに
-				// "sfen"から始まる文字列があるとそこを読み捨ててしまうため。-2してあれば、そこに
-				// CR+LFがあるはずだから、ここを読み捨てても大丈夫。)
-
-				// last_posには、現在のファイルポジションが返ってくる。
-				// ※　実際の位置より改行コードのせいで少し手前である可能性はある。
-				// ftell()を用いると、MSYS2 + g++ 環境でtellgが嘘を返す(getlineを呼び出した時に内部的に
-				// bufferingしているため(?)、かなり先のファイルポジションを返す)ので自前で計算する。
-				auto next_sfen = [&](s64 seek_from , s64& last_pos)
+				auto entry = find_bookmoves_on_the_fly(sfen);
+				if (entry == nullptr)
 				{
-					string line;
-
-					seek_from = std::max( s64(0), seek_from - 2);
-					fs.seekg(seek_from , fstream::beg);
-
-					// --- 1行読み捨てる
-
-					// seek_from == 0の場合も、ここで1行読み捨てられるが、1行目は
-					// ヘッダ行であり、問題ない。
-					getline(fs, line);
-					last_pos = seek_from + (s64)line.size() + 1;
-					// 改行コードが1文字はあるはずだから、+1しておく。
-
-					// getlineはeof()を正しく反映させないのでgetline()の返し値を用いる必要がある。
-					while (getline(fs, line))
+					// FlippedBookが有効なら、反転させた局面にhitするか調べる。
+					if (Options["FlippedBook"])
 					{
-						last_pos += s64(line.size()) + 1;
-
-						if (!line.compare(0, 4, "sfen"))
-						{
-							// ios::binaryつけているので末尾に'\r'が付与されている。禿げそう。
-							// →　trim()で吸収する。(trimがStringExtension::trim_number()を呼び出すがそちらで吸収される)
-							return trim(line.substr(5));
-							// "sfen"という文字列は取り除いたものを返す。
-							// IgnoreBookPly == trueのときは手数の表記も取り除いて比較したほうがいい。
-						}
+						entry = find_bookmoves_on_the_fly(Position::sfen_to_flipped_sfen(sfen));
+						// 指し手をflipさせる
+						if (entry != nullptr)
+							entry = make_flipped_bookmoves(entry);
 					}
-					return string();
-				};
-
-				// バイナリサーチ
-				//
-				// 区間 [s,e) で解を求める。現時点での中間地点がm。
-				// 解とは、探しているsfen文字列が書いてある行の先頭のファイルポジションのことである。
-				//
-				// next_sfen()でm以降にある"sfen"で始まる行を読み込んだ時、そのあとのファイルポジションがlast_pos。
-
-				s64 s = 0, e = file_size, m , last_pos;
-				// s,eは無符号型だと、s - 2のような式が負にならないことを保証するのが面倒くさい。
-				// こういうのを無符号型で扱うのは筋が悪い。
-
-				while (true)
-				{
-					m = (s + e) / 2;
-
-					auto sfen2 = next_sfen(m, last_pos);
-					if (sfen2 == "" || sfen < sfen2) {
-
-						// 左(それより小さいところ)を探す
-						e = m;
-
-					} else if (sfen > sfen2) {
-
-						// 右(それより大きいところ)を探す
-
-						// next_sfen()のなかでgetline()し終わった時の位置より後ろに解がある。
-						// ここでftell()を使いたいが、上に書いた理由で嘘が返ってくるようだ。
-						s = last_pos;
-
-					} else {
-						// 見つかった！
-						break;
-					}
-
-					// 40バイトより小さなsfenはありえないので、この範囲に２つの"sfen"で始まる文字列が
-					// 入っていないことは保証されている。
-					// ゆえに、探索範囲がこれより小さいなら先頭から調べて("sfen"と書かれている文字列を探して)終了。
-					if (s + 40 > e)
-					{
-						if ( next_sfen(s, last_pos) == sfen)
-							// 見つかった！
-							break;
-
-						// 見つからなかった
-						return BookMovesPtr();
-					}
-
 				}
-				// 見つけた処理
-
-				// read_bookとほとんど同じ読み込み処理がここに必要。辛い。
-
-				// sfen文字列が合致したところまでは確定しており、そこまでfileのseekは完了している。
-				// その直後に指し手が書かれているのでそれをgetline()で読み込めば良い。
-
-				while (!fs.eof())
-				{
-					string line;
-					getline(fs, line);
-
-					// バージョン識別文字列(とりあえず読み飛ばす)
-					if (line.length() >= 1 && line[0] == '#')
-						continue;
-
-					// コメント行(とりあえず読み飛ばす)
-					if (line.length() >= 2 && line.substr(0, 2) == "//")
-						continue;
-
-					// 次のsfenに遭遇したらこれにて終了。
-					if (line.length() >= 5 && line.substr(0, 5) == "sfen ")
-					{
-						break;
-					}
-
-					pml_entry->push_back(BookMove::from_string(line));
-				}
-				pml_entry->sort_moves();
-				return pml_entry;
+				return entry;
 
 			} else {
 
@@ -728,6 +776,17 @@ namespace Book
 					// メモリ上に丸読みしてあるので参照透明だと思って良い。
 					it->second->sort_moves();
 					return BookMovesPtr(it->second);
+				}
+
+				// FlippedBookが有効なら、反転させた局面にhitするか調べる。
+				if (Options["FlippedBook"])
+				{
+					it = book_body.find(trim(Position::sfen_to_flipped_sfen(sfen)));
+					if (it != book_body.end())
+					{
+						// hitしたので反転された指し手を登録した新規エントリーを作成してそれを返す。
+						return make_flipped_bookmoves(it->second);
+					}
 				}
 
 				// 空のentryを返す。
@@ -994,18 +1053,15 @@ namespace Book
 		// 例) 局面図が同じなら、DBの36手目の局面に40手目でもヒットする。
 		// これ変更したときに定跡ファイルの読み直しが必要になるのだが…(´ω｀)
 		o["IgnoreBookPly"] << Option(false);
+
+		// 反転させた局面が定跡DBに登録されていたら、それにヒットするようになるオプション。
+		o["FlippedBook"] << Option(true);
 	}
 
 	// 与えられたmで進めて定跡のpv文字列を生成する。
-	string BookMoveSelector::pv_builder(Position& pos, Move16 m16 , int depth)
+	string BookMoveSelector::pv_builder(Position& pos, Move16 m16 , int rest_ply)
 	{
-		// 千日手検出
-		auto rep = pos.is_repetition(MAX_PLY);
-		if (rep != REPETITION_NONE)
-		{
-			// 千日手でPVを打ち切るときはその旨を表示(USI拡張)
-			return " " + to_usi_string(rep);
-		}
+		ASSERT_LV3(rest_ply > 0);
 
 		string result = "";
 
@@ -1016,24 +1072,58 @@ namespace Book
 			StateInfo si;
 			pos.do_move(m, si);
 
-			Move16 bestMove16, ponderMove16;
-			if (!probe_impl(pos, true, bestMove16, ponderMove16 , true /* 強制的にhitさせる */))
-				goto UNDO;
+			result = " " + m16.to_usi_string();
+			// 残り出力するPV長さをデクリメントしておく。
+			--rest_ply;
 
-			if (depth > 0)
-				result = pv_builder(pos, bestMove16 , depth - 1); // さらにbestMoveで指し手を進める。
+			// 千日手検出
+			auto rep = pos.is_repetition(MAX_PLY);
+			if (rep != REPETITION_NONE)
+			{
+				// 千日手でPVを打ち切るときはその旨を表示(USI拡張)
+				result += " " + to_usi_string(rep);
 
-			result = " " + bestMove16.to_usi_string()
-				+ ((result == "" /* is leaf node? */) ? (" " + ponderMove16.to_usi_string()) : result);
+			} else {
 
-		UNDO:;
+				// さらに指し手を進める
+				Move16 bestMove16, ponderMove16;
+				Value value;
+				if (probe_impl(pos, true, bestMove16, ponderMove16, value, true /* 強制的にhitさせる */))
+				{
+					// hitした
+
+					string result2;
+					if (rest_ply >= 1)
+					{
+						// まだ表示すべき手数が残っているので再帰的にさらにbestMoveで指し手を進める。
+						result2 = pv_builder(pos, bestMove16 , rest_ply);
+
+						// resultの文字がないならそこでPVの末尾なのでponderがあればそれを出力。
+						if (result2.empty())
+						{
+							// result2がemptyということはPVを出力しなかったということなのでrest_plyは消費していない。
+							// だから、
+							// 1. rest_plyの残りがあるならもう1手は出力しないといけないのでponderを出力して良い。
+							// 2. 但し、この時、ponderが登録されていない(MOVE_NONE)なら出力しない。
+							if (rest_ply >= 1 && ponderMove16 != MOVE_NONE)
+								result += " " + ponderMove16.to_usi_string();
+
+						} else {
+							result += result2;
+						}
+
+						//--rest_ply;
+						// ↑このあと用いないので更新不要。
+					}
+				}
+			}
 			pos.undo_move(m);
 		}
 		return result;
 	}
 
 	// probe()の下請け
-	bool BookMoveSelector::probe_impl(Position& rootPos, bool silent , Move16& bestMove , Move16& ponderMove , bool forceHit)
+	bool BookMoveSelector::probe_impl(Position& rootPos, bool silent , Move16& bestMove , Move16& ponderMove , Value& value, bool forceHit)
 	{
 		if (!forceHit)
 		{
@@ -1106,6 +1196,7 @@ namespace Book
 
 		if (!silent)
 		{
+			// PVとして出力する長さ(手数)
 			int pv_moves = (int)Options["BookPvMoves"];
 
 			for (size_t i = 0; i < move_list.size() ; ++ i)
@@ -1113,19 +1204,6 @@ namespace Book
 				// PVを構築する。pv_movesで指定された手数分だけ表示する。
 				// bestMoveを指した局面でさらに定跡のprobeを行なって…。
 				auto& it = move_list[i];
-
-				string pv_string;
-				if (pv_moves <= 1)
-					pv_string = it.move.to_usi_string();
-				else if (pv_moves == 2)
-					pv_string =it.move.to_usi_string() + " " + it.ponder.to_usi_string();
-				else {
-					// 次の局面で定跡にhitしない場合があって、その場合、この局面のnextMoveを出力してやる必要がある。
-					auto rest = pv_builder(rootPos, it.move, pv_moves - 3);
-					pv_string = (rest != "") ?
-						(it.move.to_usi_string() + rest) :
-						(it.move.to_usi_string() + " " + it.ponder.to_usi_string());
-				}
 
 				// USIの"info"で読み筋を出力するときは"pv"サブコマンドはサブコマンドの一番最後にしなければならない。
 				// 複数出力するときに"multipv"は連番なのでこれが先頭に来ているほうが見やすいと思うので先頭に"multipv"を出力する。
@@ -1135,7 +1213,7 @@ namespace Book
 					<< " multipv " << (i + 1)
 #endif
 					<< " score cp " << it.value << " depth " << it.depth
-					<< " pv " << pv_string
+					<< " pv" << pv_builder(rootPos, it.move, pv_moves)
 					<< " (" << fixed << std::setprecision(2) << (100 * it.move_count / double(move_count_total)) << "%" << ")" // 採択確率
 					<< sync_endl;
 
@@ -1257,8 +1335,9 @@ namespace Book
 				}
 			}
 
-			bestMove = bestBookMove.move;
+			bestMove   = bestBookMove.move;
 			ponderMove = bestBookMove.ponder;
+			value      = Value(bestBookMove.value);
 
 			// ponderが登録されていなければ、bestMoveで一手進めてそこの局面のbestを拾ってくる。
 			if (!is_ok((Move)ponderMove.to_u16()))
@@ -1290,7 +1369,8 @@ namespace Book
 	{
 		const bool silent = true;
 		Move16 bestMove16, ponderMove16;
-		if (!probe_impl(pos, silent, bestMove16, ponderMove16))
+		Value value;
+		if (!probe_impl(pos, silent, bestMove16, ponderMove16, value))
 			return MOVE_NONE;
 
 		Move bestMove = pos.to_move(bestMove16);
@@ -1309,8 +1389,9 @@ namespace Book
 			return false;
 
 		Move16 bestMove16, ponderMove16;
+		Value value;
 		auto& pos = th.rootPos;
-		if (probe_impl(pos , Limits.silent, bestMove16, ponderMove16))
+		if (probe_impl(pos , Limits.silent, bestMove16, ponderMove16, value))
 		{
 			auto & rootMoves = th.rootMoves;
 
@@ -1332,7 +1413,20 @@ namespace Book
 				// この意味では、
 				// MultiPVでの探索の時は定跡の上位の指し手をrootMoves[0..N-1]に反映させたほうが良いかも？
 
-				std::swap(rootMoves[0], *it_move);
+				auto& r = rootMoves[0];
+				std::swap(r, *it_move);
+
+				// 定跡の評価値はcp(centi-pawn)のはずだから、
+				// この逆変換をしたものを設定してやる。そうすると出力するときにcpに変換されてちょうど良くなる。
+				// ⇨　出力する逆変換の時の誤差あるの少し気持ち悪いか…。まあ仕方ないな…。定跡ファイルがcp単位になってるからな…。
+				// これは次のaspiration searchで少し探索効率が良くなるから、設定はしたいが…。
+
+				// cp_to_value()はscale downするから⇓変換後、このclampの範囲外に出ないことは保証される。scale upする場合は、注意。
+				value = std::clamp(value , VALUE_MATED_IN_MAX_PLY , VALUE_MATE_IN_MAX_PLY);
+#if defined(USE_PIECE_VALUE)
+				r.previousScore = r.usiScore = r.score = USI::cp_to_value(value);
+#endif
+				// ⇨　定跡の評価値0になってる方が、嬉しい意味もあるか…。
 
 				// 2手目の指し手も与えないとponder出来ない。
 				// 定跡ファイルに2手目が書いてあったなら、それをponder用に出力する。
@@ -1341,13 +1435,13 @@ namespace Book
 				//  普通の指し手でなければならない。これは、is_ok(Move)で判定できる。)
 				if (is_ok((Move)ponderMove16.to_u16()))
 				{
-					if (rootMoves[0].pv.size() <= 1)
-						rootMoves[0].pv.push_back(MOVE_NONE);
+					if (r.pv.size() <= 1)
+						r.pv.push_back(MOVE_NONE);
 
 					// これ32bit Moveに変換してあげるほうが親切なのか…。
 					StateInfo si;
 					pos.do_move(bestMove,si);
-					rootMoves[0].pv[1] = pos.to_move(ponderMove16);
+					r.pv[1] = pos.to_move(ponderMove16);
 					pos.undo_move(bestMove);
 				}
 				// この指し手を指す

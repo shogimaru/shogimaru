@@ -15,6 +15,8 @@ namespace Search { struct LimitsType; };
 // 定跡処理関連のnamespace
 namespace Book
 {
+	static const char* BookDBHeader2016_100 = "#YANEURAOU-DB2016 1.00";
+
 	// 将棋ソフト用の標準定跡ファイルフォーマットの提案 : http://yaneuraou.yaneu.com/2016/02/05/standard-shogi-book-format/
 
 	// ある局面における指し手1つ(定跡の局面での指し手を格納するのに用いる)
@@ -183,7 +185,7 @@ namespace Book
 		// [ASYNC] メモリに保持している定跡に局面を一つ追加する。
 		//   book_body[sfen] = ptr;
 		// と等価。すでに登録されているとしたら、それは置き換わる。
-		void append(const std::string& sfen, const Book::BookMovesPtr& ptr);
+		void append(const std::string& sfen, const Book::BookMovesPtr ptr);
 
 		// [ASYNC] book_bodyの局面sfenに対してBookMoveを一つ追加するヘルパー関数。
 		// 同じ局面に対して繰り返し、この関数を呼ぶぐらいなら、BookMovesに直接push_back()してから、このクラスのappend()を呼ぶべき。
@@ -191,8 +193,11 @@ namespace Book
 		//             このフラグがfalseならば、その局面ですでに同じmoveの指し手が登録されている場合は何もしない。
 		void insert(const std::string& sfen, const BookMove& bp , bool overwrite = true);
 
+		// [ASYNC] 他のbookをmergeする。
+		void merge(MemoryBook& book2);
+
 		// [ASYNC] このクラスの持つ定跡DBに対して、それぞれの局面を列挙する時に用いる
-		void foreach(std::function<void(std::string /*sfen*/, BookMovesPtr)> f);
+		void foreach(std::function<void(const std::string& /*sfen*/, const Book::BookMovesPtr)> f);
 
 		// 保持している局面数を返す。これは、on the flyではない状態でread_book()した時にのみ有効。
 		size_t size() const { return book_body.size(); }
@@ -212,6 +217,9 @@ namespace Book
 		// Options["IgnoreBookPly"] == trueのときは、さらに数字も除去する。
 		// sfen文字列の末尾にある手数を除去する目的。
 		std::string trim(std::string input) const;
+
+		// sfenで指定された局面の情報を定跡DBファイルにon the flyで探して、それを返すヘルパー関数。
+		BookMovesPtr find_bookmoves_on_the_fly(std::string sfen);
 
 		// メモリに丸読みせずにfind()のごとにファイルを調べにいくのか。
 		// これは思考エンジン設定のOptions["BookOnTheFly"]の値を反映したもの。
@@ -295,12 +303,17 @@ namespace Book
 		// bestMoveが合法手であることは保証される。
 		// GenerateAllLegalMovesがfalseの時、歩の不成の指し手を返さないことも保証する。
 		// 但し、ponderMoveが合法手であることは保証しない。
-		bool probe_impl(Position& rootPos, bool silent, Move16& bestMove, Move16& ponderMove , bool forceHit = false);
+		//
+		// 以下の3つの変数は、この関数がtrueを返した時のみ有効。
+		// bestMove   : 今回選択された指し手
+		// ponderMove : bestMoveの次の定跡の指し手 
+		// value      : bestMoveの評価値。
+		bool probe_impl(Position& rootPos, bool silent, Move16& bestMove, Move16& ponderMove , Value& value , bool forceHit = false);
 
 		// 定跡のpv文字列を生成して返す。
-		// m : 局面posで進める指し手
-		// depth : 残りdepth
-		std::string pv_builder(Position& pos, Move16 m , int depth);
+		// m        : 局面posをこの指し手で進める
+		// rest_ply : 残り出力するPVの手数
+		std::string pv_builder(Position& pos, Move16 m , int rest_ply);
 
 		AsyncPRNG prng;
 	};
@@ -324,7 +337,8 @@ namespace BookTools
 
 	// 平手、駒落ちの開始局面集
 	// ここで返ってきた配列の、[0]は平手のsfenであることは保証されている。
-	// 先頭に"sfen "とついているので注意。
+	// 先頭に"sfen "とついているのでこれはPosition::set()では設定できないから注意。
+	// Position::set()を用いるなら先頭の"sfen"の文字列を削るか、さもなくばfeed_position_string()を用いること。
 	std::vector<std::string> get_start_sfens();
 
 	// "position"コマンドに設定できるsfen文字列を渡して、そこから全合法手で１手進めたsfen文字列を取得する。

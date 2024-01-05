@@ -4,19 +4,26 @@
 [![Make CI (for Ubuntu Linux)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make.yml/badge.svg?event=push)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make.yml)
 [![Make CI (DeepLearning for Ubuntu Linux)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-deep-ubuntu.yml/badge.svg?event=push)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-deep-ubuntu.yml)
 [![NDK CI (for Android)](https://github.com/yaneurao/YaneuraOu/actions/workflows/ndk.yml/badge.svg?event=push)](https://github.com/yaneurao/YaneuraOu/actions/workflows/ndk.yml)
-[![Make CI (for MacOS)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-macos.yml/badge.svg?event=push)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-macos.yml)
+[![Make CI (for macOS)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-macos.yml/badge.svg?event=push)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-macos.yml)
 [![Make CI (for WebAssembly)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-wasm.yml/badge.svg?event=push)](https://github.com/yaneurao/YaneuraOu/actions/workflows/make-wasm.yml)
 
 # About this project
 
 YaneuraOu is the World's Strongest Shogi engine(AI player) , WCSC29 1st winner , educational and USI compliant engine.
 
-やねうら王は、WCSC29(世界コンピュータ将棋選手権/2019年)において優勝した世界最強の将棋の思考エンジンです。教育的でUSIプロトコルに準拠しています。
+やねうら王は、WCSC29(世界コンピュータ将棋選手権/2019年)、第4回世界将棋AI電竜戦本戦(2023年)などにおいて優勝した世界最強の将棋の思考エンジンです。教育的でUSIプロトコルに準拠しています。
 
 - [WCSC29、やねうら王優勝しました！](http://yaneuraou.yaneu.com/2019/05/06/wcsc29%E3%80%81%E3%82%84%E3%81%AD%E3%81%86%E3%82%89%E7%8E%8B%E5%84%AA%E5%8B%9D%E3%81%97%E3%81%BE%E3%81%97%E3%81%9F%EF%BC%81/)
+- [第4回世界将棋AI電竜戦本戦 優勝記](https://yaneuraou.yaneu.com/2023/12/10/won-the-4th-shogi-ai-denryu-tournament/)
+
 
 # やねうら王エンジンの大会での戦績
 
+- 2023年 第4回世界将棋AI電竜戦本戦 『水匠』優勝 (探索部やねうら王。やねうらおは、チームメンバーとして参加)
+- 2023年 第1回 マイナビニュース杯電竜戦ハードウェア統一戦 『水匠』優勝。(探索部やねうら王)
+- 2023年 第33回 世界コンピュータ将棋選手権(WCSC33)『やねうら王』準優勝。
+- 2023年 第4回世界将棋AI電竜戦TSEC4 ファイナル『やねうら王』相居飛車部門優勝。総合2位。
+- 2022年 第3回世界将棋AI電竜戦本戦 『水匠』優勝。(探索部やねうら王)
 - 2021年 第2回世界将棋AI電竜戦TSEC 『水匠』総合優勝。(探索部やねうら王)
 - 2020年 第1回 世界コンピュータ将棋オンライン大会(WCSO1) 『水匠』優勝。(探索部やねうら王)
 - 2019年 世界コンピュータ将棋選手権(WCSC29) 『やねうら王 with お多福ラボ2019』優勝。
@@ -29,11 +36,23 @@ YaneuraOu is the World's Strongest Shogi engine(AI player) , WCSC29 1st winner ,
 
 - USIプロトコルに準拠した思考エンジンです。
 - 入玉宣言勝ち、トライルール等にも対応しています。
-- Ponder(相手番で思考する)に対応しています。
+- Ponder(相手番で思考する)、StochasticPonder(確率的ponder)に対応しています。
+- MultiPV(複数の候補手を出力する)に対応しています。
 - 秒読み、フィッシャールールなど様々な持時間に対応しています。
 - 256スレッドのような超並列探索に対応しています。
-- 定跡にやねうら王標準定跡フォーマットを採用しています。
+- 定跡DBにやねうら王標準定跡フォーマットを採用しています。
+- 定跡DBのon the fly(メモリに丸読みしない)に対応しています。
+- 定跡DBの様々なメンテナンス用コマンドをサポートしています。
 - 置換表の上限サイズは33TB(実質的に無限)まで対応しています。
+- Windows、Ubuntu、macOS、ARMなど様々なプラットフォームをサポートしています。
+
+# ふかうら王の特長
+
+- dlshogi互換エンジンです。
+- やねうら王の思考エンジンオプションをサポートしています。
+- 定跡DBにやねうら王標準定跡フォーマットを採用しています。
+- 定跡DBのon the fly(メモリに丸読みしない)に対応しています。
+- GPU無しでも動作するDirectML版、TensorRT版を用意しています。
 
 # やねうら王の解説記事
 
