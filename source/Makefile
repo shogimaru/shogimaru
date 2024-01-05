@@ -1,9 +1,9 @@
 
 # === ビルドターゲット (build target) ===
 
-# normal     : 通常使用用
+# normal     : 通常使用版(配布用の実行ファイルはこちら)
 # evallearn  : 教師局面からの学習用
-# tournament : 大会で使う用
+# tournament : 大会で使う用(通常版よりややEloが高いが使える機能に制限がある)
 
 # === ビルドオプション (build options) ===
 
@@ -11,6 +11,8 @@
 # YANEURAOU_ENGINE_NNUE          : NNUE型評価関数(halfKP256),標準NNUE型
 # YANEURAOU_ENGINE_NNUE_KP256    : NNUE型評価関数(KP256)
 # YANEURAOU_ENGINE_NNUE_HALFKPE9 : NNUE型評価関数(halfKPE9)
+# YANEURAOU_ENGINE_NNUE_HALFKP_512X2_16_32 : NNUE型評価関数(halfkp_512x2-16-32)
+# YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_32 : NNUE型評価関数(halfkp_1024x2-8-32)
 # YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32 : NNUE型評価関数(halfkp_vm_256x2-32-32)
 # YANEURAOU_ENGINE_KPPT          : KPPT型評価関数
 # YANEURAOU_ENGINE_KPP_KKPT      : KPP_KKPT型評価関数
@@ -19,13 +21,20 @@
 # YANEURAOU_MATE_ENGINE          : やねうら王 詰将棋solver (2020/12/29～)
 # USER_ENGINE                    : USER定義エンジン
 
+# YANEURAOU_ENGINE_DEEP_TENSOR_RT_UBUNTU : ふかうら王(dlshogi互換エンジン) , TensorRT使用 , Ubuntu用build。
+#                                  ビルドを確認したDocker image → nvcr.io/nvidia/tensorrt:22.12-py3
+
+
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
 YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKPE9
+#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_512X2_16_32
+#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_32
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_KPPT
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_KPP_KKPT
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_MATERIAL
+#YANEURAOU_EDITION = YANEURAOU_ENGINE_DEEP_TENSOR_RT_UBUNTU
 #YANEURAOU_EDITION = TANUKI_MATE_ENGINE
 #YANEURAOU_EDITION = YANEURAOU_MATE_ENGINE
 #YANEURAOU_EDITION = USER_ENGINE
@@ -348,6 +357,7 @@ ifeq (,)
 		book/makebook2015.cpp                                                  \
 		book/makebook2019.cpp                                                  \
 		book/makebook2021.cpp                                                  \
+		book/makebook2023.cpp                                                  \
 		learn/learner.cpp                                                      \
 		learn/learning_tools.cpp                                               \
 		learn/multi_think.cpp
@@ -409,6 +419,7 @@ ifneq (,$(findstring YANEURAOU_ENGINE_DEEP,$(YANEURAOU_EDITION)))
 			OBJC_SOURCES += eval/deep/nn_coreml.mm
 
 		endif
+
 	endif
 
 	# 大して大きなファイルではないので全部追加する。
@@ -436,6 +447,12 @@ ifneq (,$(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)))
 
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKPE9)
 			CPPFLAGS += -DEVAL_NNUE_HALFKPE9
+
+		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKP_512X2_16_32)
+			CPPFLAGS += -DEVAL_NNUE_HALFKP_512X2_16_32
+
+		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_32)
+			CPPFLAGS += -DEVAL_NNUE_HALFKP_1024X2_8_32
 
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32)
 			CPPFLAGS += -DEVAL_NNUE_HALFKP_VM_256X2_32_32
