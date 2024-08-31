@@ -246,7 +246,7 @@ void RecordDialog::loadItem(QListWidgetItem *item)
 
 void RecordDialog::readRecord(const QString &hash)
 {
-    QString Url("https://shogidb2.com/games/%1");
+    QString Url("https://api.shogidb2.com/games/%1");
 #ifdef Q_OS_WASM
     Url.prepend("https://shogimaru.com/rd/?u=");
 #endif
@@ -275,15 +275,12 @@ void RecordDialog::parseRecordJson()
     }
 
     auto body = reply->readAll();
-    const QRegularExpression re("<script>\\s*var\\s*data\\s*=([^;]*);\\s*</script>");
-    auto match = re.match(body);
-    if (!match.hasMatch()) {
-        qCritical() << "Not match script tag " << __FILE__ << __LINE__;
+    if (body.isEmpty()) {
+        qCritical() << "No data. " << __FILE__ << __LINE__;
         return;
     }
 
-    //qDebug() << match.captured(1);
-    QJsonDocument doc = QJsonDocument::fromJson(match.captured(1).toUtf8());
+    QJsonDocument doc = QJsonDocument::fromJson(body);
     QJsonObject json = doc.object();
     auto array = json.value("moves").toArray();
     if (array.count() == 0) {
