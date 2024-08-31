@@ -35,7 +35,7 @@ const std::string config_info();
 // prefetch()は、与えられたアドレスの内容をL1/L2 cacheに事前に読み込む。
 // これはnon-blocking関数で、CPUがメモリに読み込むのを待たない。
 
-void prefetch(void* addr);
+void prefetch(const void* addr);
 
 // --------------------
 //  logger
@@ -215,7 +215,10 @@ struct PRNG
 
 		// time値とか、thisとか色々加算しておく。
 		s = (u64)(time(NULL)) + ((u64)(this) << 32)
-			+ (u64)(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+		//	+ (u64)(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+		// ⇨ MSYS2 + clang18でhigh_resolution_clock::now()を使うとセグフォで落ちるようになった。
+		//   代わりにsteady_clockを用いる。
+			+ (u64)std::chrono::steady_clock::now().time_since_epoch().count();
 	}
 
 	// 乱数を一つ取り出す。
@@ -1043,6 +1046,9 @@ namespace StringExtension
 	// sを文字列spで分割した文字列集合を返す。
 	extern std::vector<std::string> Split(const std::string& s , const std::string& sep);
 
+	// Pythonの delemiter.join(v) みたいなの。
+	// 例: v = [1,2,3] に対して ' '.join(v) == "1 2 3"
+	extern std::string Join(const std::vector<std::string>& v , const std::string& delimiter);
 };
 
 // --------------------

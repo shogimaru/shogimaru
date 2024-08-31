@@ -230,6 +230,7 @@ MovePicker::MovePicker(const Position& p, Move ttm, Depth d, const ButterflyHist
 MovePicker::MovePicker(const Position& p, Move ttm, Value th, const CapturePieceToHistory* cph)
 	: pos(p), captureHistory(cph) , ttMove(ttm), threshold(th)
 {
+
 	ASSERT_LV3(!pos.in_check());
 
 	// ProbCutにおいて、SEEが与えられたthresholdの値以上の指し手のみ生成する。
@@ -320,9 +321,8 @@ void MovePicker::score()
 			// → しかしこのあとsee_ge()の引数に使うのだが、see_ge()ではpromotionの価値を考慮してないので、
 			//    ここでpromotionの価値まで足し込んでしまうとそこと整合性がとれなくなるのか…。
 
-			m.value = (7 * int(Eval::CapturePieceValuePlusPromote(pos, m))
-					   + (*captureHistory)(pos.moved_piece_after(m), to_sq(m), type_of(pos.piece_on(to_sq(m)))))
-					  / 16;
+			m.value = 7 * int(Eval::CapturePieceValuePlusPromote(pos, m))
+					   + (*captureHistory)(pos.moved_piece_after(m), to_sq(m), type_of(pos.piece_on(to_sq(m))));
 			// →　係数を掛けたり全体を16で割ったりしているのは、
 			// このあと、GOOD_CAPTURE で、
 			//	return pos.see_ge(*cur, Value(-cur->value))
@@ -343,13 +343,13 @@ void MovePicker::score()
 			//Square    from = from_sq(m);
 			Square    to = to_sq(m);
 
-			m.value  =  2 * (*mainHistory)(pos.side_to_move(), from_to(m));
+			m.value  =      (*mainHistory)(pos.side_to_move(), from_to(m));
 #if defined(ENABLE_PAWN_HISTORY)
 			m.value +=  2 * (*pawnHistory)(pawn_structure(pos), pc, to);
 #endif
 			m.value +=  2 * (*continuationHistory[0])(pc,to);
 			m.value +=      (*continuationHistory[1])(pc,to);
-			m.value +=      (*continuationHistory[2])(pc,to) / 4;
+			m.value +=      (*continuationHistory[2])(pc,to) / 3;
 			m.value +=      (*continuationHistory[3])(pc,to);
 			m.value +=      (*continuationHistory[5])(pc,to);
 
@@ -459,6 +459,12 @@ Move MovePicker::select(Pred filter) {
 // skipQuiets : これがtrueだとQUIETな指し手は返さない。
 Move MovePicker::next_move(bool skipQuiets) {
 
+#if defined(USE_SUPER_SORT) && defined(USE_AVX2)
+	auto quiet_threshold = [](Depth d) { return -PARAM_MOVEPICKER_SORT_ALPHA1 * d; };
+#else
+	auto quiet_threshold = [](Depth d) { return -PARAM_MOVEPICKER_SORT_ALPHA2 * d; };
+#endif
+
 top:
 	switch (stage) {
 
@@ -508,9 +514,9 @@ top:
 				// 損をする(SEE値が悪い)captureの指し手はあとで試すためにendBadCapturesに移動させる
 
 				// moveは駒打ちではないからsee()の内部での駒打ちは判定不要だが…。
-                return pos.see_ge(*cur, Value(-cur->value)) ?
-						// 損をする捕獲する指し手はあとのほうで試行されるようにendBadCapturesに移動させる
-						true : (*endBadCaptures++ = *cur, false);
+                return pos.see_ge(*cur, Value(-cur->value / 18)) ? true
+																 : (*endBadCaptures++ = *cur, false);
+				// 損をする捕獲する指し手はあとのほうで試行されるようにendBadCapturesに移動させる
 			}))
 			return *(cur -1);
 
@@ -558,7 +564,7 @@ top:
 
 		if (!skipQuiets)
 		{
-			cur = endBadCaptures;
+			cur      = endBadCaptures;
 
 			/*
 			moves          : バッファの先頭
@@ -609,9 +615,9 @@ top:
 
 #if defined(USE_SUPER_SORT) && defined(USE_AVX2)
 			// SuperSortを有効にするとinsertion_sortと結果が異なるのでbenchコマンドの探索node数が変わって困ることがあるので注意。
-			partial_super_sort    (cur, endMoves, - PARAM_MOVEPICKER_SORT_TH1 /*1960*/ - PARAM_MOVEPICKER_SORT_ALPHA1 /*3130*/ * depth);
+			partial_super_sort    (cur, endMoves, quiet_threshold(depth));
 #else
-			partial_insertion_sort(cur, endMoves, - PARAM_MOVEPICKER_SORT_TH2 /*1960*/ - PARAM_MOVEPICKER_SORT_ALPHA2 /*3130*/ * depth);
+			partial_insertion_sort(cur, endMoves, quiet_threshold(depth));
 #endif
 
 			// →　sort時間がもったいないのでdepthが浅いときはscoreの悪い指し手を無視するようにしているだけで
@@ -678,10 +684,12 @@ top:
 										|| to_sq(*cur) == recaptureSquare; }))
 			return *(cur - 1);
 
-		// 指し手がなくて、depthが0(DEPTH_QS_CHECKS)より深いなら、これで終了
-		// depthが0のときは特別に、王手になる指し手も生成する。
-		if (depth != DEPTH_QS_CHECKS)
-			return MOVE_NONE;
+		// If we found no move and the depth is too low to try checks, then we have finished
+		// 指し手がなくて、depthがDEPTH_QS_NORMALより深いなら、これで終了
+		// depth == DEPTH_QS_NORMAL + 1 == DEPTH_QS_CHECKS のときは特別に
+		// 王手になる指し手も生成する。
+		if (depth <= DEPTH_QS_NORMAL)
+				return MOVE_NONE;
 
 		++stage;
 		[[fallthrough]];

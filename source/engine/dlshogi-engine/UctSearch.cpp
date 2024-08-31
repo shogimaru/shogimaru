@@ -439,7 +439,7 @@ namespace dlshogi
 				// rootPosはスレッドごとに用意されたもので、呼び出し元にインスタンスが存在しているので、
 				// 単純なコピーで問題ない。
 				Position pos;
-				memcpy(&pos, &rootPos, sizeof(Position));
+				std::memcpy(&pos, &rootPos, sizeof(Position));
 
 				// 1回プレイアウトする
 				visitor_batch.emplace_back();
@@ -550,7 +550,7 @@ namespace dlshogi
 
 		// 選んだ手を着手
 		StateInfo st;
-		pos->do_move(uct_child[next_index].move, st);
+		pos->do_move(uct_child[next_index].getMove(), st);
 
 		// Virtual Lossを加算
 		// ※　ノードの訪問回数をmove_countに加算。
@@ -625,15 +625,32 @@ namespace dlshogi
 
 #if !defined(LOG_PRINT)
 
-					bool isMate =
-						// Mate::mate_odd_ply()は自分に王手がかかっていても詰みを読めるはず…。
+					bool isMate = false;
 
-						// df-pn mate solverをleaf nodeで使う。
-						(options.leaf_dfpn_nodes_limit // 0なら詰み探索無効
-							&& is_ok(mate_solver.mate_dfpn(*pos, options.leaf_dfpn_nodes_limit)))
-							// MOVE_NONE(詰み不明) , MOVE_NULL(不詰)ではない 。これらはis_ok(m) == false
-						|| (pos->DeclarationWin() != MOVE_NONE)            // 宣言勝ち
-						;
+					// 浅いdfpnによる詰み探索
+
+					// 0なら詰み探索無効
+					if (options.leaf_dfpn_nodes_limit) {
+
+						// Mate::mate_odd_ply()は自分に王手がかかっていても詰みを読めるが遅い。
+						// leaf nodeでもdf-pn mate solverを用いることにする。
+
+						// MOVE_NONE(詰み不明) , MOVE_NULL(不詰)ではない 。これらはis_ok(m) == false
+						Move mate_move = mate_solver.mate_dfpn(*pos, options.leaf_dfpn_nodes_limit);
+						if (mate_move == MOVE_NULL)
+						{
+							// 不詰を証明したので、このnodeでは詰み探索をしたことを記録しておく。
+							// (そうするとPvMateでmate探索が端折れる)
+							child_node->dfpn_proven_unsolvable = true;
+						}
+						else {
+							isMate = is_ok(mate_move);
+						}
+					}
+					if (!isMate)
+						// 宣言勝ち
+						isMate = pos->DeclarationWin() != MOVE_NONE;
+
 #else
 					// mateが絡むとdlshogiと異なるノードを探索してしまうのでログ調査する時はオフにする。
 					bool isMate = (pos->DeclarationWin() != MOVE_NONE);            // 宣言勝ち
@@ -990,6 +1007,50 @@ namespace dlshogi
 			node->SetEvaled();
 		}
 	}
+
+
+	// 訪問回数が最大の子ノードを選択
+	unsigned int select_max_child_node(const Node* uct_node)
+	{
+		const ChildNode* uct_child = uct_node->child.get();
+
+		unsigned int select_index = 0;
+		NodeCountType max_count = 0;
+		const int child_num = uct_node->child_num;
+		NodeCountType child_win_count = 0;
+		NodeCountType child_lose_count = 0;
+
+		for (int i = 0; i < child_num; i++) {
+			if (uct_child[i].IsWin()) {
+				// 負けが確定しているノードは選択しない
+				if (child_win_count == NodeCountType(i) && uct_child[i].move_count > max_count) {
+					// すべて負けの場合は、探索回数が最大の手を選択する
+					select_index = i;
+					max_count = uct_child[i].move_count;
+				}
+				child_win_count++;
+				continue;
+			}
+			else if (uct_child[i].IsLose()) {
+				// 子ノードに一つでも負けがあれば、勝ちなので選択する
+				if (child_lose_count == 0 || uct_child[i].move_count > max_count) {
+					// すべて勝ちの場合は、探索回数が最大の手を選択する
+					select_index = i;
+					max_count = uct_child[i].move_count;
+				}
+				child_lose_count++;
+				continue;
+			}
+
+			if (child_lose_count == 0 && uct_child[i].move_count > max_count) {
+				select_index = i;
+				max_count = uct_child[i].move_count;
+			}
+		}
+
+		return select_index;
+	}
+
 }
 
 

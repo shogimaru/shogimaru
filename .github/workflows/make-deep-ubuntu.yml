@@ -11,10 +11,11 @@ on:
 
 jobs:
   build-ubuntu:
-    # ubuntu-latest = ubuntu-20.04
+    # ubuntu-latest = ubuntu-24.04
     # https://docs.github.com/ja/actions/using-github-hosted-runners/about-github-hosted-runners
-    # https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+    # https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md
 
     strategy:
       matrix:
@@ -22,12 +23,7 @@ jobs:
           - YANEURAOU_ENGINE_DEEP_ORT_CPU
           - YANEURAOU_ENGINE_DEEP_TENSOR_RT_UBUNTU
         compiler:
-          - g++-10
           - g++-11
-          - clang++-11
-          - clang++-12
-          - clang++-13
-          - clang++-14
           - clang++-15
         target:
           - normal
@@ -40,66 +36,18 @@ jobs:
         with:
           path: main
 
-      - name: install g++-10
-        # Ubuntu 20.04
-        run: |
-          sudo cat /etc/apt/sources.list
-          sudo ls -R /etc/apt/sources.list.d
-          sudo apt update
-          sudo apt install g++-10
-        if: ${{ matrix.compiler == 'g++-10' }}
       - name: install g++-11
-        #
         run: |
-          # sudo curl "https://keyserver.ubuntu.com/pks/lookup?search=0x1e9377a2ba9ef27f&op=get" -o /usr/share/keyrings/ubuntu-toolchain-r.gpg.asc
-          # echo "deb [signed-by=/usr/share/keyrings/ubuntu-toolchain-r.gpg.asc] http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/ubuntu-toolchain-r-test-focal.list
-          sudo cat /etc/apt/sources.list
-          sudo ls -R /etc/apt/sources.list.d
+          # sudo cat /etc/apt/sources.list
+          # sudo ls -R /etc/apt/sources.list.d
           sudo apt update
           sudo apt install g++-11
         if: ${{ matrix.compiler == 'g++-11' }}
-      - name: install clang-11
-        # Ubuntu 20.04
-        run: |
-          sudo cat /etc/apt/sources.list
-          sudo ls -R /etc/apt/sources.list.d
-          sudo apt update
-          sudo apt install clang-11 libomp-11-dev
-        if: ${{ matrix.compiler == 'clang++-11' }}
-      - name: install clang-12
-        # Ubuntu 20.04 or LLVM APT
-        run: |
-          sudo cat /etc/apt/sources.list
-          sudo ls -R /etc/apt/sources.list.d
-          sudo apt update
-          sudo apt install clang-12 libomp-12-dev
-        if: ${{ matrix.compiler == 'clang++-12' }}
-      - name: install clang-13
-        # LLVM APT
-        run: |
-          # install clang-13
-          wget https://apt.llvm.org/llvm.sh
-          sudo bash ./llvm.sh 13 all
-          sudo cat /etc/apt/sources.list
-          sudo ls -R /etc/apt/sources.list.d
-        if: ${{ matrix.compiler == 'clang++-13' }}
-      - name: install clang-14
-        # LLVM APT
-        run: |
-          # install clang-14
-          wget https://apt.llvm.org/llvm.sh
-          sudo bash ./llvm.sh 14 all
-          sudo cat /etc/apt/sources.list
-          sudo ls -R /etc/apt/sources.list.d
-        if: ${{ matrix.compiler == 'clang++-14' }}
+
       - name: install clang-15
-        # LLVM APT
         run: |
-          # install clang-15
-          wget https://apt.llvm.org/llvm.sh
-          sudo bash ./llvm.sh 15 all
-          sudo cat /etc/apt/sources.list
-          sudo ls -R /etc/apt/sources.list.d
+          sudo apt update
+          sudo apt install -y clang-15
         if: ${{ matrix.compiler == 'clang++-15' }}
 
       - name: install ONNXRUNTIME

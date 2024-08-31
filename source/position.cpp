@@ -19,6 +19,9 @@ using namespace Effect8;
 
 std::string SFEN_HIRATE = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1";
 
+// set_max_repetition_ply()で設定される、千日手の最大遡り手数
+int Position::max_repetition_ply = 16;
+
 // 局面のhash keyを求めるときに用いるZobrist key
 namespace Zobrist {
 	HASH_KEY zero;							// ゼロ(==0)
@@ -737,7 +740,7 @@ inline Bitboard Position::attackers_to_pawn(Color c, Square pawn_sq) const
 	const Bitboard& occ = pieces();
 
 	// 馬と龍
-	const Bitboard bb_hd = kingEffect(pawn_sq) & pieces(HORSE,DRAGON);
+	const Bitboard bb_hd = /* kingEffect(pawn_sq) & */ pieces(HORSE,DRAGON);
 	// 馬、龍の利きは考慮しないといけない。しかしここに玉が含まれるので玉は取り除く必要がある。
 	// bb_hdは銀と金のところに加えてしまうことでテーブル参照を一回減らす。
 
@@ -985,7 +988,7 @@ bool Position::pseudo_legal_s(const Move m) const {
 			// --- 成る指し手
 
 			// 成れない駒の成りではないことを確かめないといけない。
-			if (is_promoted_piece(pc))
+			if (is_non_promotable_piece(pc))
 				return false;
 
 			// 上位32bitに移動後の駒が格納されている。それと一致するかのテスト
@@ -1161,7 +1164,7 @@ Move Position::to_move(Move16 m16) const
 	if (is_promote(m))
 	{
 		// 成駒や金・玉であるなら、これ以上成れない。これは非合法手である。
-		if (is_promoted_piece(moved_piece))
+		if (is_non_promotable_piece(moved_piece))
 			return MOVE_NONE;
 
 		return Move(u16(m) + ((u32)(make_promoted_piece(moved_piece) << 16)));
@@ -3048,6 +3051,72 @@ void Position::UnitTest(Test::UnitTester& tester)
 		tester.test("pos_is_ok()",pos.pos_is_ok());
 	}
 
+#if defined(USE_SFEN_PACKER)
+	{
+		// packed sfenのテスト
+		auto section = tester.section("PackedSfen");
+
+		vector<string> test_sfens = {
+			"lnsgkgsnl/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w -",
+			"lns1kgsnl/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w -",
+			"lnsgkgsnl/9/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGK4 w -",
+			"lnsgk4/9/ppppppppp/9/9/9/PPPPPPPPP/9/LNSGK4 w GBRgbr",
+		};
+
+		// packed by cshogi
+		/*
+			board = cshogi.Board()
+			psfen = np.zeros(32, dtype=np.uint8)
+			board.set_sfen(sfen)
+			board.to_psfen(psfen)
+			print(np.array2string(psfen, separator=', '))
+		*/
+		vector<PackedSfen> packed_sfens =
+		{
+			{
+				89, 164,  81,  34,  12, 171,  68, 252,  44, 167,  68,  56,  94, 137, 240,
+				72, 132,  87,  34,  60, 167,  68,  56,  86, 137, 248,  88,  70, 137,  48,
+				188, 126
+			},
+			{
+				89, 164,  81,  34,  12, 171,  68, 252,  44, 167,  68,  56,  94, 137, 240,
+				72,   4,  18, 225,  57,  37, 194, 177,  74, 196, 199,  50,  74, 132,  97,
+				191, 126
+			},
+			{
+				89, 164,  81,  34,  88,  37, 226, 199,  41,  17, 188,  18, 129,  68, 120,
+				37, 194, 115,  74, 132,  99, 149, 136, 143, 101, 148,   8,  67, 106, 107,
+				191, 126
+			},
+			{
+				89,  36,  18,   1, 137, 128,  68,  64,  34, 144,   8, 175,  68, 120,  78,
+				137, 112, 172,  18,  97,  25,  37, 194, 112,  30, 159, 251, 252, 166, 212,
+				218,  90
+			}
+		};
+
+		bool success = true;
+		for(size_t i = 0 ; i < test_sfens.size() ; ++i)
+		{
+			auto sfen = test_sfens[i];
+			auto &packed_sfen = packed_sfens[i];
+
+			StateInfo si;
+			pos.set(sfen, &si, Threads.main());
+
+			PackedSfen ps;
+			pos.sfen_pack(ps);
+
+			// バイナリ列として一致するか。
+			success &= ps == packed_sfen;
+
+			// decodeで元のsfenになることは、このあとのランダムプレイヤーのテストで散々やっているから
+			// ここでやる必要なし。
+		}
+		tester.test("handicapped sfen",success);
+	}
+#endif
+
 	{
 		// それ以外のテスト
 		auto section = tester.section("misc");
@@ -3094,7 +3163,66 @@ void Position::UnitTest(Test::UnitTester& tester)
 		}
 	}
 
-	// ランダムプレイヤーでの対局
+	// ランダムプレイヤーでの対局によるテスト
+
+	// packed sfenのtest
+	auto extra_test1 = [&](Position& pos)
+	{
+#if defined(USE_SFEN_PACKER)
+			PackedSfen ps;
+			StateInfo si;
+			string sfen = pos.sfen();
+			int game_ply = pos.game_ply();
+			pos.sfen_pack(ps);
+
+			Position pos2;
+			pos2.set_from_packed_sfen(ps, &si, Threads.main());
+			string sfen2 = pos2.sfen(game_ply);
+
+			return sfen == sfen2;
+#else
+			return true;
+#endif
+	};
+
+	// 駒落ちのpacked sfenのテスト
+	auto extra_test2 = [&](Position& pos)
+	{
+#if defined(USE_SFEN_PACKER)
+			PackedSfen ps;
+			StateInfo si;
+			string sfen = pos.sfen();
+			int game_ply = pos.game_ply();
+			pos.sfen_pack(ps);
+
+			Position pos2;
+			pos2.set_from_packed_sfen(ps, &si, Threads.main());
+			// ここから駒を5枚ほど落とす。
+			int count = 0;
+			for(auto sq : SQ)
+			{
+				auto pc = pos2.piece_on(sq);
+				if (pc != NO_PIECE && type_of(pc) != KING)
+				{
+					pos2.board[sq] = NO_PIECE; // 自分のclass内なので直接書き換えてしまう。
+					if (++count >= 5)
+						break;
+				}
+			}
+			string sfen2 = pos2.sfen(game_ply);
+			pos2.sfen_pack(ps); // 駒落ちのpacked sfenができた。
+
+			Position pos3;
+			pos3.set_from_packed_sfen(ps, &si, Threads.main());
+
+			string sfen3 = pos3.sfen(game_ply);
+
+			return sfen2 == sfen3;
+#else
+			return true;
+#endif
+	};
+
 	{
 		// 対局回数→0ならskip
 		s64 random_player_loop = tester.options["random_player_loop"];
@@ -3103,7 +3231,7 @@ void Position::UnitTest(Test::UnitTester& tester)
 			auto section2 = tester.section("GamesOfRandomPlayer");
 
 			// seed固定乱数(再現性ある乱数)
-			PRNG my_rand;
+			PRNG my_rand(114514);
 			StateInfo s[512];
 
 			for (s64 i = 0; i < random_player_loop; ++i)
@@ -3125,8 +3253,9 @@ void Position::UnitTest(Test::UnitTester& tester)
 
 					pos.do_move(m,s[ply]);
 
-					if (!pos.pos_is_ok())
+					if (!pos.pos_is_ok() || !extra_test1(pos) || !extra_test2(pos))
 						fail = true;
+
 				}
 
 				// 今回のゲームのなかでおかしいものがなかったか

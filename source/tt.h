@@ -25,7 +25,7 @@ struct Key256;
 /// key        16 bit : hash keyの下位16bit(bit0は除くのでbit16..1)
 /// depth       8 bit : 格納されているvalue値の探索深さ
 /// move       16 bit : このnodeの最善手(指し手16bit ≒ Move16 , Moveの上位16bitは無視される)
-/// generation  5 bit : 世代カウンター
+/// generation  5 bit : このエントリーにsave()された時のTTの世代カウンターの値
 /// pv node     1 bit : PV nodeで調べた値であるかのフラグ
 /// bound type  2 bit : 格納されているvalue値の性質(fail low/highした時の値であるだとか)
 /// value      16 bit : このnodeでのsearch()の返し値
@@ -35,7 +35,7 @@ struct TTEntry {
 	Move16 move()  const { return Move16(move16); }
 	Value  value() const { return Value(value16); }
 	Value  eval()  const { return Value(eval16 ); }
-	Depth  depth() const { return Depth(depth8 + DEPTH_OFFSET); }
+	Depth  depth() const { return Depth(depth8 + DEPTH_ENTRY_OFFSET); }
 	bool   is_pv() const { return bool (genBound8 & 0x4); }
 	Bound  bound() const { return Bound(genBound8 & 0x3); }
 
@@ -49,6 +49,8 @@ struct TTEntry {
 	void save(Key     k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
 	void save(Key128& k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
 	void save(Key256& k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
+
+	uint8_t relative_age(const uint8_t generation8) const;
 
 	// -- やねうら王独自拡張
 

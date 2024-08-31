@@ -53,6 +53,7 @@ void TTEntry::save_(TTEntry::KEY_TYPE key_for_ttentry, Value v, bool pv , Bound 
 	// これは、このnodeで、TT::probeでhitして、その指し手は試したが、それよりいい手が見つかって、枝刈り等が発生しているような
 	// ケースが考えられる。ゆえに、今回の指し手のほうが、いまの置換表の指し手より価値があると考えられる。
 
+	// Preserve the old ttmove if we don't have a new one
 	if (m || key_for_ttentry != key)
 		move16 = uint16_t(m);
 
@@ -64,19 +65,38 @@ void TTEntry::save_(TTEntry::KEY_TYPE key_for_ttentry, Value v, bool pv , Bound 
 	// 1. or 2. or 3.
 	if (   b == BOUND_EXACT
 		|| key_for_ttentry != key
-		|| d - DEPTH_OFFSET + 2 * pv > depth8 - 4)
+		|| d - DEPTH_ENTRY_OFFSET + 2 * pv > depth8 - 4)
 		// ここ、 2 * pv を入れたほうが強いらしい。
 		// https://github.com/official-stockfish/Stockfish/commit/94514199123874c0029afb6e00634f26741d90db
 	{
-		ASSERT_LV3(d > DEPTH_OFFSET);
-		ASSERT_LV3(d < 256 + DEPTH_OFFSET);
+		ASSERT_LV3(d > DEPTH_ENTRY_OFFSET);
+		ASSERT_LV3(d < 256 + DEPTH_ENTRY_OFFSET);
 
 		key       = key_for_ttentry;
-		depth8    = uint8_t(d - DEPTH_OFFSET); // DEPTH_OFFSETだけ下駄履きさせてある。
+		depth8    = uint8_t(d - DEPTH_ENTRY_OFFSET); // DEPTH_ENTRY_OFFSETだけ下駄履きさせてある。
 		genBound8 = uint8_t(TT.generation8 | uint8_t(pv) << 2 | b);
 		value16   = int16_t(v);
 		eval16    = int16_t(ev);
 	}
+}
+
+uint8_t TTEntry::relative_age(const uint8_t generation8) const {
+	// Due to our packed storage format for generation and its cyclic
+	// nature we add GENERATION_CYCLE (256 is the modulus, plus what
+	// is needed to keep the unrelated lowest n bits from affecting
+	// the result) to calculate the entry age correctly even after
+	// generation8 overflows into the next cycle.
+
+	// generationは256になるとオーバーフローして0になるのでそれをうまく処理できなければならない。
+	// a,bが8bitであるとき ( 256 + a - b ) & 0xff　のようにすれば、オーバーフローを考慮した引き算が出来る。
+	// このテクニックを用いる。
+	// いま、
+	//   a := generationは下位3bitは用いていないので0。
+	//   b := genBound8は下位3bitにはBoundが入っているのでこれはゴミと考える。
+	// ( 256 + a - b + c) & 0xfc として c = 7としても結果に影響は及ぼさない、かつ、このゴミを無視した計算が出来る。
+
+	return (TranspositionTable::GENERATION_CYCLE + generation8 - genBound8)
+		 & TranspositionTable::GENERATION_MASK;
 }
 
 // 置換表のサイズを確保しなおす。
@@ -183,7 +203,7 @@ TTEntry* TranspositionTable::probe(const Key key_for_index, const TTEntry::KEY_T
 		// Stockfish12からはdepth8 == 0が空のTTEntryを意味するように変わった。
 		// key16は1/65536の確率で0になりうるので…。
 
-		if (tte[i].key == key_for_ttentry || !tte[i].depth8)
+		if (tte[i].key == key_for_ttentry)
 		{
 			tte[i].genBound8 = uint8_t(generation8 | (tte[i].genBound8 & (GENERATION_DELTA - 1))); // Refresh
 
@@ -211,22 +231,9 @@ TTEntry* TranspositionTable::probe(const Key key_for_index, const TTEntry::KEY_T
 		//		https://yaneuraou.yaneu.com/2023/06/09/replacement-strategy-in-transposition-table/
 		// 
 
-      // Due to our packed storage format for generation and its cyclic
-      // nature we add GENERATION_CYCLE (256 is the modulus, plus what
-      // is needed to keep the unrelated lowest n bits from affecting
-      // the result) to calculate the entry age correctly even after
-      // generation8 overflows into the next cycle.
-      if (  replace->depth8 - ((GENERATION_CYCLE + generation8 - replace->genBound8) & GENERATION_MASK)
-          >   tte[i].depth8 - ((GENERATION_CYCLE + generation8 -   tte[i].genBound8) & GENERATION_MASK))
-			replace = &tte[i];
-
-	// generationは256になるとオーバーフローして0になるのでそれをうまく処理できなければならない。
-	// a,bが8bitであるとき ( 256 + a - b ) & 0xff　のようにすれば、オーバーフローを考慮した引き算が出来る。
-	// このテクニックを用いる。
-	// いま、
-	//   a := generationは下位3bitは用いていないので0。
-	//   b := genBound8は下位3bitにはBoundが入っているのでこれはゴミと考える。
-	// ( 256 + a - b + c) & 0xfc として c = 7としても結果に影響は及ぼさない、かつ、このゴミを無視した計算が出来る。
+	  if (replace->depth8 - replace->relative_age(generation8) * 2
+			> tte[i].depth8 - tte[i].relative_age(generation8) * 2)
+			  replace = &tte[i];
 
 	return found = false, replace;
 }

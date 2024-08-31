@@ -13,6 +13,7 @@
 # YANEURAOU_ENGINE_NNUE_HALFKPE9 : NNUE型評価関数(halfKPE9)
 # YANEURAOU_ENGINE_NNUE_HALFKP_512X2_16_32 : NNUE型評価関数(halfkp_512x2-16-32)
 # YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_32 : NNUE型評価関数(halfkp_1024x2-8-32)
+# YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_64 : NNUE型評価関数(halfkp_1024x2-8-64)
 # YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32 : NNUE型評価関数(halfkp_vm_256x2-32-32)
 # YANEURAOU_ENGINE_KPPT          : KPPT型評価関数
 # YANEURAOU_ENGINE_KPP_KKPT      : KPP_KKPT型評価関数
@@ -30,6 +31,7 @@ YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_KP256
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKPE9
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_512X2_16_32
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_32
+#YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_64
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_KPPT
 #YANEURAOU_EDITION = YANEURAOU_ENGINE_KPP_KKPT
@@ -75,6 +77,11 @@ YO_CLUSTER = OFF
 #TARGET_CPU = OTHER
 #TARGET_CPU = GRAVITON2
 TARGET_CPU = WASM
+# -- macOSとか
+#TARGET_CPU = APPLEM1
+#TARGET_CPU = APPLEM2
+#TARGET_CPU = APPLEM3
+
 
 
 # デバッガーを使用するか (debugger)
@@ -101,18 +108,20 @@ COMPILER = em++
 
 
 # 標準的なコンパイルオプション (standard compile options)
-#CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -MMD -MP -fpermissive
-#CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -O2 -s USE_PTHREADS=1 -s TOTAL_MEMORY=1GB -s INITIAL_MEMORY=1GB -DPOSIXALIGNEDALLOC
-CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -DPOSIXALIGNEDALLOC -msimd128
+CPPFLAGS      = -std=c++17 -fno-exceptions -fno-rtti -Wextra -DPOSIXALIGNEDALLOC -msimd128
 NVCC_CPPFLAGS = -std=c++17 -x cu -maxrregcount=0 --machine 64 --compile -cudart static -DNDEBUG -Xcompiler "-Ofast"
-WCPPFLAGS  =
-LDFLAGS  = $(EXTRA_LDFLAGS)
-LIBS     =
-INCLUDE  = -I../../../src
-AR       = emar cq
+WCPPFLAGS     =
+LDFLAGS       = $(EXTRA_LDFLAGS)
+LIBS          =
+INCLUDE       = -I../../../src
+AR            = emar cq
 
-# makeするときにCPPFLAGSを追加で指定したいときはこれを用いる。
+# makeするときにCPPFLAGS,LDFLAGSを追加で指定したいときはこれを用いる。
 EXTRA_CPPFLAGS =
+EXTRA_LDFLAGS  =
+
+CPPFLAGS += $(EXTRA_CPPFLAGS)
+LDFLAGS  += $(EXTRA_LDFLAGS)
 
 # YANEURAOU_EDITION = YANEURAOU_ENGINE_MATERIALのときに指定できる、評価関数の通し番号
 #  1 : 普通の駒得のみの評価関数
@@ -355,8 +364,6 @@ ifeq (,)
 	SOURCES  +=                                                                \
 		book/makebook.cpp                                                      \
 		book/makebook2015.cpp                                                  \
-		book/makebook2019.cpp                                                  \
-		book/makebook2021.cpp                                                  \
 		book/makebook2023.cpp                                                  \
 		learn/learner.cpp                                                      \
 		learn/learning_tools.cpp                                               \
@@ -437,6 +444,7 @@ ifneq (,$(findstring YANEURAOU_ENGINE_DEEP,$(YANEURAOU_EDITION)))
 		engine/dlshogi-engine/PrintInfo.cpp                             \
 		engine/dlshogi-engine/UctSearch.cpp                             \
 		engine/dlshogi-engine/Node.cpp                                  \
+		engine/dlshogi-engine/PvMateSearch.cpp                          \
 		engine/dlshogi-engine/YaneuraOu_dlshogi_bridge.cpp
 endif
 
@@ -617,7 +625,7 @@ else ifeq ($(TARGET_CPU),OTHER)
 endif
 
 # YANEURAOU_EDITION , CPUターゲット名 などのシンボルをコンパイル時に定義してやる。
-CPPFLAGS += -D$(YANEURAOU_EDITION) -DTARGET_CPU=\"$(TARGET_CPU)\" $(EXTRA_CPPFLAGS)
+CPPFLAGS += -D$(YANEURAOU_EDITION) -DTARGET_CPU=\"$(TARGET_CPU)\"
 NVCC_CPPFLAGS += -D$(YANEURAOU_EDITION) -DTARGET_CPU=\"$(TARGET_CPU)\"
 
 OBJECTS  = $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))

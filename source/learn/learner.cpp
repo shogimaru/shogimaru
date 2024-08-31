@@ -1509,7 +1509,7 @@ struct LearnerThink: public MultiThink
 		newbob_scale = 1.0;
 		newbob_decay = 1.0;
 		newbob_num_trials = 2;
-		best_loss = std::numeric_limits<double>::infinity();
+		best_loss = std::numeric_limits<double>::max();
 		latest_loss_sum = 0.0;
 		latest_loss_count = 0;
 #endif
@@ -3392,7 +3392,7 @@ namespace Learner {
 	}
 
 	// gensfen2019コマンド本体
-	void gen_sfen2019(Position& pos, istringstream& is)
+	void gen_sfen2019([[maybe_unused]] Position& pos, [[maybe_unused]] istringstream& is)
 	{
 		// スレッド数(これは、USIのsetoptionで与えられる)
 		u32 thread_num = (u32)Options["Threads"];

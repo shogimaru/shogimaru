@@ -366,7 +366,7 @@
     <Import Project="props\YaneuraOu-common.props" />
     <Import Project="props\YaneuraOuSolution-debug-x64.props" />
     <Import Project="props\YaneuraOuCpu-x64-avx2.props" />
-    <Import Project="$(CUDA_PATH_V11_7)\extras\visual_studio_integration\MSBuildExtensions\CUDA 11.7.props" />
+    <Import Project="$(CUDA_PATH_V12_3)\extras\visual_studio_integration\MSBuildExtensions\CUDA 12.3.props" />
     <Import Project="props\YaneuraOuEdition-Deep-TensorRT.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-Deep-ORT-CPU|x64'" Label="PropertySheets">
@@ -395,7 +395,7 @@
     <Import Project="props\YaneuraOu-common.props" />
     <Import Project="props\YaneuraOuSolution-release-x64.props" />
     <Import Project="props\YaneuraOuCpu-x64-avx2.props" />
-    <Import Project="$(CUDA_PATH_V11_7)\extras\visual_studio_integration\MSBuildExtensions\CUDA 11.7.props" />
+    <Import Project="$(CUDA_PATH_V12_3)\extras\visual_studio_integration\MSBuildExtensions\CUDA 12.3.props" />
     <Import Project="props\YaneuraOuEdition-Deep-TensorRT.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release-NNUE-LEARN|x64'" Label="PropertySheets">
@@ -595,6 +595,7 @@
     <ClInclude Include="engine\dlshogi-engine\dlshogi_searcher.h" />
     <ClInclude Include="engine\dlshogi-engine\Node.h" />
     <ClInclude Include="engine\dlshogi-engine\PrintInfo.h" />
+    <ClInclude Include="engine\dlshogi-engine\PvMateSearch.h" />
     <ClInclude Include="engine\dlshogi-engine\UctSearch.h" />
     <ClInclude Include="engine\yaneuraou-engine\yaneuraou-param.h" />
     <ClInclude Include="engine\yo-cluster\ClusterCommon.h" />
@@ -616,6 +617,7 @@
     <ClInclude Include="eval\kpp_kkpt\evaluate_kpp_kkpt.h" />
     <ClInclude Include="eval\nnue\architectures\halfkpe9_256x2-32-32.h" />
     <ClInclude Include="eval\nnue\architectures\halfkp_1024x2-8-32.h" />
+    <ClInclude Include="eval\nnue\architectures\halfkp_1024x2-8-64.h" />
     <ClInclude Include="eval\nnue\architectures\halfkp_256x2-32-32.h" />
     <ClInclude Include="eval\nnue\architectures\halfkp_512x2-16-32.h" />
     <ClInclude Include="eval\nnue\architectures\halfkp_vm_256x2-32-32.h" />
@@ -679,11 +681,10 @@
     <ClCompile Include="book\book.cpp" />
     <ClCompile Include="book\makebook.cpp" />
     <ClCompile Include="book\makebook2015.cpp" />
-    <ClCompile Include="book\makebook2019.cpp" />
-    <ClCompile Include="book\makebook2021.cpp" />
     <ClCompile Include="book\makebook2023.cpp" />
     <ClCompile Include="engine\dlshogi-engine\dlshogi_searcher.cpp" />
     <ClCompile Include="engine\dlshogi-engine\PrintInfo.cpp" />
+    <ClCompile Include="engine\dlshogi-engine\PvMateSearch.cpp" />
     <ClCompile Include="engine\dlshogi-engine\UctSearch.cpp" />
     <ClCompile Include="engine\dlshogi-engine\Node.cpp" />
     <ClCompile Include="engine\dlshogi-engine\YaneuraOu_dlshogi_bridge.cpp" />
@@ -762,9 +763,9 @@
     <None Include="..\script\engine_invoker5.py" />
     <CustomBuild Include="eval\deep\unpack.cu">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release-Deep-TensorRT|x64'">"$(CUDA_PATH_V11_7)\bin\nvcc.exe" --use-local-env -ccbin "$(VC_ExecutablePath_x64)" -std=c++17 -x cu --keep-dir ..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget) -maxrregcount=0 --machine 64 --compile -cudart static -DNDEBUG -D_CONSOLE -D_UNICODE -DUNICODE -DYANEURAOU_ENGINE_DEEP -DTENSOR_RT -Xcompiler "/EHsc /W3 /nologo /O2 /Fd..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\vc143.pdb /FS /MT" -o "..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\%(Filename)%(Extension).obj" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release-Deep-TensorRT|x64'">"$(CUDA_PATH_V12_3)\bin\nvcc.exe" --use-local-env -ccbin "$(VC_ExecutablePath_x64)" -std=c++17 -x cu --keep-dir ..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget) -maxrregcount=0 --machine 64 --compile -cudart static -DNDEBUG -D_CONSOLE -D_UNICODE -DUNICODE -DYANEURAOU_ENGINE_DEEP -DTENSOR_RT -Xcompiler "/EHsc /W3 /nologo /O2 /Fd..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\vc143.pdb /FS /MT" -o "..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\%(Filename)%(Extension).obj" "%(FullPath)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release-Deep-TensorRT|x64'">..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\%(Filename)%(Extension).obj</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-Deep-TensorRT|x64'">"$(CUDA_PATH_V11_7)\bin\nvcc.exe" --use-local-env -ccbin "$(VC_ExecutablePath_x64)" -std=c++17 -x cu -G --keep-dir ..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget) -maxrregcount=0 --machine 64 --compile -cudart static -g -D_DEBUG -D_CONSOLE -D_UNICODE -DUNICODE -DYANEURAOU_ENGINE_DEEP -DTENSOR_RT -Xcompiler "/EHsc /W3 /nologo /Od /Fd..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\vc143.pdb /FS /Zi /RTC1 /MTd" -o "..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\%(Filename)%(Extension).obj" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug-Deep-TensorRT|x64'">"$(CUDA_PATH_V12_3)\bin\nvcc.exe" --use-local-env -ccbin "$(VC_ExecutablePath_x64)" -std=c++17 -x cu -G --keep-dir ..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget) -maxrregcount=0 --machine 64 --compile -cudart static -g -D_DEBUG -D_CONSOLE -D_UNICODE -DUNICODE -DYANEURAOU_ENGINE_DEEP -DTENSOR_RT -Xcompiler "/EHsc /W3 /nologo /Od /Fd..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\vc143.pdb /FS /Zi /RTC1 /MTd" -o "..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\%(Filename)%(Extension).obj" "%(FullPath)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-Deep-TensorRT|x64'">..\$(Platform)\$(Configuration)\obj\$(YaneuraOuDbgPrefix)$(YaneuraOuCpuTarget)\%(Filename)%(Extension).obj</Outputs>
     </CustomBuild>
     <None Include="Makefile" />

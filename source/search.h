@@ -32,7 +32,7 @@ struct Stack {
 	bool inCheck;						// この局面で王手がかかっていたかのフラグ
 	bool ttPv;							// 置換表にPV nodeで調べた値が格納されていたか(これは価値が高い)
 	bool ttHit;							// 置換表にhitしたかのフラグ
-	int doubleExtensions;				// 前のノードで延長した手数と今回のノードで延長したか手数を加算した値
+	int multipleExtensions;				// 前のノードで延長した手数と今回のノードで延長したか手数を加算した値
 	int cutoffCnt;						// cut off(betaを超えたので枝刈りとしてreturn)した回数。
 };
 
@@ -159,7 +159,7 @@ struct LimitsType {
 	// 今回のgoコマンドでの指定されていた"nodes"(探索ノード数)の値。
 	// これは、USIプロトコルで規定されているものの将棋所では送ってこない。ShogiGUIはたぶん送ってくる。
 	// goコマンドで"nodes"が指定されていない場合は、"エンジンオプションの"NodesLimit"の値。
-	int64_t nodes;
+	uint64_t nodes;
 
 	// -- やねうら王が将棋用に追加したメンバー
 
