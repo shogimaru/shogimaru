@@ -151,7 +151,9 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
 
     options["BookDir"].setValue(QString("assets/YaneuraOu"));
     options["BookFile"].setValue(QString("user_book1.db"));
-    options["EvalDir"].setValue(QString("assets/YaneuraOu/nnue-kp256"));
+    //options["EvalDir"].setValue(QString("assets/YaneuraOu/nnue-kp256"));
+    options["EvalDir"].setValue(QString("assets/YaneuraOu/nnue-halfkp256"));
+    options["FV_SCALE"].setValue(24);
 }
 
 #else
