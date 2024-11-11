@@ -1,5 +1,6 @@
 #include "sound.h"
 #include "user.h"
+#include "global.h"
 #include <QAudioOutput>
 #include <QMediaPlayer>
 
@@ -12,7 +13,7 @@ void Sound::playBleep()
         auto audioOutput = new QAudioOutput;
         audioOutput->setVolume(80);
         player->setAudioOutput(audioOutput);
-        player->setSource(QUrl::fromLocalFile("assets/sounds/bleep.wav"));
+        player->setSource(QUrl::fromLocalFile(maru::appResourcePath("assets/sounds/bleep.wav")));
         return player;
     }();
 
@@ -32,7 +33,7 @@ void Sound::playSnap()
         auto audioOutput = new QAudioOutput;
         audioOutput->setVolume(80);
         player->setAudioOutput(audioOutput);
-        player->setSource(QUrl::fromLocalFile("assets/sounds/snap.wav"));
+        player->setSource(QUrl::fromLocalFile(maru::appResourcePath("assets/sounds/snap.wav")));
         return player;
     }();
 

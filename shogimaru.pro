@@ -52,6 +52,10 @@ msvc {
 
 macx {
   LIBS += -liconv
+  RESOURCE_DIR = $${TARGET}.app/Contents/Resources
+  QMAKE_POST_LINK += mkdir -p $${RESOURCE_DIR}/assets/images/ && cp -a $$PWD/assets/images/*  $${RESOURCE_DIR}/assets/images/;
+  QMAKE_POST_LINK += mkdir -p $${RESOURCE_DIR}/assets/sounds/ && cp -a $$PWD/assets/sounds/*  $${RESOURCE_DIR}/assets/sounds/;
+  QMAKE_POST_LINK += mkdir -p $${RESOURCE_DIR}/assets/translations/ && cp -a $$PWD/assets/translations/*  $${RESOURCE_DIR}/assets/translations/;
 }
 
 SOURCES += \

@@ -64,7 +64,7 @@ void Audio::stop()
 
 void Sound::playBleep()
 {
-    static Audio bleep("assets/sounds/bleep.wav", 0);
+    static Audio bleep(maru::appResourcePath("assets/sounds/bleep.wav"), 0);
     if (User::load().soundEnable()) {
         bleep.play();
     }
@@ -73,7 +73,7 @@ void Sound::playBleep()
 
 void Sound::playSnap()
 {
-    static Audio bleep("assets/sounds/snap.wav", 1);
+    static Audio bleep(maru::appResourcePath("assets/sounds/snap.wav"), 1);
     if (User::load().soundEnable()) {
         bleep.play();
     }

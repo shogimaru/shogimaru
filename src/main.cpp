@@ -8,6 +8,8 @@
 #include <QFontDatabase>
 #include <QTimer>
 #include <QTranslator>
+#include <QStyleFactory>
+#include <QStyleHints>
 #include <locale>
 #include <cstdlib>
 
@@ -34,17 +36,26 @@ int main(int argc, char *argv[])
     QTranslator translator;
     qDebug() << QLocale::system().name();
     QString ts = QString("message_") + QLocale::system().name();
-    if (translator.load(ts, "assets/translations/")) {
+    if (translator.load(ts, maru::appResourcePath("assets/translations/"))) {
         app.installTranslator(&translator);
     }
+
+    // Light mode
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
+
+    // Style
+    app.setStyle(QStyleFactory::create("Fusion"));
 
     // Set font
 #ifdef Q_OS_WIN64
     QFont font("Yu Gothic UI");
     font.setPointSizeF(11.5);
+#elif defined(Q_OS_DARWIN)
+    QFont font("SF Pro Text");
+    font.setPointSizeF(12);
 #else
-    int id = QFontDatabase::addApplicationFont("assets/fonts/ipagp.ttf");
-    QString family = QFontDatabase::applicationFontFamilies(id).at(0);
+    int id = QFontDatabase::addApplicationFont(maru::appResourcePath("assets/fonts/ipagp.ttf"));
+    QString family = QFontDatabase::applicationFontFamilies(id).value(0);
     QFont font(family, 12);
 #endif
     QApplication::setFont(font);

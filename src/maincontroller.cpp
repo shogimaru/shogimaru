@@ -1758,9 +1758,9 @@ void MainController::showSpinner()
     _spinner = new QLabel(this);
     _spinner->setAttribute(Qt::WA_TranslucentBackground, true);  // 背景透明
     _spinner->setWindowModality(Qt::WindowModal);
-    QMovie *movie = new QMovie("assets/images/spinner.gif", QByteArray(), _spinner);
+    QMovie *movie = new QMovie(maru::appResourcePath("assets/images/spinner.gif"), QByteArray(), _spinner);
     _spinner->setMovie(movie);
-    auto size = QImage("assets/images/spinner.gif").size();
+    auto size = QImage(maru::appResourcePath("assets/images/spinner.gif")).size();
     auto pos = _ui->boardView->geometry().center() - QPoint(size.width() / 2, 0);
     _spinner->setGeometry(pos.x(), pos.y(), size.width(), size.height());
     _spinner->show();
