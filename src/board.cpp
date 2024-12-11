@@ -57,6 +57,7 @@ bool Board::startGame(const QByteArray &sfen)
 {
     _current = nullptr;
     _lastMove = QPair<Piece *, QString>(nullptr, QString());
+    _lastMovedSquare->hide();
     return parse(sfen);
 }
 

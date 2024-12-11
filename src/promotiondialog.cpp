@@ -9,10 +9,17 @@ PromotionDialog::PromotionDialog(Piece *src, Piece *dst, QWidget *parent) :
     _src(src),
     _dst(dst)
 {
-    setModal(true);
     setWindowModality(Qt::ApplicationModal);
     setMaximumSize(300, 200);
     setStyleSheet("QLabel{text-align: left; margin: 30px 20px 30px 0px;}");
+
+    if (parent) {
+        // 中央に表示
+        QRect geo = parent->geometry();
+        int x = geo.x() + (geo.width() - sizeHint().width()) / 2;
+        int y = geo.y() + (geo.height() - sizeHint().height()) / 2;
+        move(x, y);
+    }
 }
 
 

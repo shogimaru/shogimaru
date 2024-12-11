@@ -53,11 +53,9 @@ int ChessClock::remaining(maru::Turn player)
 }
 
 
-void ChessClock::start(Turn startTurn)
+void ChessClock::start()
 {
-    _currentTurn = startTurn;
     _elapsedTimer.start();
-    //startTimer();
     _timerId = startTimer(1000 / 5);
 }
 
@@ -69,9 +67,6 @@ void ChessClock::stop()
 
 void ChessClock::stopTimer()
 {
-    // _timeoutTimer.stop();
-    // _bleepTimer.stop();
-
     if (_timerId > 0) {
         killTimer(_timerId);
         _timerId = 0;
@@ -81,8 +76,6 @@ void ChessClock::stopTimer()
 
 maru::Turn ChessClock::changeTurn()
 {
-    //stopTimer();
-
     int elapsed = _elapsedTimer.restart();
 
     if (_currentTurn == Sente) {

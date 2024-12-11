@@ -20,7 +20,7 @@ MyPage::~MyPage()
 
 void MyPage::open()
 {
-    auto &user = User::load();
+    const auto &user = User::load();
 
     _ui->editNickName->setText(user.nickname());
     _ui->labelRating->setText(QString::number(user.rating()));

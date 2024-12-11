@@ -16,19 +16,18 @@ class StartDialog;
 class StartDialog : public QDialog {
     Q_OBJECT
 public:
-    enum StartPosision : int {
-        Initial = 0,  // 初期局面
-        Current,      // 現在の局面
-    };
-
     explicit StartDialog(QWidget *parent = nullptr);
     ~StartDialog() {}
 
-    StartPosision postion() const;
+    void open();
+    void accept();
+    maru::StartPosision position() const;
     maru::PlayerType player(maru::Turn turn) const;
-    int byoyomi() const;  // 秒読み
-    QTime time() const;  // 持ち時間(秒)
 
 private:
+    int byoyomi() const;  // 秒読み
+    int basicTime() const;  // 持ち時間(分)
+    maru::TimeMethod method() const;
+
     Ui::StartDialog *_ui {nullptr};
 };

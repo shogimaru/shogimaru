@@ -182,7 +182,7 @@ void RecordDialog::request(const QString &url, Func slot)
 
 void RecordDialog::open()
 {
-    constexpr int NUM_RECORDS = 50;
+    constexpr int NUM_RECORDS = 100;
     QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
 #ifdef Q_OS_WASM
     ShogiDbUrl.prepend("https://shogimaru.com/rd/?u=");

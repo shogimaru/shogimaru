@@ -38,9 +38,11 @@ public:
 
     bool open(const QString &path);
     void close();
+    bool isOpen() const;
 
     QString name() const { return _name; }
     QString author() const { return _author; }
+    QString shortName() const;
     const QVariantMap &options() const { return _options; }
     QVariantMap &options() { return _options; }
     void setOptions(const QVariantMap &options) { _options = options; }
@@ -48,7 +50,7 @@ public:
     void setStartPosition(const QByteArray &sfen = QByteArray());
     QByteArrayList allMoves() const { return _allMoves; }  // 全指し手（SFEN形式）
     void setSkillLevel(int level) { _level = level; }
-    bool newGame(int slowMover = 100);
+    bool newGame(int slowMover = 0);
     void gameover();
     void quit();
     bool go(const QByteArrayList &position, int senteTime, int goteTime, int byoyomi, int incTime);  // 考慮開始
@@ -70,7 +72,7 @@ public:
     static EngineInfo getEngineInfo(const QString &path);
 
 signals:
-    void ready();  // 準備完了
+    void readyGame();  // 準備完了
     void bestMove(const QByteArray &best);  // 指し手
     void pondering(const PonderInfo &info);
     void resign();  // 投了

@@ -1,5 +1,7 @@
 #include "startdialog.h"
 #include "ui_startdialog.h"
+#include "user.h"
+#include "enginesettings.h"
 
 
 StartDialog::StartDialog(QWidget *parent) :
@@ -7,27 +9,56 @@ StartDialog::StartDialog(QWidget *parent) :
     _ui(new Ui::StartDialog)
 {
     _ui->setupUi(this);
-    setWindowTitle("StartDialog");
-
-    // 持ち時間
-    for (int i = 0; i < 10; i++) {
-        _ui->hourBox->addItem(QString::number(i), i);
-    }
-    for (int i = 0; i < 60; i++) {
-        _ui->minBox->addItem(QString::number(i), i);
-    }
-    _ui->minBox->setCurrentIndex(10);
-
-    for (int i = 0; i <= 60; i++) {
-        _ui->byoyomiBox->addItem(QString::number(i), i);
-    }
-    _ui->byoyomiBox->setCurrentIndex(30);
+    setWindowTitle("New Game");
 }
 
 
-StartDialog::StartPosision StartDialog::postion() const
+void StartDialog::open()
 {
-    return _ui->initPosButton->isChecked() ? Initial : Current;
+    const auto &user = User::load();
+
+    int byoyomi = user.byoyomi();
+    int basicTime = user.basicTime();
+
+    if (!byoyomi && !basicTime) {  // デフォルト値
+        byoyomi = 5;
+        basicTime = 5;
+    }
+
+    // if (user.startPosition() == (int)maru::Initial) {
+    //     _ui->initPosButton->setChecked(true);
+    // } else {
+    //     _ui->currentPosButton->setChecked(true);
+    // }
+    _ui->methodBox->setCurrentIndex(user.method());
+    _ui->byoyomiBox->setCurrentText(QString::number(byoyomi));  // 秒読み
+    _ui->minBox->setCurrentText(QString::number(basicTime % 60));
+    _ui->hourBox->setCurrentText(QString::number(basicTime / 60));
+
+    _ui->senteEngine->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
+    _ui->goteEngine->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
+
+    QDialog::open();
+}
+
+
+void StartDialog::accept()
+{
+    auto &user = User::load();
+
+    user.setByoyomi(byoyomi());
+    user.setBasicTime(basicTime());
+    user.setStartPosition(position());
+    user.setMethod(method());
+    user.save();
+
+    QDialog::accept();
+}
+
+
+maru::StartPosision StartDialog::position() const
+{
+    return _ui->initPosButton->isChecked() ? maru::Initial : maru::Current;
 }
 
 
@@ -43,11 +74,20 @@ maru::PlayerType StartDialog::player(maru::Turn turn) const
 
 int StartDialog::byoyomi() const
 {
-    return _ui->byoyomiBox->currentData().toInt();
+    int b = _ui->byoyomiBox->currentText().toInt();
+    return b;
 }
 
 
-QTime StartDialog::time() const
+int StartDialog::basicTime() const
 {
-    return QTime(_ui->hourBox->currentData().toInt(), _ui->minBox->currentData().toInt());
+    int m = _ui->minBox->currentText().toInt();
+    int h = _ui->hourBox->currentText().toInt();
+    return h * 60 + m;
+}
+
+
+maru::TimeMethod StartDialog::method() const
+{
+    return (maru::TimeMethod)_ui->methodBox->currentIndex();
 }

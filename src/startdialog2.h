@@ -20,10 +20,11 @@ public:
 
     void open();
     void accept();
+
+private:
     int byoyomi() const;  // 秒読み
     int basicTime() const;  // 持ち時間(分)
     maru::TimeMethod method() const;
 
-private:
     Ui::StartDialog2 *_ui {nullptr};
 };

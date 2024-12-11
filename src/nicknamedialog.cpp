@@ -28,5 +28,6 @@ void NicknameDialog::save()
     user.setNickname(name);
     user.setRating(_ui->ratingSpinBox->value());
     user.save();
+
     emit accepted();
 }

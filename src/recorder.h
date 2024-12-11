@@ -70,6 +70,7 @@ public:
     Sfen toSfen() const;
     maru::Turn turn(int index) const;
     void removeLast();
+    void removeAfter(int index);
     int count() const { return _pvList.count(); }  // 局面数 (初期値:1, 初手指すと2)
     void clear();
     QString kifString(maru::Turn turn, const QPair<Piece*, QString> &move, int prevCoord) const;

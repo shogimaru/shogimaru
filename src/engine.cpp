@@ -156,6 +156,19 @@ void Engine::close()
 }
 
 
+bool Engine::isOpen() const
+{
+    return _state != NotRunning && _state != EngineError;
+}
+
+
+QString Engine::shortName() const
+{
+    int idx = _name.indexOf(QRegularExpression("[\( -]"));
+    return (idx > 0) ? _name.mid(0, idx) : _name;
+}
+
+
 void Engine::setStartPosition(const QByteArray &sfen)
 {
     _startPositionSfen = sfen;
@@ -233,8 +246,10 @@ bool Engine::newGame(int slowMover)
     if (opts.contains("MultiPV")) {  // 対局では1
         opts.insert("MultiPV", 1);
     }
-    if (opts.contains("SlowMover")) {  // 序盤重視率[%]
-        opts.insert("SlowMover", slowMover);
+    if (slowMover > 0) {
+        if (opts.contains("SlowMover")) {  // 序盤重視率[%]
+            opts.insert("SlowMover", slowMover);
+        }
     }
     if (opts.contains("SkillLevel")) {
         opts.insert("SkillLevel", _level);
@@ -258,7 +273,7 @@ void Engine::usiNewGame()
     _errorTimer->stop();
     Command::instance().request("usinewgame");
     _state = Idle;
-    emit ready();
+    emit readyGame();
 }
 
 
@@ -449,7 +464,7 @@ bool Engine::mated(const QByteArray &startPosition, const QByteArrayList &moves)
             cmd += " moves ";
             cmd += moves.join(" ");
         }
-        //qDebug() << cmd.toStdString();
+        qDebug() << cmd.toStdString();
         Command::instance().request(cmd.toStdString());
         Command::instance().request("mated");
         auto res = Command::instance().poll(1000);
@@ -488,6 +503,10 @@ void Engine::quit()
 
 void Engine::gameover()
 {
+    if (!isOpen()) {
+        return;
+    }
+
     switch (_state) {
     case Idle:
     case Going:

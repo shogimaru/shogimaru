@@ -23,10 +23,10 @@
     </rect>
    </property>
    <property name="orientation">
-    <enum>Qt::Horizontal</enum>
+    <enum>Qt::Orientation::Horizontal</enum>
    </property>
    <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+    <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
    </property>
   </widget>
   <widget class="QGroupBox" name="timeGroupBox">
@@ -39,19 +39,19 @@
     </rect>
    </property>
    <property name="title">
-    <string>Time Control</string>
+    <string>Time Settings</string>
    </property>
    <widget class="QLabel" name="timeCondition">
     <property name="geometry">
      <rect>
       <x>20</x>
       <y>40</y>
-      <width>71</width>
+      <width>101</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>Time</string>
+     <string>Time Control</string>
     </property>
    </widget>
    <widget class="QComboBox" name="byoyomiBox">

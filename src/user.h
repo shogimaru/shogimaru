@@ -35,6 +35,10 @@ public:
     void setSoundEnable(bool enable) { _soundEnable = enable; }
     int pieceType() const { return _pieceType; }
     void setPieceType(int type) { _pieceType = type; }
+    int startPosition() const { return _startPosition; }
+    void setStartPosition(int startPosition) { _startPosition = startPosition; }
+    int method() const { return _method; }
+    void setMethod(int method) { _method = method; }
     int version() const { return _version; }
     void setVersion(int version) { _version = version; }
 
@@ -61,5 +65,7 @@ private:
     int _analysisDepth {-23};  // 解析深度
     bool _soundEnable {true};  // サウンド有効
     int _pieceType {1};  // 駒種類
+    int _startPosition {0};  // 開始局面
+    int _method {1};  // 持ち時間方式
     int _version {1};
 };
