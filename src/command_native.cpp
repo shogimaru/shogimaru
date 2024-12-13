@@ -2,26 +2,7 @@
 #include "engineprocess.h"
 #include "global.h"
 #include <QDebug>
-
-
-std::string CBus::get(int)
-{
-    // do nothing
-    return std::string();
-}
-
-
-std::list<std::string> CBus::getAll(int)
-{
-    // do nothing
-    return std::list<std::string>();
-}
-
-
-void CBus::set(const std::string &)
-{
-    // do nothing
-}
+#include <QDateTime>
 
 
 void Command::request(const std::string &command)
@@ -71,9 +52,19 @@ bool Command::pollFor(const std::string &waitingResponse, int msecs, std::list<s
 
 void Command::clearResponse(int msecs)
 {
-    if (Command::engineProcess->waitForReadyRead(msecs)) {
-        Command::engineProcess->readAll();
+    if (msecs < 0) {
+        return;
     }
+
+    const int64_t end = QDateTime::currentMSecsSinceEpoch() + msecs;
+    int ms = msecs;
+
+    do {
+        if (Command::engineProcess->waitForReadyRead(ms)) {
+            Command::engineProcess->readAll();
+        }
+        ms = end - QDateTime::currentMSecsSinceEpoch();
+    } while (ms > 0);
 }
 
 

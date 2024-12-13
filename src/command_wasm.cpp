@@ -18,7 +18,7 @@ std::string CBus::get(int msecs)
     std::string ret;
     std::unique_lock<std::mutex> lock(_mutex);
 
-    if (_commands.empty()) {
+    if (empty()) {
         if (msecs < 0) {
             _cond.wait(lock);
         } else if (msecs > 0) {
@@ -28,7 +28,7 @@ std::string CBus::get(int msecs)
         }
     }
 
-    if (!_commands.empty()) {
+    if (!empty()) {
         ret = _commands.front();
         _commands.pop_front();
     }
@@ -42,7 +42,7 @@ std::list<std::string> CBus::getAll(int msecs)
     std::list<std::string> ret;
     std::unique_lock<std::mutex> lock(_mutex);
 
-    if (_commands.empty()) {
+    if (empty()) {
         if (msecs < 0) {
             _cond.wait(lock);
         } else if (msecs > 0) {
@@ -52,7 +52,7 @@ std::list<std::string> CBus::getAll(int msecs)
         }
     }
 
-    if (!_commands.empty()) {
+    if (!empty()) {
         ret = _commands;  // copy
         _commands.clear();
     }
@@ -140,8 +140,8 @@ void Command::clearResponse(int msecs)
         return;
     }
 
+    const int64_t end = currentMSecsSinceEpoch() + msecs;
     int ms = msecs;
-    int64_t end = currentMSecsSinceEpoch() + msecs;
 
     do {
         _response.getAll(ms);

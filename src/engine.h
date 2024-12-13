@@ -34,6 +34,15 @@ public:
         virtual void terminate() { }
     };
 
+    enum State : int {
+        NotRunning = 0,
+        GameReady,  // 対局OK（初期化終了）
+        Idle,  // 対局中アイドル
+        Going,  // 考慮中
+        Pondering,  // 先読み中
+        EngineError,
+    };
+
     virtual ~Engine();
 
     bool open(const QString &path);
@@ -63,6 +72,7 @@ public:
     bool hasSkillLevelOption() const;
     QMetaType::Type type(const QString &option) const;
     QString error() const { return _error; }
+    State state() const { return _state; }
 
     // 棋譜解析
     bool startAnalysis();
@@ -90,15 +100,6 @@ private:
     bool go(const QByteArrayList &position, bool ponderFlag, int senteTime, int goteTime, int byoyomi, int incTime);
     void setTurn();
     void sendOptions(const QVariantMap &options);
-
-    enum State : int {
-        NotRunning,
-        GameReady,  // 対局OK（初期化終了）
-        Idle,  // 対局中アイドル
-        Going,  // 考慮中
-        Pondering,  // 先読み中
-        EngineError,
-    };
 
     Engine(QObject *parent = nullptr);
     Engine(const Engine &) = delete;

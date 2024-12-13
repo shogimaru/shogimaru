@@ -467,13 +467,13 @@ void MainController::newGame()
     MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
 
     _mode = Game;
-    if (_startDialog->position() == maru::Initial) {
+    int index = std::max(_ui->recordWidget->currentRow(), 0);
+    if (_startDialog->position() == maru::Initial || index == 0) {
         clear();  // 画面クリア
         _board->startGame(Sfen::defaultPostion());
         _clock->setTurn(maru::Sente);
     } else {
         // 現在局面から開始
-        int index = _ui->recordWidget->currentRow();
         maru::Turn turn = _recorder->turn(index);
         _clock->setTurn(turn);
         _recorder->removeAfter(index + 1);
@@ -482,6 +482,7 @@ void MainController::newGame()
             delete _ui->recordWidget->takeItem(i);
         }
 
+        setEventName(QString());
         _ui->messageTableWidget->clear();
         _graph->clear();  // グラフクリア
     }
@@ -993,6 +994,7 @@ void MainController::setTurn(maru::Turn turn)
         if (_players[turn].type() == maru::Human) {
             if (_board->isCheck()) {  // 最後の手が王手か
                 // 詰みチェック
+                Engine::instance().stop();
                 bool mated = Engine::instance().mated(_recorder->sfen(_recorder->count() - 1));
                 if (mated) {
                     // 詰み
@@ -1008,6 +1010,7 @@ void MainController::setTurn(maru::Turn turn)
             // qDebug() << "moves: " << _recorder->allMoves();
         } else {
             if (_ponderFlag) {  // 先読み
+                Engine::instance().stop();
                 Engine::instance().ponder(_clock->remainingTime(maru::Sente), _clock->remainingTime(maru::Gote), _clock->byoyomi(), _clock->incrementTime());
             }
         }
@@ -1066,9 +1069,10 @@ void MainController::pondered(const PonderInfo &info)
     PonderInfo pi = info;
 
     if (_mode == Rating || _mode == Game) {  // 対局
-        bool minus = _players[maru::Sente].type() != _players[maru::Gote].type() && _players[maru::Gote].type() == maru::Computer;
+        bool pondering = (Engine::instance().state() == Engine::Pondering); // 先読みか
+        bool minus = (pondering) ? (_clock->currentTurn() == maru::Sente) : (_clock->currentTurn() == maru::Gote);
         updateScore(pi, minus);  // 後手がコンピュータならマイナス
-        // qDebug() << "turn:" << ((_clock->currentTurn()== maru::Sente) ? "b" : "w") << "score:" << pi.scoreCp << "mateCount:" << pi.mateCount << "nodes:" << pi.nodes << "pv:" << pi.pv;
+        // qDebug() << "turn:" << ((_clock->currentTurn()== maru::Sente) ? "b" : "w") << "score:" << pi.scoreCp << "mateCount:" << pi.mateCount << "mate:" << pi.mate << "nodes:" << pi.nodes << "pv:" << pi.pv;
 
         // PonderInfoチェック
         if (!pi.pv.isEmpty()) {
@@ -1079,8 +1083,7 @@ void MainController::pondered(const PonderInfo &info)
 
             QByteArray sfen = _recorder->sfen(_recorder->count() - 1);
             sfen += " moves ";
-            if (_players[_clock->currentTurn()].type() == maru::Human
-                && !Engine::instance().lastPondered().isEmpty()) {
+            if (pondering) {
                 // 先読みの場合
                 pi.pv.prepend(Engine::instance().lastPondered());
             }
@@ -1778,6 +1781,7 @@ void MainController::clear()
     auto *item = new QListWidgetItem(str, _ui->recordWidget);
     _ui->recordWidget->addItem(item);
     _ui->recordWidget->scrollToItem(item);
+    setEventName(QString());
 
     _ui->messageTableWidget->clear();
     _graph->clear();  // グラフクリア

@@ -259,6 +259,7 @@ bool Engine::newGame(int slowMover)
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
     _errorTimer->start(20000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
+    _lastPondered.clear();
     return true;
 }
 
@@ -345,7 +346,7 @@ bool Engine::ponder(int senteTime, int goteTime, int byoyomi, int incTime)
     if (!_lastPondered.isEmpty()) {
         auto pos = _allMoves;
         pos << _lastPondered;
-        //qDebug() << "先読み: " << qPrintable(pos.join(" "));
+        // qDebug() << "先読み: " << qPrintable(pos.join(" "));
         return go(pos, true, senteTime, goteTime, byoyomi, incTime);
     }
     return false;
@@ -361,8 +362,11 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         }
 
         if (moves == _ponderingMoves) {
-            //qDebug() << "ponderhit";
+            // qDebug() << "ponderhit: " <<  _ponderingMoves;
+            Command::instance().clearResponse();
             Command::instance().request("ponderhit");
+            _ponderingMoves.clear();
+            _state = Going;
             return true;
         } else {
             stop();
@@ -413,7 +417,8 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         cmd += QByteArray::number(incTime);
     }
 
-    qDebug() << cmd;
+    //qDebug() << cmd;
+    Command::instance().clearResponse();
     Command::instance().request(cmd.toStdString());
     return true;
 }
@@ -421,17 +426,17 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 
 void Engine::stop()
 {
-    bool res;
     std::list<std::string> response;
 
     switch (_state) {
+    case Idle:
+        Command::instance().request("stop");
+        break;
+
     case Going:
     case Pondering:
         Command::instance().request("stop");
-        res = Command::instance().pollFor("bestmove", 1000, response);
-        if (!res) {
-            qWarning() << "go stop" << res;
-        }
+        Command::instance().clearResponse();
         _state = Idle;
         break;
 
@@ -490,6 +495,7 @@ void Engine::quit()
     case Going:
     case Pondering:
         Command::instance().request("quit");
+        Command::instance().clearResponse();
         break;
 
     default:
@@ -512,6 +518,7 @@ void Engine::gameover()
     case Going:
     case Pondering:
         Command::instance().request("gameover win");  // win固定
+        Command::instance().clearResponse();
         break;
 
     case GameReady:

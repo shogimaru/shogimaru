@@ -25,11 +25,11 @@ void StartDialog::open()
         basicTime = 5;
     }
 
-    // if (user.startPosition() == (int)maru::Initial) {
-    //     _ui->initPosButton->setChecked(true);
-    // } else {
-    //     _ui->currentPosButton->setChecked(true);
-    // }
+    if (user.startPosition() == (int)maru::Initial) {
+        _ui->initPosButton->setChecked(true);
+    } else {
+        _ui->currentPosButton->setChecked(true);
+    }
     _ui->methodBox->setCurrentIndex(user.method());
     _ui->byoyomiBox->setCurrentText(QString::number(byoyomi));  // 秒読み
     _ui->minBox->setCurrentText(QString::number(basicTime % 60));
