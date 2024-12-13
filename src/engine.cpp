@@ -164,7 +164,7 @@ bool Engine::isOpen() const
 
 QString Engine::shortName() const
 {
-    int idx = _name.indexOf(QRegularExpression("[\( -]"));
+    int idx = _name.indexOf(QRegularExpression("[\\( -]"));
     return (idx > 0) ? _name.mid(0, idx) : _name;
 }
 
