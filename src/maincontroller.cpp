@@ -416,7 +416,7 @@ void MainController::newGame()
     int basicTime = user.basicTime();
     int byoyomi = user.byoyomi();
 
-    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && basicTime == 0)) {
+    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && byoyomi == 0)) {
         _startDialog->open();
         return;
     }
@@ -499,7 +499,7 @@ void MainController::newRatingGame()
     int basicTime = user.basicTime();
     int byoyomi = user.byoyomi();
 
-    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && basicTime == 0)) {
+    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && byoyomi == 0)) {
         _startRatingDialog->open();
         return;
     }
@@ -590,13 +590,17 @@ bool MainController::openEngine()
     return ret;
 }
 
-
-// 現在局面から開始
+// 対局開始
 void MainController::startGame()
 {
     const auto &user = User::load();
     int basicTimeMsecs = user.basicTime() * 60000;
     int byoyomiMsecs = user.byoyomi() * 1000;
+
+    if (user.method() == maru::Fischer) {
+        // フィッシャーの場合は持ち時間は加算時間以上であるべき
+        basicTimeMsecs = std::max(basicTimeMsecs, byoyomiMsecs);
+    }
 
     _clock->setTime((maru::TimeMethod)user.method(), basicTimeMsecs, byoyomiMsecs);
     _ponderFlag = (_players[maru::Sente].type() != _players[maru::Gote].type()); // 人間対コンピュータか
@@ -605,7 +609,7 @@ void MainController::startGame()
 
     // エンジン開始（通常対戦の場合、序盤重視率はデフォルト）
     // 詰みチェックで人対人でもエンジン使用する
-    int slowMover = (_mode == Game) ? 0 : qBound(20, user.basicTime(), 100);  // 序盤重視率
+    int slowMover = (_mode == Game) ? 0 : qBound(20, user.basicTime() * 3, 100);  // 序盤重視率
     if (!Engine::instance().newGame(slowMover)) {
         MessageBox::information(tr("Engine error"), Engine::instance().error());
         return;
@@ -620,7 +624,7 @@ void MainController::startGame()
     showRemainingTime(maru::Gote, basicTimeMsecs, byoyomiMsecs);
 }
 
-
+// 思考開始
 void MainController::startGo()
 {
     hideSpinner();  // スピナー非表示

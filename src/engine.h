@@ -58,7 +58,7 @@ public:
     QByteArray startPosition() const { return _startPositionSfen; }
     void setStartPosition(const QByteArray &sfen = QByteArray());
     QByteArrayList allMoves() const { return _allMoves; }  // 全指し手（SFEN形式）
-    void setSkillLevel(int level) { _level = level; }
+    void setSkillLevel(int level) { _level = qBound(0, level, 20); }
     bool newGame(int slowMover = 0);
     void gameover();
     void quit();

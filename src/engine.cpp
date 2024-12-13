@@ -363,7 +363,7 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 
         if (moves == _ponderingMoves) {
             // qDebug() << "ponderhit: " <<  _ponderingMoves;
-            Command::instance().clearResponse();
+            Command::instance().clearResponse(1);
             Command::instance().request("ponderhit");
             _ponderingMoves.clear();
             _state = Going;
@@ -401,11 +401,11 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 
     if (senteTime > 0) {
         cmd += " btime ";
-        cmd += QByteArray::number(senteTime);
+        cmd += QByteArray::number(senteTime - incTime);
     }
     if (goteTime > 0) {
         cmd += " wtime ";
-        cmd += QByteArray::number(goteTime);
+        cmd += QByteArray::number(goteTime - incTime);
     }
     if (byoyomi > 0) {
         cmd += " byoyomi ";
@@ -417,8 +417,8 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         cmd += QByteArray::number(incTime);
     }
 
-    //qDebug() << cmd;
-    Command::instance().clearResponse();
+    //qDebug() << "cmd: " << cmd;
+    Command::instance().clearResponse(1);
     Command::instance().request(cmd.toStdString());
     return true;
 }
