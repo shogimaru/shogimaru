@@ -1,5 +1,5 @@
 #pragma once
-#include <QtSystemDetection>
+#include <QtGlobal>
 #include <condition_variable>
 #include <list>
 #include <mutex>
