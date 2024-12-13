@@ -7,7 +7,7 @@ on:
     branches: [develop]
 
 jobs:
-  build-windows-qt68-msvc2022:
+  ci-windows-qt68-msvc2022:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@main
