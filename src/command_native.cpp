@@ -5,6 +5,11 @@
 #include <QDateTime>
 
 
+Command::Command() {}
+
+Command::~Command() {}
+
+
 void Command::request(const std::string &command)
 {
     //qDebug() << "request" << command.c_str();

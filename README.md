@@ -49,7 +49,7 @@
 
 - WebAssembly（マルチスレッド版）
   Emscripten 環境を有効にした上で次のコマンドを実行する。
-  Emscripten のバージョンは Qt をビルドしたバージョンと合わせること（https://doc.qt.io/qt-6/wasm.html）。
+  Emscripten のバージョンは Qt をビルドしたバージョンと合わせる（ https://doc.qt.io/qt-6/wasm.html ）。
 
 ```
  $ qmake -spec wasm-emscripten CONFIG+=release && make

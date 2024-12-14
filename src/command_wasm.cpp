@@ -3,6 +3,26 @@
 #include <QDebug>
 #include <sys/time.h>
 
+/*
+  CBus class
+*/
+class CBus {
+public:
+    void set(const std::string &cmd);
+    std::string get(int msecs);
+    std::list<std::string> getAll(int msecs);
+    bool empty() const { return _commands.empty(); }
+
+private:
+    std::list<std::string> _commands;
+    mutable std::mutex _mutex;
+    mutable std::condition_variable _cond;
+
+    CBus() { }
+    CBus(const CBus &) = delete;
+    CBus &operator=(const CBus &) = delete;
+    friend class Command;
+};
 
 static int64_t currentMSecsSinceEpoch()
 {
@@ -76,9 +96,25 @@ void CBus::set(const std::string &cmd)
 }
 
 
+/*
+ Command class
+*/
+
+Command::Command() :
+    _request(new CBus),
+    _response(new CBus)
+{ }
+
+Command::~Command()
+{
+    delete _request;
+    delete _response;
+}
+
+
 std::string Command::wait(int msecs)
 {
-    return _request.get(msecs);
+    return _request->get(msecs);
 }
 
 
@@ -86,14 +122,14 @@ void Command::reply(const std::string &response)
 {
     auto res = maru::trim(response);
     if (!res.empty()) {
-        _response.set(res);
+        _response->set(res);
     }
 }
 
 
 void Command::request(const std::string &command)
 {
-    _request.set(command);
+    _request->set(command);
 }
 
 
@@ -103,7 +139,7 @@ std::list<std::string> Command::poll(int msecs)
     int64_t end = currentMSecsSinceEpoch() + msecs;
 
     do {
-        auto res = _response.getAll(ms);
+        auto res = _response->getAll(ms);
         if (!res.empty()) {
             return res;
         }
@@ -120,7 +156,7 @@ bool Command::pollFor(const std::string &waitingResponse, int msecs, std::list<s
     int64_t end = currentMSecsSinceEpoch() + msecs;
 
     do {
-        auto res = _response.get(ms);
+        auto res = _response->get(ms);
         if (!res.empty()) {
             response.push_back(res);
 
@@ -144,7 +180,7 @@ void Command::clearResponse(int msecs)
     int ms = msecs;
 
     do {
-        _response.getAll(ms);
+        _response->getAll(ms);
         ms = end - currentMSecsSinceEpoch();
     } while (ms > 0);
 }
