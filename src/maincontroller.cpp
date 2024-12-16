@@ -17,6 +17,7 @@
 #include "sfen.h"
 #include "shogirecord.h"
 #include "sound.h"
+#include "startdialog.h"
 #include "startdialog2.h"
 #include "ui_mainwindow.h"
 #include "user.h"
@@ -84,7 +85,8 @@ MainController::MainController(QWidget *parent) :
     _boardScaleBox(new QComboBox(this)),
     _clock(new ChessClock(this)),
     _recorder(new Recorder),
-    _startDialog(new StartDialog2(this)),
+    _startDialog(new StartDialog(this)),
+    _startRatingDialog(new StartDialog2(this)),
     _nicknameDialog(new NicknameDialog(this)),
     _settingsDialog(new SettingsDialog(this)),
     _analysisDialog(new AnalysisDialog(this)),
@@ -138,8 +140,10 @@ MainController::MainController(QWidget *parent) :
     _ui->infoLine->setReadOnly(true);
     _ui->infoLine->hide();
 
-    connect(_ui->newAction, &QAction::triggered, _startDialog, &QDialog::open);  // 対局ボタンクリック
-    connect(_startDialog, &QDialog::accepted, this, &MainController::newRatingGame);  // 対局ダイアログOKボタンクリック
+    connect(_ui->newAction, &QAction::triggered, _startDialog, &QDialog::open);  // 通常対局ボタンクリック
+    connect(_startDialog, &QDialog::accepted, this, &MainController::newGame);  // 通常対局ダイアログOKボタンクリック
+    connect(_ui->newRatingAction, &QAction::triggered, _startRatingDialog, &QDialog::open);  // レーティング対局ボタンクリック
+    connect(_startRatingDialog, &QDialog::accepted, this, &MainController::newRatingGame);  // レーティング対局ダイアログOKボタンクリック
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_ui->resignAction, &QAction::triggered, this, &MainController::resign);  // 投了ボタンクリック
     connect(_ui->settingsAction, &QAction::triggered, this, &MainController::slotSettingsAction);  // 設定ボタンクリック
@@ -154,7 +158,7 @@ MainController::MainController(QWidget *parent) :
     connect(_ui->myPageAction, &QAction::triggered, _myPage, &MyPage::open);  // マイページボタンクリック
     connect(_ui->infoAction, &QAction::triggered, this, &MainController::openInfoBox);  // 情報ボタンクリック
     connect(_ui->recordWidget, &QListWidget::itemSelectionChanged, this, &MainController::slotRecordItemSelected);
-    connect(&Engine::instance(), &Engine::ready, this, &MainController::startGo);
+    connect(&Engine::instance(), &Engine::readyGame, this, &MainController::startGo);
     connect(&Engine::instance(), &Engine::bestMove, _board, &Board::movePiece);
     connect(&Engine::instance(), &Engine::pondering, this, &MainController::pondered);
     connect(&Engine::instance(), &Engine::win, this, &MainController::engineWin);
@@ -192,7 +196,7 @@ MainController::MainController(QWidget *parent) :
     connect(_boardScaleBox, QOverload<int>::of(&QComboBox::currentIndexChanged), scaleBoard);
 
     // ロード
-    auto &user = User::load();
+    const auto &user = User::load();
     for (int i = 0; i < _boardScaleBox->count(); i++) {
         if (_boardScaleBox->itemData(i).toInt() == user.scale()) {
             _boardScaleBox->setCurrentIndex(i);
@@ -234,6 +238,7 @@ void MainController::setGotePlayer(const Player &player)
 // 棋戦名
 void MainController::setEventName(const QString &name)
 {
+    _eventName = name;
     QString text = maru::elideText(name, _ui->labelEvent);
     _ui->labelEvent->setText(text);
 }
@@ -242,6 +247,8 @@ void MainController::setEventName(const QString &name)
 void MainController::createToolBar()
 {
     _ui->toolBar->addAction(_ui->newAction);
+    _ui->toolBar->addSeparator();
+    _ui->toolBar->addAction(_ui->newRatingAction);
     _ui->toolBar->addSeparator();
     _ui->toolBar->addAction(_ui->resignAction);
     _ui->toolBar->addSeparator();
@@ -301,9 +308,11 @@ void MainController::openInfoBox()
 void MainController::updateButtonStates()
 {
     switch (_mode) {
-    case Watch:  // 棋譜再生
+    case Watch:  // 棋譜再生中
         _ui->newAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
+        _ui->newRatingAction->setEnabled(true);
         _ui->resignAction->setDisabled(true);
+        _ui->resignAction->setText(tr("Resign"));
         _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0 && _recorder->count() > 1);
@@ -319,9 +328,11 @@ void MainController::updateButtonStates()
         _ui->infoLine->hide();
         break;
 
-    case Rating:  // 対局
-        _ui->newAction->setDisabled(EngineSettings::instance().availableEngineCount() > 0);
+    case Game:  // 通常対局中
+        _ui->newAction->setEnabled(EngineSettings::instance().availableEngineCount() <= 0);
+        _ui->newRatingAction->setEnabled(false);
         _ui->resignAction->setEnabled(true);
+        _ui->resignAction->setText((_players[maru::Sente].type() == maru::Computer && _players[maru::Gote].type() == maru::Computer) ? tr("Abort") : tr("Resign"));
         _ui->settingsAction->setEnabled(false);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(false);
@@ -335,9 +346,29 @@ void MainController::updateButtonStates()
         _ui->infoLine->hide();
         break;
 
-    case Analyzing:  // 検討
+    case Rating:  // レーティング対局中
+        _ui->newAction->setEnabled(EngineSettings::instance().availableEngineCount() <= 0);
+        _ui->newRatingAction->setEnabled(false);
+        _ui->resignAction->setEnabled(true);
+        _ui->resignAction->setText(tr("Resign"));
+        _ui->settingsAction->setEnabled(false);
+        _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
+        _ui->analysisAction->setEnabled(false);
+        _ui->recordAction->setEnabled(false);
+        _ui->recordWidget->setAttribute(Qt::WA_TransparentForMouseEvents);
+        _ui->messageTableWidget->setAttribute(Qt::WA_TransparentForMouseEvents);
+        _ui->messageTableWidget->hide();
+        _graph->setAttribute(Qt::WA_TransparentForMouseEvents);
+        _graph->hide();
+        _opeButtonGroup->setEnabled(false);
+        _ui->infoLine->hide();
+        break;
+
+    case Analyzing:  // 検討中
         _ui->newAction->setEnabled(false);
+        _ui->newRatingAction->setEnabled(false);
         _ui->resignAction->setDisabled(true);
+        _ui->resignAction->setText(tr("Resign"));
         _ui->settingsAction->setEnabled(false);
         _ui->analysisAction->setText(tr("Stop"));
         _ui->analysisAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
@@ -353,9 +384,11 @@ void MainController::updateButtonStates()
         _ui->infoLine->show();
         break;
 
-    case Edit:  // 編集
+    case Edit:  // 編集中
         _ui->newAction->setEnabled(EngineSettings::instance().availableEngineCount() > 0);
+        _ui->newRatingAction->setEnabled(true);
         _ui->resignAction->setDisabled(true);
+        _ui->resignAction->setText(tr("Resign"));
         _ui->settingsAction->setEnabled(true);
         _ui->analysisAction->setText(QCoreApplication::translate("MainWindow", "Analysis", nullptr));
         _ui->analysisAction->setEnabled(false);
@@ -377,45 +410,103 @@ void MainController::updateButtonStates()
 }
 
 
+void MainController::newGame()
+{
+    // 持ち時間チェック
+    const User &user = User::load();
+    int basicTime = user.basicTime();
+    int byoyomi = user.byoyomi();
+
+    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && byoyomi == 0)) {
+        _startDialog->open();
+        return;
+    }
+
+    int comRating = maru::R3000;  // 最大エンジンレベル
+    QString nickname = user.nickname().isEmpty() ? tr("You") : user.nickname();
+
+    // 先手
+    Player sente = (_startDialog->player(maru::Sente) == maru::Computer) ? Player(maru::Computer, "", comRating) : Player(maru::Human, nickname, user.rating());
+
+    // 後手
+    Player gote = (_startDialog->player(maru::Gote) == maru::Computer) ? Player(maru::Computer, "", comRating) : Player(maru::Human, nickname, user.rating());
+
+    // エンジン起動
+    openEngine();
+
+    if (sente.type() == maru::Computer || gote.type() == maru::Computer) {
+        QString comname = Engine::instance().shortName();  // COM名
+        if (Engine::instance().hasSkillLevelOption()) {
+            comname += " " + engineLevelName(comRating);
+            int skillLevel = engineSkillLevel(comRating, 0);
+            Engine::instance().setSkillLevel(skillLevel);
+        }
+
+        if (sente.type() == maru::Computer) {
+            sente.setName(comname);
+        }
+
+        if (gote.type() == maru::Computer) {
+            gote.setName(comname);
+        }
+    }
+
+    setSentePlayer(sente);
+    setGotePlayer(gote);
+
+    QString msg;
+    msg += tr("Time control:%1min").arg(user.basicTime());
+    msg += "  ";
+    if (user.method() == maru::Byoyomi) {
+        msg += tr("Byoyomi:%1sec").arg(user.byoyomi());
+    } else {
+        msg += tr("Add per move:%1sec").arg(user.byoyomi());
+    }
+    msg += "\n\n";
+    msg += tr("Good Luck!");
+
+    MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
+
+    _mode = Game;
+    int index = std::max(_ui->recordWidget->currentRow(), 0);
+    if (_startDialog->position() == maru::Initial || index == 0) {
+        clear();  // 画面クリア
+        _board->startGame(Sfen::defaultPostion());
+        _clock->setTurn(maru::Sente);
+    } else {
+        // 現在局面から開始
+        maru::Turn turn = _recorder->turn(index);
+        _clock->setTurn(turn);
+        _recorder->removeAfter(index + 1);
+        // 次以降の棋譜を削除
+        for (int i = _ui->recordWidget->count() - 1; i >= index + 1; --i) {
+            delete _ui->recordWidget->takeItem(i);
+        }
+
+        setEventName(QString());
+        _ui->messageTableWidget->clear();
+        _graph->clear();  // グラフクリア
+    }
+}
+
+
 void MainController::newRatingGame()
 {
     // ユーザ情報
     _nicknameDialog->hide();
 
     // 持ち時間チェック
-    int basicTime = _startDialog->basicTime() * 60000;
-    int byoyomi = _startDialog->byoyomi() * 1000;
-    if ((basicTime == 0 && byoyomi == 0) || (_startDialog->method() == maru::Fischer && basicTime == 0)) {
-        _startDialog->open();
-        return;
-    }
+    const User &user = User::load();
+    int basicTime = user.basicTime();
+    int byoyomi = user.byoyomi();
 
-    User &user = User::load();
-
-    // 空チェック
-    if (user.nickname().isEmpty()) {
-        _nicknameDialog->open();
+    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && byoyomi == 0)) {
+        _startRatingDialog->open();
         return;
     }
 
     // エンジン起動
-    auto data = EngineSettings::instance().currentEngine();
-    if (data.name.isEmpty()) {
-        qCritical() << "No shogi engine";
-        return;
-    }
-
-#ifndef Q_OS_WASM
-    if (!QFileInfo(data.path).exists()) {
-        qCritical() << "Not found such shogi engine:" << data.path;
-        return;
-    }
-#endif
-
-    Engine::instance().open(data.path);
-    // オプション
-    auto engineData = EngineSettings::instance().currentEngine();
-    Engine::instance().setOptions(engineData.options);
+    openEngine();
 
     // エンジンレベル
     int comRating = 0;
@@ -430,16 +521,16 @@ void MainController::newRatingGame()
         } while (std::abs(user.rating() - comRating) > 300);
     }
 
-    QString name;
+    QString name = Engine::instance().shortName();
     if (Engine::instance().hasSkillLevelOption()) {
-        name = engineLevelName(comRating);
+        name += " " + engineLevelName(comRating);
         int skillLevel = engineSkillLevel(comRating, 0);
         Engine::instance().setSkillLevel(skillLevel);
-    } else {
-        name = Engine::instance().name();
     }
+
     Player computer(maru::Computer, name, comRating);
-    Player human(maru::Human, user.nickname(), user.rating());
+    QString nickname = user.nickname().isEmpty() ? tr("You") : user.nickname();
+    Player human(maru::Human, nickname, user.rating());
 
     QString msg;
     if (maru::random(0, 1)) {
@@ -453,105 +544,106 @@ void MainController::newRatingGame()
     }
 
     msg += "\n\n";
-    msg += tr("Time control:%1min").arg(_startDialog->basicTime());
+    msg += tr("Time control:%1min").arg(user.basicTime());
     msg += "  ";
-    if (_startDialog->method() == maru::Byoyomi) {
-        msg += tr("Byoyomi:%1sec").arg(_startDialog->byoyomi());
+    if (user.method() == maru::Byoyomi) {
+        msg += tr("Byoyomi:%1sec").arg(user.byoyomi());
     } else {
-        msg += tr("Add per move:%1sec").arg(_startDialog->byoyomi());
+        msg += tr("Add per move:%1sec").arg(user.byoyomi());
     }
     msg += "\n\n";
     msg += tr("Good Luck!");
+
+    _mode = Rating;
+    clear();  // 画面クリア
+    _board->startGame(Sfen::defaultPostion());
+    _clock->setTurn(maru::Sente);
     MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
 }
 
 
+bool MainController::openEngine()
+{
+    // エンジン起動
+    auto data = EngineSettings::instance().currentEngine();
+    if (data.name.isEmpty()) {
+        qCritical() << "No shogi engine";
+        return false;
+    }
+
+    if (Engine::instance().isOpen()) {
+        return true;
+    }
+
+#ifndef Q_OS_WASM
+    if (!QFileInfo(data.path).exists()) {
+        qCritical() << "Not found such shogi engine:" << data.path;
+        return false;
+    }
+#endif
+
+    bool ret = Engine::instance().open(data.path);
+    if (ret) {
+        // オプション設定
+        auto engineData = EngineSettings::instance().currentEngine();
+        Engine::instance().setOptions(engineData.options);
+    }
+    return ret;
+}
+
+// 対局開始
 void MainController::startGame()
 {
-    // // 千日手
-    // static const QByteArray firstPosition =
-    //     "l5knl/"
-    //     "4r1g2/"
-    //     "1Bn1gpsp1/"
-    //     "p1pps1p1p/"
-    //     "1p5P1/"
-    //     "P1P1SPP1P/"
-    //     "1PSPP4/"
-    //     "2G2G3/"
-    //     "LNK4RL "
-    //     "b Pbn 1";
+    const auto &user = User::load();
+    int basicTimeMsecs = user.basicTime() * 60000;
+    int byoyomiMsecs = user.byoyomi() * 1000;
 
-    // // 連続王手千日手
-    // static const QByteArray firstPosition =
-    //     "l4g2l/"
-    //     "5g3/"
-    //     "3p1p1k1/"
-    //     "p1p3p1p/"
-    //     "1p3P3/"
-    //     "P1P1pn2+b/"
-    //     "1PGP2PPN/"
-    //     "L5SK1/"
-    //     "5G2L "
-    //     "b RSSPPPrbsnn 1";
+    if (user.method() == maru::Fischer) {
+        // フィッシャーの場合は持ち時間は加算時間以上であるべき
+        basicTimeMsecs = std::max(basicTimeMsecs, byoyomiMsecs);
+    }
 
-    // // 打ち歩詰めチェック
-    // static const QByteArray firstPosition =
-    //     "l7l/"
-    //     "4S1g2/"
-    //     "3pp2p1/"
-    //     "5Bp1p/"
-    //     "P1SG1R3/"
-    //     "2SP1G2P/"
-    //     "KPN4k1/"
-    //     "2P2PP2/"
-    //     "Lr4S1L "
-    //     "b NPPPbgnnpppp 1";
+    _clock->setTime((maru::TimeMethod)user.method(), basicTimeMsecs, byoyomiMsecs);
+    _ponderFlag = (_players[maru::Sente].type() != _players[maru::Gote].type()); // 人間対コンピュータか
 
-    // // 最後の審判
-    // static const QByteArray firstPosition =
-    //     "-+P-pS--+PR/"
-    //     "--n--S-lg/"
-    //     "-l---p-p-/"
-    //     "-G--n-pS-/"
-    //     "N-p--o---/"
-    //     "---S--l--/"
-    //     "----K-lgP/"
-    //     "---P-+p--p/"
-    //     "----Pg-PN "
-    //     "b BPrb4p 1";
+    showSpinner();  // スピナー表示
 
-    clear();  // 画面クリア
-    int basicTime = _startDialog->basicTime() * 60000;
-    int byoyomi = _startDialog->byoyomi() * 1000;
-
-    _clock->setTime(_startDialog->method(), basicTime, byoyomi);
-    _ponderFlag = (_players[maru::Sente].type() != _players[maru::Gote].type());
-
-    if (_players[maru::Sente].type() == maru::Computer || _players[maru::Gote].type() == maru::Computer) {
-        // 初期局面から開始
-        Engine::instance().setStartPosition(Sfen::defaultPostion());
-        if (!_board->startGame(Sfen::defaultPostion())) {
-            qCritical() << "start game error " << __FILE__ << __LINE__;
-        }
-        _recorder->setFirstPosition(Sfen::defaultPostion());
-        showSpinner();  // スピナー表示
-
-        // エンジン開始
-        int slowMover = qBound(10, basicTime / 60000, 100);  // 序盤重視率
-        if (!Engine::instance().newGame(slowMover)) {
-            MessageBox::information(tr("Engine error"), Engine::instance().error());
-            return;
-        }
+    // エンジン開始（通常対戦の場合、序盤重視率はデフォルト）
+    // 詰みチェックで人対人でもエンジン使用する
+    int slowMover = (_mode == Game) ? 0 : qBound(20, user.basicTime() * 3, 100);  // 序盤重視率
+    if (!Engine::instance().newGame(slowMover)) {
+        MessageBox::information(tr("Engine error"), Engine::instance().error());
+        return;
     }
 
     _rotated = (_players[maru::Sente].type() == maru::Computer && _players[maru::Gote].type() == maru::Human);  // 反転有無
     updateBoard();
 
     // 対局開始
-    _mode = Rating;
     updateButtonStates();
-    showRemainingTime(maru::Sente, basicTime, byoyomi);
-    showRemainingTime(maru::Gote, basicTime, byoyomi);
+    showRemainingTime(maru::Sente, basicTimeMsecs, byoyomiMsecs);
+    showRemainingTime(maru::Gote, basicTimeMsecs, byoyomiMsecs);
+}
+
+// 思考開始
+void MainController::startGo()
+{
+    hideSpinner();  // スピナー非表示
+
+    if (_mode == Rating || _mode == Game) {
+        _clock->start();
+        setTurn(_clock->currentTurn());
+    } else if (_mode == Analyzing) {
+        // 解析開始手数
+        auto sfen = _recorder->sfen(_analysisMoves);
+        Engine::instance().analysis(sfen);
+        setCurrentRecordRow(_analysisMoves);
+        _analysisTimerId = startTimer(1000);
+        _analysisTimer.start();
+        _elapsedTimer.start();
+    } else {
+        qCritical() << "Invalid mode:" << _mode << "line:" << __LINE__;
+    }
 }
 
 
@@ -794,7 +886,7 @@ void MainController::move()
 {
     Sound::playSnap();  // 駒音
 
-    if (_mode == Rating) {
+    if (_mode == Rating || _mode == Game) {
         // 棋譜UIへ追加
         record(_board->lastMovedPiece(), _board->isCheck());  // 指し手記録
 
@@ -903,24 +995,27 @@ void MainController::setTurn(maru::Turn turn)
     displayTurn(turn);
     _board->setTurn(turn, (_players[turn].type() == maru::Human));
 
-    if (_mode == Rating) {
+    if (_mode == Rating || _mode == Game) {
         if (_players[turn].type() == maru::Human) {
             if (_board->isCheck()) {  // 最後の手が王手か
                 // 詰みチェック
+                Engine::instance().stop();
                 bool mated = Engine::instance().mated(_recorder->sfen(_recorder->count() - 1));
                 if (mated) {
                     // 詰み
                     stopGame(turn, maru::Loss, maru::Loss_Resign);
-                    showGameoverBox(tr("Checkmate."));  // 詰みました。
+                    showGameoverBox(tr("Checkmate."));  // 詰みました
                     return;
                 }
             }
         }
 
-        if (_players[turn].type() == maru::Computer) {
+        if (_players[turn].type() == maru::Computer) {  // 手番がコンピュータなら
             Engine::instance().go(_recorder->allMoves(), _clock->remainingTime(maru::Sente), _clock->remainingTime(maru::Gote), _clock->byoyomi(), _clock->incrementTime());
+            // qDebug() << "moves: " << _recorder->allMoves();
         } else {
             if (_ponderFlag) {  // 先読み
+                Engine::instance().stop();
                 Engine::instance().ponder(_clock->remainingTime(maru::Sente), _clock->remainingTime(maru::Gote), _clock->byoyomi(), _clock->incrementTime());
             }
         }
@@ -978,8 +1073,11 @@ void MainController::pondered(const PonderInfo &info)
 
     PonderInfo pi = info;
 
-    if (_mode == Rating) {  // レーティング対局
-        updateScore(pi, (_players[maru::Gote].type() == maru::Computer));  // 後手がコンピュータならマイナス
+    if (_mode == Rating || _mode == Game) {  // 対局
+        bool pondering = (Engine::instance().state() == Engine::Pondering); // 先読みか
+        bool minus = (pondering) ? (_clock->currentTurn() == maru::Sente) : (_clock->currentTurn() == maru::Gote);
+        updateScore(pi, minus);  // 後手がコンピュータならマイナス
+        // qDebug() << "turn:" << ((_clock->currentTurn()== maru::Sente) ? "b" : "w") << "score:" << pi.scoreCp << "mateCount:" << pi.mateCount << "mate:" << pi.mate << "nodes:" << pi.nodes << "pv:" << pi.pv;
 
         // PonderInfoチェック
         if (!pi.pv.isEmpty()) {
@@ -990,8 +1088,7 @@ void MainController::pondered(const PonderInfo &info)
 
             QByteArray sfen = _recorder->sfen(_recorder->count() - 1);
             sfen += " moves ";
-            if (_players[_clock->currentTurn()].type() == maru::Human
-                && !Engine::instance().lastPondered().isEmpty()) {
+            if (pondering) {
                 // 先読みの場合
                 pi.pv.prepend(Engine::instance().lastPondered());
             }
@@ -1010,7 +1107,6 @@ void MainController::pondered(const PonderInfo &info)
         if (currentPlayer().type() == maru::Human && !Engine::instance().lastPondered().isEmpty()) {
             pi.pv.prepend(Engine::instance().lastPondered());
         }
-        //qDebug() << "turn:" << ((pi.turn == maru::Sente) ? "b" : "w") << "score:" << pi.scoreCp << "mateCount:" << pi.mateCount << "nodes:" << pi.nodes << "pv:" << pi.pv;
 
     } else if (_mode == Analyzing) {  // 棋譜検討
 
@@ -1307,7 +1403,12 @@ void MainController::rotate(bool rotation)
 void MainController::engineWin()
 {
     switch (_mode) {
-    case Rating:  // 対局
+    case Game:  // 通常対局
+        stopGame(_clock->currentTurn(), maru::Win, maru::Win_Declare);
+        showGameoverBox(tr("The computer declared victory by entering the king, according to CSA rules."));
+        break;
+
+    case Rating:  // レーティング対局
         stopGame(_clock->currentTurn(), maru::Win, maru::Win_Declare);
         showGameoverBox(tr("The computer declared victory by entering the king, according to CSA rules."));
         break;
@@ -1334,7 +1435,16 @@ void MainController::engineWin()
 void MainController::engineResign()
 {
     switch (_mode) {
-    case Rating:  // 対局
+    case Game:  // 通常対局
+        stopGame(_clock->currentTurn(), maru::Loss, maru::Loss_Resign);
+        if (_players[maru::Sente].type() != _players[maru::Gote].type()) { // 人間対コンピュータか
+            showGameoverBox(tr("You win!"));
+        } else {
+            showGameoverBox(tr("COM win!"));
+        }
+        break;
+
+    case Rating:  // レーティン部対局
         stopGame(_clock->currentTurn(), maru::Loss, maru::Loss_Resign);
         showGameoverBox(tr("You win!"));
         break;
@@ -1359,7 +1469,7 @@ void MainController::engineResign()
 
 void MainController::slotRecordItemSelected()
 {
-    if (_mode == Rating) {
+    if (_mode == Rating || _mode == Game) {
         _ui->messageTableWidget->clear();
         return;
     }
@@ -1444,9 +1554,10 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
 
 void MainController::showRemainingTime(maru::Turn turn, int time, int byoyomi)
 {
+    const auto &user = User::load();
     QString str = QTime(0, 0, 0, 999).addMSecs(time).toString("h:mm:ss");
 
-    if (_startDialog->method() == maru::Byoyomi) {
+    if (user.method() == maru::Byoyomi) {
         // 秒読み表示
         int byo = (byoyomi > 0) ? (byoyomi - 1) / 1000 + 1 : 0;
         str += QString("  %1").arg(byo, 2);
@@ -1469,7 +1580,7 @@ void MainController::updateRemainingTime()
 
 void MainController::gameoverTimeout()
 {
-    if (_mode == Rating) {
+    if (_mode == Rating || _mode == Game) {
         stopGame(_clock->currentTurn(), maru::Illegal, maru::Illegal_OutOfTime);
         showGameoverBox(tr("Out of time."));  // 時間切れです。
     }
@@ -1484,26 +1595,11 @@ void MainController::setCurrentRecordRow(int move)
 
 void MainController::startAnalysis()
 {
-    auto data = EngineSettings::instance().currentEngine();
-    if (data.name.isEmpty()) {
-        qCritical() << "No shogi engine";
-        return;
-    }
-
-#ifndef Q_OS_WASM
-    if (!QFileInfo(data.path).exists()) {
-        qCritical() << "Not found such shogi engine:" << data.path;
-        return;
-    }
-#endif
-
-    Engine::instance().open(data.path);
-    // オプション設定
-    auto engineData = EngineSettings::instance().currentEngine();
-    Engine::instance().setOptions(engineData.options);
+    // エンジン起動
+    openEngine();
 
     _analysisDialog->hide();
-    User &user = User::load();
+    const User &user = User::load();
 
     // Check conditions
     if (user.analysisTimeSeconds() <= 0 && user.analysisNodes() <= 0 && user.analysisDepth() <= 0) {
@@ -1535,28 +1631,6 @@ bool MainController::startEngineForAnalysis(int moves)
     _analysisMoves = moves;
     _mode = Analyzing;
     return true;
-}
-
-
-void MainController::startGo()
-{
-    hideSpinner();  // スピナー非表示
-
-    if (_mode == Rating) {
-        maru::Turn turn = maru::Sente;
-        _clock->start(turn);
-        setTurn(turn);
-    } else if (_mode == Analyzing) {
-        // 解析開始手数
-        auto sfen = _recorder->sfen(_analysisMoves);
-        Engine::instance().analysis(sfen);
-        setCurrentRecordRow(_analysisMoves);
-        _analysisTimerId = startTimer(1000);
-        _analysisTimer.start();
-        _elapsedTimer.start();
-    } else {
-        qCritical() << "Invalid mode:" << _mode << "line:" << __LINE__;
-    }
 }
 
 
@@ -1712,6 +1786,7 @@ void MainController::clear()
     auto *item = new QListWidgetItem(str, _ui->recordWidget);
     _ui->recordWidget->addItem(item);
     _ui->recordWidget->scrollToItem(item);
+    setEventName(QString());
 
     _ui->messageTableWidget->clear();
     _graph->clear();  // グラフクリア

@@ -17,6 +17,7 @@ public:
 
     maru::PlayerType type() const { return _type; }
     QString name() const { return _name; }
+    void setName(const QString &name) { _name = name; }
     int rating() const { return _rating; }
 
 private:

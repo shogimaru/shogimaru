@@ -7,6 +7,33 @@ on:
     branches: [develop]
 
 jobs:
+  ci-windows-qt68-msvc2022:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: Setup msbuild
+      uses: microsoft/setup-msbuild@v2
+      with:
+        vs-version: '[17,18)'  # 17.xx
+        msbuild-architecture: x64
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version:      6.8.0
+        host:         windows
+        target:       desktop
+        modules:      qtmultimedia
+        setup-python: false
+    - name: build
+      shell: cmd
+      run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        set CL=/MP
+        qmake CONFIG+=release
+        nmake
+    - name: deploy
+      run: windeployqt.exe .\shogimaru.exe
+
   ci-macos:
     runs-on: macos-latest
     steps:
@@ -20,7 +47,22 @@ jobs:
       - name: version
         run: shogimaru.app/Contents/MacOS/shogimaru -v
 
-  ci-ubuntu-gcc:
+  ci-ubuntu-clang:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@main
+      - name: apt
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 libgl1-mesa-dev clang make cmake
+      - name: build
+        run: |
+          qmake6 -spec linux-clang CONFIG+=release
+          make -j4
+      - name: version
+        run: ./shogimaru -v
+
+  ci-ubuntu22-gcc:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
@@ -35,7 +77,7 @@ jobs:
       - name: version
         run: ./shogimaru -v
 
-  ci-ubuntu-clang:
+  ci-ubuntu22-clang:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main

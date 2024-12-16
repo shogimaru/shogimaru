@@ -14,7 +14,7 @@ StartDialog2::StartDialog2(QWidget *parent) :
 
 void StartDialog2::open()
 {
-    auto &user = User::load();
+    const auto &user = User::load();
 
     int byoyomi = user.byoyomi();
     int basicTime = user.basicTime();
@@ -24,6 +24,7 @@ void StartDialog2::open()
         basicTime = 5;
     }
 
+    _ui->methodBox->setCurrentIndex(user.method());
     _ui->byoyomiBox->setCurrentText(QString::number(byoyomi));  // 秒読み
     _ui->minBox->setCurrentText(QString::number(basicTime % 60));
     _ui->hourBox->setCurrentText(QString::number(basicTime / 60));
@@ -38,6 +39,7 @@ void StartDialog2::accept()
 
     user.setByoyomi(byoyomi());
     user.setBasicTime(basicTime());
+    user.setMethod(method());
     user.save();
 
     QDialog::accept();

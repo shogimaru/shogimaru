@@ -11,6 +11,7 @@ public:
     ChessClock(QObject *parent = nullptr);
 
     void setTime(maru::TimeMethod mode, int basicTime, int byo);
+    void setTurn(maru::Turn turn) { _currentTurn = turn; }
     maru::Turn currentTurn() const { return _currentTurn; }
     maru::TimeMethod method() const { return _method; }
     int byoyomi() const { return _byoyomi; }
@@ -20,7 +21,7 @@ public:
     void setBleepEnabled(bool enable) { _bleepEnable = enable; }
 
 public slots:
-    void start(maru::Turn startTurn);
+    void start();
     void stop();
     maru::Turn changeTurn();
 
@@ -43,7 +44,6 @@ private:
     int _incTime {0};
     QElapsedTimer _elapsedTimer;
     maru::Turn _currentTurn {maru::Sente};
-    //QBasicTimer _timeoutTimer;
     bool _bleepEnable {true};
     int _time {0};
     int _elapsedTemp {0};

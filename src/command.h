@@ -5,24 +5,7 @@
 #include <ostream>
 
 class EngineProcess;
-
-
-class CBus {
-public:
-    void set(const std::string &cmd);
-    std::string get(int msecs);
-    std::list<std::string> getAll(int msecs);
-
-private:
-    std::list<std::string> _commands;
-    mutable std::mutex _mutex;
-    mutable std::condition_variable _cond;
-
-    CBus() { }
-    CBus(const CBus &) = delete;
-    CBus &operator=(const CBus &) = delete;
-    friend class Command;
-};
+class CBus;
 
 
 class Command {
@@ -31,7 +14,7 @@ public:
     void request(const std::string &command);
     std::list<std::string> poll(int msecs = 1000);
     bool pollFor(const std::string &waitingResponse, int msecs, std::list<std::string> &error);
-    void clearResponse(int msecs = 100);
+    void clearResponse(int msecs = 50);
 
     // Engine side
     std::string wait(int msecs = -1);
@@ -43,10 +26,11 @@ public:
 private:
     static EngineProcess *engineProcess;
 
-    CBus _request;
-    CBus _response;
+    CBus *_request {nullptr};   // For wasm use
+    CBus *_response {nullptr};  // For wasm use
 
-    Command() { }
+    Command();
+    ~Command();
     Command(const Command &) = delete;
     Command &operator=(const Command &) = delete;
 };

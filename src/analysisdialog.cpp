@@ -33,7 +33,7 @@ AnalysisDialog::Scope AnalysisDialog::scope() const
 
 void AnalysisDialog::open()
 {
-    auto &user = User::load();
+    const auto &user = User::load();
 
     // 時間
     _ui->timeCheckBox->setChecked(user.analysisTimeSeconds() > 0);  // マイナスは無効化

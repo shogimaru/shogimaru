@@ -13,6 +13,7 @@ void MainController::saveFile(const QString &filePath)
 
     Sfen sfen = _recorder->toSfen();
     sfen.setPlayers(_players[maru::Sente].name(), _players[maru::Gote].name());
+    sfen.setEventName(eventName());
     auto data = sfen.toCsa().toLocal8Bit();
     QFile file(filePath);
 

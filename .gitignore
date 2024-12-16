@@ -13,6 +13,9 @@ core
 engines.json
 kifu.dat
 Gemfile.lock
+*.csa
+*.sh
+html/*.html
 
 **/*.dll
 **/*.ilk

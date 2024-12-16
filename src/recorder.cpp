@@ -252,6 +252,25 @@ void Recorder::removeLast()
 }
 
 
+void Recorder::removeAfter(int index)
+{
+    if (index < 0) {
+        return;
+    }
+
+    if (index == 0) {
+        clear();
+        return;
+    }
+
+    int n = _pvList.count() - index;
+
+    _illegalItems.remove(index - 1, n);
+    _pvList.remove(index, n);
+    _moveRoutes.remove(index -1, n);
+}
+
+
 void Recorder::clear()
 {
     _illegalItems.clear();

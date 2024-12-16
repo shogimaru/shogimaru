@@ -22,6 +22,8 @@ const QLatin1String AnalysisNodes("analysisNodes");
 const QLatin1String AnalysisDepth("analysisDepth");
 const QLatin1String SoundEnable("soundEnable");
 const QLatin1String PieceType("pieceType");
+const QLatin1String StartPosition("startPosition");
+const QLatin1String Method("method");
 
 
 static QString jsonPath()
@@ -60,6 +62,8 @@ bool User::save()
     json[AnalysisDepth] = analysisDepth();
     json[SoundEnable] = soundEnable();
     json[PieceType] = pieceType();
+    json[StartPosition] = startPosition();
+    json[Method] = method();
 
     File file(jsonPath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -155,6 +159,14 @@ User &User::load()
 
     if (json.contains(PieceType)) {
         user._pieceType = json[PieceType].toInt();
+    }
+
+    if (json.contains(StartPosition)) {
+        user._startPosition = json[StartPosition].toInt();
+    }
+
+    if (json.contains(Method)) {
+        user._method = json[Method].toInt();
     }
 
     return user;

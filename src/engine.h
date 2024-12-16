@@ -34,21 +34,32 @@ public:
         virtual void terminate() { }
     };
 
+    enum State : int {
+        NotRunning = 0,
+        GameReady,  // 対局OK（初期化終了）
+        Idle,  // 対局中アイドル
+        Going,  // 考慮中
+        Pondering,  // 先読み中
+        EngineError,
+    };
+
     virtual ~Engine();
 
     bool open(const QString &path);
     void close();
+    bool isOpen() const;
 
     QString name() const { return _name; }
     QString author() const { return _author; }
+    QString shortName() const;
     const QVariantMap &options() const { return _options; }
     QVariantMap &options() { return _options; }
     void setOptions(const QVariantMap &options) { _options = options; }
     QByteArray startPosition() const { return _startPositionSfen; }
     void setStartPosition(const QByteArray &sfen = QByteArray());
     QByteArrayList allMoves() const { return _allMoves; }  // 全指し手（SFEN形式）
-    void setSkillLevel(int level) { _level = level; }
-    bool newGame(int slowMover = 100);
+    void setSkillLevel(int level) { _level = qBound(0, level, 20); }
+    bool newGame(int slowMover = 0);
     void gameover();
     void quit();
     bool go(const QByteArrayList &position, int senteTime, int goteTime, int byoyomi, int incTime);  // 考慮開始
@@ -61,6 +72,7 @@ public:
     bool hasSkillLevelOption() const;
     QMetaType::Type type(const QString &option) const;
     QString error() const { return _error; }
+    State state() const { return _state; }
 
     // 棋譜解析
     bool startAnalysis();
@@ -70,7 +82,7 @@ public:
     static EngineInfo getEngineInfo(const QString &path);
 
 signals:
-    void ready();  // 準備完了
+    void readyGame();  // 準備完了
     void bestMove(const QByteArray &best);  // 指し手
     void pondering(const PonderInfo &info);
     void resign();  // 投了
@@ -88,15 +100,6 @@ private:
     bool go(const QByteArrayList &position, bool ponderFlag, int senteTime, int goteTime, int byoyomi, int incTime);
     void setTurn();
     void sendOptions(const QVariantMap &options);
-
-    enum State : int {
-        NotRunning,
-        GameReady,  // 対局OK（初期化終了）
-        Idle,  // 対局中アイドル
-        Going,  // 考慮中
-        Pondering,  // 先読み中
-        EngineError,
-    };
 
     Engine(QObject *parent = nullptr);
     Engine(const Engine &) = delete;

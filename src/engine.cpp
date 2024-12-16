@@ -156,6 +156,19 @@ void Engine::close()
 }
 
 
+bool Engine::isOpen() const
+{
+    return _state != NotRunning && _state != EngineError;
+}
+
+
+QString Engine::shortName() const
+{
+    int idx = _name.indexOf(QRegularExpression("[\\( -]"));
+    return (idx > 0) ? _name.mid(0, idx) : _name;
+}
+
+
 void Engine::setStartPosition(const QByteArray &sfen)
 {
     _startPositionSfen = sfen;
@@ -233,8 +246,10 @@ bool Engine::newGame(int slowMover)
     if (opts.contains("MultiPV")) {  // 対局では1
         opts.insert("MultiPV", 1);
     }
-    if (opts.contains("SlowMover")) {  // 序盤重視率[%]
-        opts.insert("SlowMover", slowMover);
+    if (slowMover > 0) {
+        if (opts.contains("SlowMover")) {  // 序盤重視率[%]
+            opts.insert("SlowMover", slowMover);
+        }
     }
     if (opts.contains("SkillLevel")) {
         opts.insert("SkillLevel", _level);
@@ -244,6 +259,7 @@ bool Engine::newGame(int slowMover)
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
     _errorTimer->start(20000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
+    _lastPondered.clear();
     return true;
 }
 
@@ -258,7 +274,7 @@ void Engine::usiNewGame()
     _errorTimer->stop();
     Command::instance().request("usinewgame");
     _state = Idle;
-    emit ready();
+    emit readyGame();
 }
 
 
@@ -330,7 +346,7 @@ bool Engine::ponder(int senteTime, int goteTime, int byoyomi, int incTime)
     if (!_lastPondered.isEmpty()) {
         auto pos = _allMoves;
         pos << _lastPondered;
-        //qDebug() << "先読み: " << qPrintable(pos.join(" "));
+        // qDebug() << "先読み: " << qPrintable(pos.join(" "));
         return go(pos, true, senteTime, goteTime, byoyomi, incTime);
     }
     return false;
@@ -346,8 +362,11 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         }
 
         if (moves == _ponderingMoves) {
-            //qDebug() << "ponderhit";
+            // qDebug() << "ponderhit: " <<  _ponderingMoves;
+            Command::instance().clearResponse(1);
             Command::instance().request("ponderhit");
+            _ponderingMoves.clear();
+            _state = Going;
             return true;
         } else {
             stop();
@@ -382,11 +401,11 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 
     if (senteTime > 0) {
         cmd += " btime ";
-        cmd += QByteArray::number(senteTime);
+        cmd += QByteArray::number(senteTime - incTime);
     }
     if (goteTime > 0) {
         cmd += " wtime ";
-        cmd += QByteArray::number(goteTime);
+        cmd += QByteArray::number(goteTime - incTime);
     }
     if (byoyomi > 0) {
         cmd += " byoyomi ";
@@ -398,7 +417,8 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         cmd += QByteArray::number(incTime);
     }
 
-    qDebug() << cmd;
+    //qDebug() << "cmd: " << cmd;
+    Command::instance().clearResponse(1);
     Command::instance().request(cmd.toStdString());
     return true;
 }
@@ -406,17 +426,17 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
 
 void Engine::stop()
 {
-    bool res;
     std::list<std::string> response;
 
     switch (_state) {
+    case Idle:
+        Command::instance().request("stop");
+        break;
+
     case Going:
     case Pondering:
         Command::instance().request("stop");
-        res = Command::instance().pollFor("bestmove", 1000, response);
-        if (!res) {
-            qWarning() << "go stop" << res;
-        }
+        Command::instance().clearResponse();
         _state = Idle;
         break;
 
@@ -449,7 +469,7 @@ bool Engine::mated(const QByteArray &startPosition, const QByteArrayList &moves)
             cmd += " moves ";
             cmd += moves.join(" ");
         }
-        //qDebug() << cmd.toStdString();
+        qDebug() << cmd.toStdString();
         Command::instance().request(cmd.toStdString());
         Command::instance().request("mated");
         auto res = Command::instance().poll(1000);
@@ -475,6 +495,7 @@ void Engine::quit()
     case Going:
     case Pondering:
         Command::instance().request("quit");
+        Command::instance().clearResponse();
         break;
 
     default:
@@ -488,11 +509,16 @@ void Engine::quit()
 
 void Engine::gameover()
 {
+    if (!isOpen()) {
+        return;
+    }
+
     switch (_state) {
     case Idle:
     case Going:
     case Pondering:
         Command::instance().request("gameover win");  // win固定
+        Command::instance().clearResponse();
         break;
 
     case GameReady:

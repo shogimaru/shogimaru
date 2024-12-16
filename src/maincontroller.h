@@ -18,6 +18,7 @@ class Piece;
 class ChessClock;
 class Recorder;
 class Engine;
+class StartDialog;
 class StartDialog2;
 class NicknameDialog;
 class SettingsDialog;
@@ -38,7 +39,8 @@ public:
     // モード
     enum Mode : int {
         Watch,  // 棋譜再生
-        Rating,  // 対局（レーティング戦）
+        Game,   // 通常対局
+        Rating,  // レーティング対局
         Analyzing,  // 検討
         Edit,  // 編集
     };
@@ -55,6 +57,7 @@ public:
     void rotate(bool rotation);  // 上下回転
     void setSentePlayer(const Player &player);
     void setGotePlayer(const Player &player);
+    QString eventName() const { return _eventName; }
     void setEventName(const QString &name);  // 棋戦名
     void showGameoverBox(const QString &msg) const;
     bool isIllegalMove();
@@ -63,6 +66,7 @@ public:
     void showUrlRecord(const QString &hash);
 
 public slots:
+    void newGame();
     void newRatingGame();
     void startGame();
     void move();
@@ -113,6 +117,8 @@ protected:
     void timerEvent(QTimerEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
+    bool openEngine();
+    void setStartPosition(const QByteArray &sfen, bool reset);
 
 signals:
     void timeout();
@@ -131,7 +137,9 @@ private:
     Recorder *_recorder {nullptr};
     Mode _mode {Watch};
     QMap<maru::Turn, Player> _players;
-    StartDialog2 *_startDialog {nullptr};
+    QString _eventName;
+    StartDialog *_startDialog {nullptr};
+    StartDialog2 *_startRatingDialog {nullptr};
     NicknameDialog *_nicknameDialog {nullptr};
     SettingsDialog *_settingsDialog {nullptr};
     AnalysisDialog *_analysisDialog {nullptr};

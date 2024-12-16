@@ -120,8 +120,8 @@ Windows、Mac、Linux などで動作する GUI アプリです。CPU/GPU をフ
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | [将棋所](http://shogidokoro.starfree.jp/)                        | 広く使われている GUI                                                                                                     |
 | [ShogiGUI](http://shogigui.siganus.com/)                         | 棋譜解析にとても便利                                                                                                     |
+| [ShogiHome](https://sunfish-shogi.github.io/shogihome/) | [Electron](https://www.electronjs.org/) で作られたオープンソース将棋アプリ。ブラウザ版もある。 |
 | [WhaleWatcher](http://garnet-alice.net/programs/whalewatcher/)   | クジラちゃんに癒やされながら指せます                                                                                     |
-| [Electron 将棋](https://sunfish-shogi.github.io/electron-shogi/) | [Electron](https://www.electronjs.org/) で作られたオープンソース将棋アプリ。ブラウザ版もあるが対局はまだできないらしい。 |
 | [ShogiDroid](http://shogidroid.siganus.com/)                     | Android 用                                                                                                               |
 
 将棋丸はこれらのソフトを参考にしています。

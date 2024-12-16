@@ -26,6 +26,7 @@ void MainController::saveFile(const QString &filePath)
 
     Sfen sfen = _recorder->toSfen();
     sfen.setPlayers(_players[maru::Sente].name(), _players[maru::Gote].name());
+    sfen.setEventName(eventName());
     QByteArray data = sfen.toCsa().toUtf8();
     QByteArray fileName = filePath.toUtf8();
     sendTextFile(data.constData(), data.size(), fileName.constData(), fileName.size());

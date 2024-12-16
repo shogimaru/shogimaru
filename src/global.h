@@ -12,11 +12,12 @@ class QFont;
 namespace maru {
 
 // バージョン
-constexpr auto SHOGIMARU_VERSION_STR = "1.4.2";
+constexpr auto SHOGIMARU_VERSION_STR = "1.5.0";
 
+// 手番
 enum Turn : int {
-    Sente = 0x1000,
-    Gote = 0x2000,
+    Sente = 0x1000,  // 先手
+    Gote = 0x2000,   // 後手
     TurnMask = 0xF000,
 };
 
@@ -24,6 +25,12 @@ enum Turn : int {
 enum TimeMethod : int {
     Byoyomi = 0,  // 通常
     Fischer = 1,  // フィッシャー（1手毎加算）
+};
+
+// 開始局面
+enum StartPosision : int {
+    Initial = 0,  // 初期局面
+    Current,      // 現在の局面
 };
 
 // プレイヤ

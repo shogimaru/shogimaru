@@ -7,6 +7,7 @@ MOC_DIR  = .obj/
 OBJECTS_DIR = .obj/
 DEFINES += QT_DEPRECATED_WARNINGS
 INCLUDEPATH += src
+UI_DIR = src/
 
 !CONFIG(debug, debug|release) {
   DEFINES += QT_NO_DEBUG_OUTPUT
@@ -82,6 +83,7 @@ SOURCES += \
         src/settingsdialog.cpp \
         src/enginesettings.cpp \
         src/westerntabstyle.cpp \
+        src/startdialog.cpp \
         src/startdialog2.cpp \
         src/mypage.cpp \
         src/messagebox.cpp \
@@ -112,6 +114,7 @@ HEADERS += \
         src/settingsdialog.h \
         src/enginesettings.h \
         src/westerntabstyle.h \
+        src/startdialog.h \
         src/startdialog2.h \
         src/mypage.h \
         src/messagebox.h \
@@ -130,7 +133,7 @@ FORMS += \
         forms/recorddialog.ui \
         forms/settingsdialog.ui \
         forms/operationbuttongroup.ui \
-#        forms/startdialog.ui \
+        forms/startdialog.ui \
         forms/startdialog2.ui
 
 TRANSLATIONS += \
