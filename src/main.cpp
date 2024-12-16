@@ -8,6 +8,8 @@
 #include <QFontDatabase>
 #include <QTimer>
 #include <QTranslator>
+#include <QStyleFactory>
+#include <QStyleHints>
 #include <locale>
 #include <cstdlib>
 
@@ -37,6 +39,10 @@ int main(int argc, char *argv[])
     if (translator.load(ts, "assets/translations/")) {
         app.installTranslator(&translator);
     }
+
+    // スタイル
+    app.setStyle(QStyleFactory::create("Fusion"));
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);  // 強制ライトモード
 
     // Set font
 #ifdef Q_OS_WIN64
