@@ -142,11 +142,7 @@ User &User::load()
     }
 
     if (json.contains(AnalysisNodes)) {
-#if QT_VERSION < 0x060000
-        user._analysisNodes = json[AnalysisNodes].toVariant().toLongLong();
-#else
         user._analysisNodes = json[AnalysisNodes].toInteger();
-#endif
     }
 
     if (json.contains(AnalysisDepth)) {

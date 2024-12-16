@@ -189,11 +189,7 @@ void Engine::sendOptions(const QVariantMap &options)
 
     for (auto it = options.begin(); it != options.end(); ++it) {
         auto &opt = _usiDefaultOptions[it.key()];
-#if QT_VERSION < 0x060000
-        int type = it.value().type();
-#else
         auto type = it.value().typeId();
-#endif
         switch (type) {
         case QMetaType::Bool:
             value = (it.value().toBool()) ? QLatin1String("true") : QLatin1String("false");

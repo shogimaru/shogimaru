@@ -28,11 +28,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(_ui->resetEngineOptButton, &QPushButton::clicked, this, &SettingsDialog::resetEngineOptions);
     connect(_ui->tableEngineOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
     connect(_ui->tableEngineOptions, &QTableWidget::currentItemChanged, this, &SettingsDialog::slotItemClicked);
-#if QT_VERSION < 0x060000
-    connect(_ui->engineComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(switchEngineOptions(int)));
-#else
     connect(_ui->engineComboBox, &QComboBox::currentIndexChanged, this, &SettingsDialog::switchEngineOptions);
-#endif
     connect(_ui->soundOnOffButton, &QToolButton::toggled, [this](bool checked) {
         auto text = (checked) ? tr("ON") : tr("OFF");
         _ui->soundOnOffButton->setText(text);
