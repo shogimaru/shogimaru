@@ -109,5 +109,6 @@ QWidget *mainWindow();
 bool isLocaleLangJapanese();
 QString appLocalDataLocation();
 QString appResourcePath(const QString &relativePath);
+bool isDarkMode();
 
 }

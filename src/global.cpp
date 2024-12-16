@@ -188,4 +188,13 @@ QString appResourcePath(const QString &relativePath)
 #endif
 }
 
+bool isDarkMode()
+{
+    auto palette = dynamic_cast<QApplication*>(QCoreApplication::instance())->palette();
+    // Window背景色とWindowTextの色を比較してモードを推測
+    QColor backgroundColor = palette.color(QPalette::Window);
+    QColor textColor = palette.color(QPalette::WindowText);
+    return backgroundColor.lightness() < textColor.lightness();
+}
+
 }

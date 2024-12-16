@@ -40,11 +40,11 @@ int main(int argc, char *argv[])
         app.installTranslator(&translator);
     }
 
-    // Light mode
-    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);
-
-    // Style
+    // スタイル
     app.setStyle(QStyleFactory::create("Fusion"));
+#if QT_VERSION >= 0x060800 && defined(Q_OS_WASM)
+    app.styleHints()->setColorScheme(Qt::ColorScheme::Light);  // 強制ライトモード
+#endif
 
     // Set font
 #ifdef Q_OS_WIN64

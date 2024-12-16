@@ -270,6 +270,15 @@ void MainController::createToolBar()
     _ui->toolBar->addAction(_ui->myPageAction);
     _ui->toolBar->addSeparator();
     _ui->toolBar->addAction(_ui->infoAction);
+
+    // メニューバーのスタイルをカスタマイズ
+    if (maru::isDarkMode()) {
+        _ui->toolBar->setStyleSheet(
+            "QToolBar {"
+            "   color: #000000;" // テキスト色
+            "}"
+        );
+    }
 }
 
 
