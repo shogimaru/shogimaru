@@ -57,6 +57,7 @@ public:
     void rotate(bool rotation);  // 上下回転
     void setSentePlayer(const Player &player);
     void setGotePlayer(const Player &player);
+    QString eventName() const { return _eventName; }
     void setEventName(const QString &name);  // 棋戦名
     void showGameoverBox(const QString &msg) const;
     bool isIllegalMove();
@@ -136,6 +137,7 @@ private:
     Recorder *_recorder {nullptr};
     Mode _mode {Watch};
     QMap<maru::Turn, Player> _players;
+    QString _eventName;
     StartDialog *_startDialog {nullptr};
     StartDialog2 *_startRatingDialog {nullptr};
     NicknameDialog *_nicknameDialog {nullptr};

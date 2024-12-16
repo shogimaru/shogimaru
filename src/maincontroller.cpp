@@ -238,6 +238,7 @@ void MainController::setGotePlayer(const Player &player)
 // 棋戦名
 void MainController::setEventName(const QString &name)
 {
+    _eventName = name;
     QString text = maru::elideText(name, _ui->labelEvent);
     _ui->labelEvent->setText(text);
 }

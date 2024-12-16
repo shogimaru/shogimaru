@@ -600,6 +600,9 @@ QString Sfen::toCsa() const
     csa += "N-";
     csa += _players.second;
     csa += '\n';
+    csa += "$EVENT:";
+    csa += _eventName;
+    csa += '\n';
     // 開始局面
     csa += "P1-KY-KE-GI-KI-OU-KI-GI-KE-KY\n";
     csa += "P2 * -HI *  *  *  *  * -KA * \n";
@@ -615,7 +618,11 @@ QString Sfen::toCsa() const
     for (auto &mv : _moves) {
         csa += (senteTurn) ? "+" : "-";  // 指し手手番
         senteTurn = !senteTurn;
-        if (mv.second.mid(0, 1).isUpper()) {
+        if (mv.second.isEmpty()) {
+            continue;
+        }
+        const auto &c = mv.second[0];
+        if (c >= 'A' && c <= 'Z') {
             csa += "00";
         } else {
             csa += QString::number(ShogiRecord::usiToCoord(mv.second.mid(0, 2)));  // 移動前
