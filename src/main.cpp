@@ -42,8 +42,21 @@ int main(int argc, char *argv[])
 
     // スタイル
     app.setStyle(QStyleFactory::create("Fusion"));
-#if QT_VERSION >= 0x060800 && defined(Q_OS_WASM)
+#if QT_VERSION >= 0x060800
     app.styleHints()->setColorScheme(Qt::ColorScheme::Light);  // 強制ライトモード
+#else
+    QPalette lightPalette;
+    QColor fontColor(36, 36, 36);
+    lightPalette.setColor(QPalette::Window, QColor(240, 240, 240));     // 背景
+    lightPalette.setColor(QPalette::Text, fontColor);                   // テキスト
+    lightPalette.setColor(QPalette::WindowText, fontColor);             // テキスト
+    lightPalette.setColor(QPalette::Base, Qt::white);                   // 入力フィールドの背景
+    lightPalette.setColor(QPalette::AlternateBase, Qt::lightGray);      // 入力フィールドの別の背景
+    lightPalette.setColor(QPalette::Button, QColor(246, 246, 246));     // ボタン背景
+    lightPalette.setColor(QPalette::ButtonText, fontColor);             // ボタン文字
+    lightPalette.setColor(QPalette::Highlight, QColor(0, 120, 215));    // ハイライト色
+    lightPalette.setColor(QPalette::HighlightedText, Qt::white);        // ハイライト中の文字
+    app.setPalette(lightPalette);
 #endif
 
     // Set font
@@ -51,8 +64,7 @@ int main(int argc, char *argv[])
     QFont font("Yu Gothic UI");
     font.setPointSizeF(11.5);
 #elif defined(Q_OS_DARWIN)
-    QFont font("SF Pro Text");
-    font.setPointSizeF(12);
+    QFont font("Hiragino Kaku Gothic ProN", 15);
 #else
     int id = QFontDatabase::addApplicationFont(maru::appResourcePath("assets/fonts/ipagp.ttf"));
     QString family = QFontDatabase::applicationFontFamilies(id).value(0);
