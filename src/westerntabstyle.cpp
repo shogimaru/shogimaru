@@ -14,6 +14,7 @@ QSize WesternTabStyle::sizeFromContents(ContentsType type, const QStyleOption *o
 }
 
 
+#if Q_OS_DARWIN
 void WesternTabStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter,
     const QWidget *widget) const
 {
@@ -51,3 +52,19 @@ void WesternTabStyle::drawControl(ControlElement element, const QStyleOption *op
         QProxyStyle::drawControl(element, option, painter, widget);
     }
 }
+
+#else
+void WesternTabStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter,
+    const QWidget *widget) const
+{
+     if (element == CE_TabBarTabLabel) {
+        if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(option)) {
+            QStyleOptionTab opt(*tab);
+            opt.shape = QTabBar::RoundedNorth;
+            QProxyStyle::drawControl(element, &opt, painter, widget);
+        }
+    } else {
+        QProxyStyle::drawControl(element, option, painter, widget);
+    }
+}
+#endif
