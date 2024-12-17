@@ -7,7 +7,7 @@ on:
     branches: [develop]
 
 jobs:
-  ci-windows-qt68-msvc2022:
+  build-windows-qt68:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@main
@@ -19,7 +19,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
-        version:      6.8.0
+        version:      6.8.1
         host:         windows
         target:       desktop
         modules:      qtmultimedia
@@ -34,7 +34,7 @@ jobs:
     - name: deploy
       run: windeployqt.exe .\shogimaru.exe
 
-  ci-macos:
+  build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@main
@@ -47,7 +47,7 @@ jobs:
       - name: version
         run: shogimaru.app/Contents/MacOS/shogimaru -v
 
-  ci-ubuntu-clang:
+  build-ubuntu-clang:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@main
@@ -62,7 +62,7 @@ jobs:
       - name: version
         run: ./shogimaru -v
 
-  ci-ubuntu22-gcc:
+  build-ubuntu22-gcc:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
@@ -77,7 +77,7 @@ jobs:
       - name: version
         run: ./shogimaru -v
 
-  ci-ubuntu22-clang:
+  build-ubuntu22-clang:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main

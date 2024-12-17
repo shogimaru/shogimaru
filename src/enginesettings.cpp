@@ -146,7 +146,7 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
 
     // エンジンスレッド数
     int con = std::thread::hardware_concurrency();  // コア（スレッド）数
-    int threads = std::max((int)std::round(con * 0.8), 1);  // 80%
+    int threads = std::max((int)std::round(con * 0.75), 1);  // 75%
     options["Threads"].setValue(threads);
 
     options["BookDir"].setValue(maru::appResourcePath("assets/YaneuraOu"));
