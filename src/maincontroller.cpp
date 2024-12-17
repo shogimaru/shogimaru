@@ -473,6 +473,7 @@ void MainController::newGame()
         clear();  // 画面クリア
         _board->startGame(Sfen::defaultPostion());
         _clock->setTurn(maru::Sente);
+        Engine::instance().setStartPosition();  // デフォルト初期局面
     } else {
         // 現在局面から開始
         maru::Turn turn = _recorder->turn(index);
@@ -482,6 +483,9 @@ void MainController::newGame()
         for (int i = _ui->recordWidget->count() - 1; i >= index + 1; --i) {
             delete _ui->recordWidget->takeItem(i);
         }
+
+        auto sfen = _recorder->sfen(0);  // 開始局面
+        Engine::instance().setStartPosition(sfen);
 
         setEventName(QString());
         _ui->messageTableWidget->clear();
@@ -558,6 +562,7 @@ void MainController::newRatingGame()
     clear();  // 画面クリア
     _board->startGame(Sfen::defaultPostion());
     _clock->setTurn(maru::Sente);
+    Engine::instance().setStartPosition();  // デフォルト初期局面
     MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
 }
 

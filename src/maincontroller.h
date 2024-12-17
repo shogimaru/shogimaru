@@ -118,7 +118,6 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     bool openEngine();
-    void setStartPosition(const QByteArray &sfen, bool reset);
 
 signals:
     void timeout();

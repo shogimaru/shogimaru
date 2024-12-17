@@ -171,14 +171,14 @@ QString Engine::shortName() const
 
 void Engine::setStartPosition(const QByteArray &sfen)
 {
-    _startPositionSfen = sfen;
-
-    if (_startPositionSfen.isEmpty()) {
+    if (sfen.isEmpty()) {
         _turn = maru::Sente;
+        _startPositionSfen.clear();
         return;
     }
 
-    QByteArrayList items = _startPositionSfen.split(' ');
+    _startPositionSfen = sfen;
+    QByteArrayList items = sfen.split(' ');
     _turn = (items.value(1) == "w") ? maru::Gote : maru::Sente;
 }
 
@@ -382,7 +382,7 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         cmd += moves.join(' ');
     }
     Command::instance().request(cmd.toStdString());
-    //qDebug() << "cmd: " << cmd;
+    // qDebug() << "cmd: " << cmd;
 
     if (ponder) {
         _state = Pondering;
