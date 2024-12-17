@@ -14,7 +14,7 @@ QSize WesternTabStyle::sizeFromContents(ContentsType type, const QStyleOption *o
 }
 
 
-#if Q_OS_DARWIN
+#ifdef Q_OS_DARWIN
 void WesternTabStyle::drawControl(ControlElement element, const QStyleOption *option, QPainter *painter,
     const QWidget *widget) const
 {
