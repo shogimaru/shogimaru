@@ -13,14 +13,15 @@
 #include <QNetworkReply>
 #include <QUrl>
 
-static WesternTabStyle westernTabStyle;
-
 
 RecordDialog::RecordDialog(QWidget *parent) :
     QDialog(parent),
     _ui(new Ui::RecordDialog)
 {
     _ui->setupUi(this);
+
+    static WesternTabStyle westernTabStyle;
+    _ui->tabWidget->setElideMode(Qt::ElideNone);
     _ui->tabWidget->tabBar()->setStyle(&westernTabStyle);
     _ui->listWidget->setSelectionMode(QAbstractItemView::NoSelection);
 
