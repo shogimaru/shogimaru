@@ -248,9 +248,9 @@ QPixmap Board::board()
 {
     static QPixmap boardPixmap = []() {
         QPixmap pixmap(600, 780);
-        QPixmap board("assets/images/shogiboard-bg.jpg");
-        QPixmap line("assets/images/shogiboard-l.png");
-        QPixmap stand("assets/images/shogistand.jpg");
+        QPixmap board(maru::appResourcePath("assets/images/shogiboard-bg.jpg"));
+        QPixmap line(maru::appResourcePath("assets/images/shogiboard-l.png"));
+        QPixmap stand(maru::appResourcePath("assets/images/shogistand.jpg"));
 
         QPainter painter(&pixmap);
         painter.drawPixmap(0, 0, stand, 0, 0, stand.width(), stand.height());

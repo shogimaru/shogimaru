@@ -149,10 +149,10 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
     int threads = std::max((int)std::round(con * 0.8), 1);  // 80%
     options["Threads"].setValue(threads);
 
-    options["BookDir"].setValue(QString("assets/YaneuraOu"));
-    options["BookFile"].setValue(QString("user_book1.db"));
-    //options["EvalDir"].setValue(QString("assets/YaneuraOu/nnue-kp256"));
-    options["EvalDir"].setValue(QString("assets/YaneuraOu/nnue-halfkp256"));
+    options["BookDir"].setValue(maru::appResourcePath("assets/YaneuraOu"));
+    options["BookFile"].setValue(maru::appResourcePath("user_book1.db"));
+    //options["EvalDir"].setValue(maru::appResourcePath("assets/YaneuraOu/nnue-kp256"));
+    options["EvalDir"].setValue(maru::appResourcePath("assets/YaneuraOu/nnue-halfkp256"));
     options["FV_SCALE"].setValue(24);
 }
 

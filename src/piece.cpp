@@ -94,7 +94,7 @@ static QPixmap piecePixmap(int piece, int type)
     if (pix.isNull()) {
         auto img = imageFileMap.value(piece);
         if (!img.isEmpty()) {
-            const QString dir = QLatin1String("assets/images/") + QString::number(type) + "/";
+            const QString dir = maru::appResourcePath("assets/images/" + QString::number(type) + "/");
             pix = QPixmap(dir + img);
             if (piece & Piece::Rotated) {
                 // 180度回転

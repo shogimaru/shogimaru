@@ -10,14 +10,16 @@
 #include <QTabBar>
 #include <QtCore>
 
-static WesternTabStyle westernTabStyle;
-
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     _ui(new Ui::SettingsDialog)
 {
     _ui->setupUi(this);
+
+    static WesternTabStyle westernTabStyle;
+    _ui->tabWidget->setTabPosition(QTabWidget::West);
+    _ui->tabWidget->setElideMode(Qt::ElideNone);
     _ui->tabWidget->tabBar()->setStyle(&westernTabStyle);
     _ui->tabWidget->setCurrentIndex(0);
 

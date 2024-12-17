@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QMap>
 #include <QStandardPaths>
+#include <QDir>
 #include <QWidget>
 #include <random>
 #ifndef Q_OS_WIN
@@ -173,6 +174,27 @@ QString appLocalDataLocation()
 #else
     return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 #endif
+}
+
+QString appResourcePath(const QString &relativePath)
+{
+#ifdef Q_OS_WASM
+    return QLatin1String("./") + relativePath;
+#elif defined(Q_OS_DARWIN)
+    QString resourcesPath = QCoreApplication::applicationDirPath() + "/../Resources/";
+    return QDir(resourcesPath).absolutePath() + "/" + relativePath;
+#else
+    return QCoreApplication::applicationDirPath() + "/" + relativePath;
+#endif
+}
+
+bool isDarkMode()
+{
+    auto palette = dynamic_cast<QApplication*>(QCoreApplication::instance())->palette();
+    // Window背景色とWindowTextの色を比較してモードを推測
+    QColor backgroundColor = palette.color(QPalette::Window);
+    QColor textColor = palette.color(QPalette::WindowText);
+    return backgroundColor.lightness() < textColor.lightness();
 }
 
 }

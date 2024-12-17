@@ -108,5 +108,7 @@ QString elideText(const QString &text, const QLabel *label);
 QWidget *mainWindow();
 bool isLocaleLangJapanese();
 QString appLocalDataLocation();
+QString appResourcePath(const QString &relativePath);
+bool isDarkMode();
 
 }
