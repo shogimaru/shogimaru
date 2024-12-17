@@ -1,5 +1,6 @@
 #include "sound.h"
 #include "user.h"
+#include "global.h"
 #include <QDebug>
 #include <QString>
 #include <SDL/SDL_mixer.h>
