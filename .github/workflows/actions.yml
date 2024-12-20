@@ -3,8 +3,14 @@ name: ActionsCI
 on:
   push:
     branches: [master, develop]
+    paths:
+      - '**'
+      - '!docs/**'
   pull_request:
     branches: [develop]
+    paths:
+      - '**'
+      - '!docs/**'
 
 jobs:
   build-windows-qt68:
