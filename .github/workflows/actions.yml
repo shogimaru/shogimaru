@@ -47,6 +47,32 @@ jobs:
       - name: version
         run: shogimaru.app/Contents/MacOS/shogimaru -v
 
+  build-macos14:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@main
+      - name: Homebrew
+        run: brew install qt6 libiconv
+      - name: build
+        run: |
+          qmake CONFIG+=release
+          make -j4
+      - name: version
+        run: shogimaru.app/Contents/MacOS/shogimaru -v
+
+  build-macos13:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@main
+      - name: Homebrew
+        run: brew install qt6 libiconv
+      - name: build
+        run: |
+          qmake CONFIG+=release
+          make -j4
+      - name: version
+        run: shogimaru.app/Contents/MacOS/shogimaru -v
+
   build-ubuntu-clang:
     runs-on: ubuntu-24.04
     steps:
