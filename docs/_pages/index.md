@@ -54,13 +54,6 @@ Windows 向け将棋丸は次の手順を参考にセットアップしてくだ
 
 将棋思考エンジンは2つ以上登録でき、適宜切り替えて対局や棋譜解析することができます。
 
-### ビルド
-
-ソースコードからビルドするには Qt6 が必要です。
-詳しい内容は [GitHub](https://github.com/shogimaru/shogimaru) を参考にしてください。
-
-※ Windowsの場合は build.bat を参考にしてビルドを実行してください。
-
 ### レーティング対局
 
 最近の思考エンジンは人間が全く敵わないほど強くなっているので、レーティング対局では手加減するよう設定しました。
@@ -95,7 +88,7 @@ Windows 向け将棋丸は次の手順を参考にセットアップしてくだ
 
 ## <i class="fas fa-laptop-code"></i> 開発
 
-将棋丸はオープンソースであり [GitHub](https://github.com/shogimaru/shogimaru) で公開されています。  
+将棋丸はオープンソースであり [GitHub](https://github.com/shogimaru/shogimaru) で公開されています。ビルド方法などはそちらをご覧ください。 
 要望やバグ報告などお待ちしています。
 
 ## <i class="fas fa-brain"></i> 将棋思考エンジン
