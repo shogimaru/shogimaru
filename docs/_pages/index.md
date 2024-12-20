@@ -57,12 +57,7 @@ Windows 向け将棋丸は次の手順を参考にセットアップしてくだ
 ### ビルド
 
 ソースコードからビルドするには Qt6 が必要です。
-
-- qmake と make コマンドを実行
-  ```
-   $ qmake
-   $ make
-  ```
+詳しい内容は [GitHub](https://github.com/shogimaru/shogimaru) を参考にしてください。
 
 ※ Windowsの場合は build.bat を参考にしてビルドを実行してください。
 

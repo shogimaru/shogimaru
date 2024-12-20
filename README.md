@@ -18,7 +18,7 @@
 
 ソースファイルをビルドして実行ファイルを作成するために、次のとおり開発環境を用意します。
 
-- WebAssembly
+- WebAssembly 版
 
   - [Emscripten](https://emscripten.org/)
   - [Qt for WebAssembly (multithread)](https://www.qt.io/)  
@@ -31,39 +31,25 @@
 
 #### WebAssembly 版
 
-1. リポジトリ取得
-
-```
- $ git clone --recursive https://github.com/shogimaru/shogimaru.git
-```
-
-2. 将棋思考エンジン（やねうら王）をコンパイル  
-   WebAssembly 向けに Makefile を適宜修正する。
+1. エンジンのビルド
+   engines/YaneuraOu の maru ブランチで将棋思考エンジン（やねうら王）をコンパイルする。WebAssembly 向けに Makefile を適宜修正が必要。
 
 ```
  $ cd engines/YaneuraOu/source/
  $ make
 ```
 
-3. 将棋丸をコンパイル
-
-- WebAssembly（マルチスレッド版）
-  Emscripten 環境を有効にした上で次のコマンドを実行する。
-  Emscripten のバージョンは Qt をビルドしたバージョンと合わせる（ https://doc.qt.io/qt-6/wasm.html ）。
+2. 将棋丸をビルド
+  Emscripten 環境を有効にした上で次のコマンドを実行する。Emscripten のバージョンは Qt をビルドしたバージョンと合わせる必要あり（ https://doc.qt.io/qt-6/wasm.html ）。
 
 ```
- $ qmake -spec wasm-emscripten CONFIG+=release && make
+ $ qmake -spec wasm-emscripten CONFIG+=release
+ $ make
 ```
 
 #### デスクトップ版
 
-1. リポジトリ取得
-
-```
- $ git clone --recursive https://github.com/shogimaru/shogimaru.git
-```
-
-2. 将棋丸をコンパイル
+1. qmake を実行してからビルド
 
 ```
  $ qmake CONFIG+=release
@@ -78,7 +64,7 @@
 
 ### ダウンロード
 
-リリースされたソースコードやバイナリは [こちら](https://github.com/shogimaru/shogimaru/releases) でダウンロードできます。
+リリースされたソースコードは [リリースページ](https://github.com/shogimaru/shogimaru/releases) でダウンロードできます。
 
 ## ウェブサイト
 
