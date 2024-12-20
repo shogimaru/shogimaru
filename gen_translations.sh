@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-export PATH=$HOME/Qt/6.7.2/gcc_64/bin:/usr/bin
+#export PATH=$HOME/Qt/6.7.2/gcc_64/bin:/usr/bin
 
 for lang in "ja"; do
   lupdate forms/ src/ -ts src/message_${lang}.ts
