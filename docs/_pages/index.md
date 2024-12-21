@@ -48,7 +48,7 @@ Windows 向け将棋丸は次の手順を参考にセットアップしてくだ
 1.  [ダウンロードページ](https://github.com/shogimaru/shogimaru/releases)から Zip ファイルをダウンロードし、展開します。
 2.  将棋丸の実行ファイル shogimaru.exe をダブルクリックし起動します。
 3.  将棋思考エンジンを追加するため、`設定`メニューをクリックし、設定画面を開きます。
-4.  `追加`ボタンをクリックし、1.で展開した将棋思考エンジンの実行ファイル(exe)を選択します。
+4.  `追加`ボタンをクリックし、別でインストールした将棋思考エンジンの実行ファイル(exe)を選択します。
 5.  設定可能なオプションの一覧が表示されるので、必要に応じてオプションの値を変更します。初期値のままで動作することがありますが、エラーになる場合は定跡ファイルの格納ディレクトリ（BookDir）や評価関数用ファイルの格納ディレクトリ（EvalDir）などを正しく設定します。
 6.  設定画面を閉じた後、`対局`ボタンをクリックして対局を開始します。
 
@@ -104,12 +104,12 @@ Windows 向け将棋丸は次の手順を参考にセットアップしてくだ
 | 思考エンジン                                                            | ダウンロード                                                                                                             | 備考                                                                          |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
 | [やねうら王](https://yaneuraou.yaneu.com/)／ふかうら王／水匠            | [リリースページ](https://github.com/yaneurao/YaneuraOu/releases)                                                         | 実行ファイル詰め合わせ。EXE ファイルによって CUDA, cuDNN, TensorRT なども必要 |
-| [Apery](https://hiraokatakuya.github.io/apery/)                         | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)                                                        |                                                                               |
 | [dlshogi](https://github.com/TadaoYamaoka/DeepLearningShogi)            | [リリースページ](https://github.com/TadaoYamaoka/DeepLearningShogi/releases)                                             | ディープラーニング系                                                          |
+| [たぬきち](https://github.com/nodchip/tanuki-)                          | [リリースページ](https://github.com/nodchip/tanuki-/releases)                                                            | やねうら王ベース                                                              |
+| [Apery](https://hiraokatakuya.github.io/apery/)                         | [リリースページ](https://github.com/HiraokaTakuya/apery/releases)                                                        |                                                                               |
 | [技巧](https://github.com/gikou-official/Gikou)                         | [リリースページ](https://github.com/gikou-official/Gikou/releases)                                                       |
 | [芝浦将棋 Softmax](https://github.com/tanuki12hiromasa/ShogiStudyThird) | [リリースページ](https://github.com/tanuki12hiromasa/ShogiStudyThird/releases/tag/210331)                                | 他にも評価関数ファイルを置かないといけないみたい                              |
 | [白ビール](https://github.com/Tama4649/Kristallweizen)                  |                                                                                                                          | 評価関数ファイルをやねうら王に設定する                                        |
-| [たぬきち](https://github.com/nodchip/tanuki-)                          | [リリースページ](https://github.com/nodchip/tanuki-/releases)                                                            | やねうら王ベース                                                              |
 | [elmo](https://mk-takizawa.github.io/elmo/howtouse_elmo.html)           | [elmo.shogi.zip](https://drive.google.com/file/d/0B0XpI3oPiCmFalVGclpIZjBmdGs/edit?resourcekey=0-qNCo0QeQN9ZMFRa7_r90zw) | 定跡ファイルや評価関数ファイルをやねうら王に設定する                          |
 | [GPS 将棋](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/)              | [ダウンロードページ](https://gps.tanaka.ecc.u-tokyo.ac.jp/gpsshogi/index.php?%A5%C0%A5%A6%A5%F3%A5%ED%A1%BC%A5%C9)       | もう更新されていない？                                                        |
 
