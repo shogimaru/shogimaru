@@ -49,6 +49,7 @@ wasm {
 
 msvc {
   QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus /utf-8
+  RC_FILE = resources/windows/app.rc
 }
 
 macx {
@@ -57,6 +58,9 @@ macx {
   QMAKE_POST_LINK += mkdir -p $${RESOURCE_DIR}/assets/images/ && cp -a $$PWD/assets/images/*  $${RESOURCE_DIR}/assets/images/;
   QMAKE_POST_LINK += mkdir -p $${RESOURCE_DIR}/assets/sounds/ && cp -a $$PWD/assets/sounds/*  $${RESOURCE_DIR}/assets/sounds/;
   QMAKE_POST_LINK += mkdir -p $${RESOURCE_DIR}/assets/translations/ && cp -a $$PWD/assets/translations/*  $${RESOURCE_DIR}/assets/translations/;
+
+  QMAKE_INFO_PLIST = resources/macos/Info.plist
+  ICON = resources/macos/shogimaru.icns
 }
 
 SOURCES += \
