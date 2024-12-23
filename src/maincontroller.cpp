@@ -1091,6 +1091,11 @@ void MainController::pondered(const PonderInfo &info)
                 return;
             }
 
+            if (pi.pv[0] == "win") {
+                // 入玉宣言勝ち
+                return;
+            }
+
             QByteArray sfen = _recorder->sfen(_recorder->count() - 1);
             sfen += " moves ";
             if (pondering) {
