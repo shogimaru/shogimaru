@@ -189,14 +189,16 @@ void RecordDialog::request(const QString &url, Func slot)
 void RecordDialog::open()
 {
     constexpr int NUM_RECORDS = 100;
-    QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
+    const QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
+
+    auto url = ShogiDbUrl.arg(NUM_RECORDS);
 #ifdef Q_OS_WASM
-    ShogiDbUrl = QUrl::toPercentEncoding(ShogiDbUrl);
-    ShogiDbUrl.prepend("https://shogimaru.com/rd/?u=");
+    url = QUrl::toPercentEncoding(url);
+    url.prepend("https://shogimaru.com/rd/?u=");
 #endif
 
     // HTTP request
-    request(ShogiDbUrl.arg(NUM_RECORDS), &RecordDialog::parseJsonArray);
+    request(url, &RecordDialog::parseJsonArray);
 
     _ui->textEdit->clear();
     _sfen.clear();
@@ -253,15 +255,17 @@ void RecordDialog::loadItem(QListWidgetItem *item)
 
 void RecordDialog::readRecord(const QString &hash)
 {
-    QString Url("https://api.shogidb2.com/games/%1");
+    const QString Db2Url("https://api.shogidb2.com/games/%1");
+
+    auto url = Db2Url.arg(hash);
 #ifdef Q_OS_WASM
-    Url = QUrl::toPercentEncoding(Url);
-    Url.prepend("https://shogimaru.com/rd/?u=");
+    url = QUrl::toPercentEncoding(url);
+    url.prepend("https://shogimaru.com/rd/?u=");
 #endif
 
     if (!hash.isEmpty()) {
         // HTTP request
-        request(Url.arg(hash), &RecordDialog::parseRecordJson);
+        request(url, &RecordDialog::parseRecordJson);
         _ui->listWidget->setEnabled(false);
     }
 }
