@@ -5,7 +5,7 @@ rem
 rem Edit this line to run the batch file for Qt environment.
 rem
 
-set SHOGIMARU_VERSION=1.5.0
+set SHOGIMARU_VERSION=1.5.1
 set BASEDIR=%~dp0
 set TARGET=shogimaru-%SHOGIMARU_VERSION%
 

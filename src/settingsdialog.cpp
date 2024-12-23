@@ -408,6 +408,27 @@ static QString jpText(const QString &name)
 }
 
 
+void SettingsDialog::setItemValue(const QString &name, const QString &value)
+{
+    int num = _ui->tableEngineOptions->rowCount();
+    for (int row = 0; row < num; row++) {
+        if (_ui->tableEngineOptions->item(row, 0)->text().toLower() == name.toLower()) {
+            auto *item = dynamic_cast<QTableWidgetItem *>(_ui->tableEngineOptions->cellWidget(row, 1));
+            if (item) {
+                item->setText(value);
+                break;
+            }
+
+            auto *cbox = dynamic_cast<QComboBox *>(_ui->tableEngineOptions->cellWidget(row, 1));
+            if (cbox) {
+                cbox->setCurrentText(value);
+                break;
+            }
+        }
+    }
+}
+
+
 void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
 {
     if (!item) {
@@ -427,13 +448,32 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
             QRegularExpression re("[a-z_]+Dir$");
             auto matchd = re.match(optItem->text());  // オプション名
             QFileInfo fi(item->text());
+            QString defpath = (fi.isDir() && fi.exists()) ? fi.absoluteFilePath() : engineDir;
 
-            if (matchd.hasMatch()) {
+            if (optItem->text().toLower() == "bookdir") {  // 定跡ファイル
+                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Book File"), defpath, "*.db");
+                if (!fileName.isEmpty()) {
+                    QFileInfo bookdb(fileName);
+                    if (bookdb.exists()) {
+                        item->setText(bookdb.absoluteDir().path());
+                        // Book File Name
+                        QString val = bookdb.fileName();
+                        setItemValue("BookFile", val);
+                    }
+                }
+            } else if (optItem->text().toLower() == "evaldir") {  // 評価関数ファイル
+                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Eval File"), defpath, "*.bin");
+                if (!fileName.isEmpty()) {
+                    QFileInfo evalbin(fileName);
+                    if (evalbin.exists()) {
+                        item->setText(evalbin.absoluteDir().path());
+                    }
+                }
+            } else if (matchd.hasMatch()) {
                 if (!fi.isDir() || !fi.exists()) {
                     fi.setFile(engineDir, item->text());
                 }
-                QString path = (fi.isDir() && fi.exists()) ? fi.absoluteFilePath() : engineDir;
-                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Select Directory"), path);
+                QString dir = QFileDialog::getExistingDirectory(this, QObject::tr("Select Directory"), defpath);
                 if (!dir.isEmpty()) {
                     item->setText(dir);
                 }

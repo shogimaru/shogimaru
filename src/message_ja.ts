@@ -1096,7 +1096,7 @@
         <translation type="unfinished">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="436"/>
+        <location filename="settingsdialog.cpp" line="476"/>
         <source>Select Directory</source>
         <translation type="unfinished">ディレクトリ選択</translation>
     </message>
@@ -1394,36 +1394,46 @@ Are you sure?</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="452"/>
+        <location filename="settingsdialog.cpp" line="454"/>
+        <source>Select Book File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="465"/>
+        <source>Select Eval File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="settingsdialog.cpp" line="492"/>
         <source>Select File</source>
         <translation type="unfinished">ファイル選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="480"/>
+        <location filename="settingsdialog.cpp" line="520"/>
         <source>Default</source>
         <translation type="unfinished">初期値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="492"/>
+        <location filename="settingsdialog.cpp" line="532"/>
         <source>Max</source>
         <translation type="unfinished">最大</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="496"/>
+        <location filename="settingsdialog.cpp" line="536"/>
         <source>Min</source>
         <translation type="unfinished">最小</translation>
     </message>
     <message>
         <location filename="settingsdialog.cpp" line="183"/>
-        <location filename="settingsdialog.cpp" line="464"/>
-        <location filename="settingsdialog.cpp" line="483"/>
+        <location filename="settingsdialog.cpp" line="504"/>
+        <location filename="settingsdialog.cpp" line="523"/>
         <source>true</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
         <location filename="settingsdialog.cpp" line="183"/>
-        <location filename="settingsdialog.cpp" line="464"/>
-        <location filename="settingsdialog.cpp" line="483"/>
+        <location filename="settingsdialog.cpp" line="504"/>
+        <location filename="settingsdialog.cpp" line="523"/>
         <source>false</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1432,12 +1442,12 @@ Are you sure?</source>
         <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="507"/>
+        <location filename="settingsdialog.cpp" line="547"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="507"/>
+        <location filename="settingsdialog.cpp" line="547"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。
@@ -1667,20 +1677,20 @@ Are you sure?</source>
         <location filename="../forms/startdialog.ui" line="417"/>
         <location filename="ui_startdialog.h" line="207"/>
         <source>Select &apos;Byoyomi&apos; or &apos;Add per move&apos; from time methods.</source>
-        <translation type="unfinished">方式として「秒読み」または「1手毎加算」を選択</translation>
+        <translation type="unfinished">方式として「秒読み」または「1手毎加算」を選択します</translation>
     </message>
 </context>
 <context>
     <name>StartDialog2</name>
     <message>
         <location filename="../forms/startdialog2.ui" line="14"/>
-        <location filename="ui_startdialog2.h" line="122"/>
+        <location filename="ui_startdialog2.h" line="127"/>
         <source>Dialog</source>
         <translation type="unfinished">確認</translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="54"/>
-        <location filename="ui_startdialog2.h" line="124"/>
+        <location filename="ui_startdialog2.h" line="129"/>
         <source>Time Control</source>
         <translation type="unfinished">時間</translation>
     </message>
@@ -1690,93 +1700,99 @@ Are you sure?</source>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="266"/>
-        <location filename="ui_startdialog2.h" line="139"/>
+        <location filename="ui_startdialog2.h" line="144"/>
         <source>Byoyomi</source>
         <translation type="unfinished">秒読み</translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="71"/>
-        <location filename="ui_startdialog2.h" line="125"/>
+        <location filename="ui_startdialog2.h" line="130"/>
         <source>0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="42"/>
-        <location filename="ui_startdialog2.h" line="123"/>
+        <location filename="ui_startdialog2.h" line="128"/>
         <source>Time Settings</source>
         <translation type="unfinished">時間設定</translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="76"/>
-        <location filename="ui_startdialog2.h" line="126"/>
+        <location filename="ui_startdialog2.h" line="131"/>
         <source>5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="81"/>
-        <location filename="ui_startdialog2.h" line="127"/>
+        <location filename="ui_startdialog2.h" line="132"/>
         <source>10</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="86"/>
-        <location filename="ui_startdialog2.h" line="128"/>
+        <location filename="ui_startdialog2.h" line="133"/>
         <source>20</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="91"/>
-        <location filename="ui_startdialog2.h" line="129"/>
+        <location filename="ui_startdialog2.h" line="134"/>
         <source>30</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="96"/>
-        <location filename="ui_startdialog2.h" line="130"/>
+        <location filename="ui_startdialog2.h" line="135"/>
         <source>60</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="169"/>
-        <location filename="ui_startdialog2.h" line="133"/>
+        <location filename="ui_startdialog2.h" line="138"/>
         <source>2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="174"/>
-        <location filename="ui_startdialog2.h" line="134"/>
+        <location filename="ui_startdialog2.h" line="139"/>
         <source>3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="223"/>
-        <location filename="ui_startdialog2.h" line="136"/>
+        <location filename="ui_startdialog2.h" line="141"/>
         <source>hour</source>
         <translation type="unfinished">時間</translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="236"/>
-        <location filename="ui_startdialog2.h" line="137"/>
+        <location filename="ui_startdialog2.h" line="142"/>
         <source>min</source>
         <translation type="unfinished">分</translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="249"/>
-        <location filename="ui_startdialog2.h" line="138"/>
+        <location filename="ui_startdialog2.h" line="143"/>
         <source>seconds</source>
         <translation type="unfinished">秒</translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="271"/>
-        <location filename="ui_startdialog2.h" line="140"/>
+        <location filename="ui_startdialog2.h" line="145"/>
         <source>Add per move</source>
         <translation type="unfinished">1手毎加算</translation>
     </message>
     <message>
         <location filename="../forms/startdialog2.ui" line="291"/>
-        <location filename="ui_startdialog2.h" line="142"/>
+        <location filename="ui_startdialog2.h" line="147"/>
         <source>Select &apos;Byoyomi&apos; or &apos;Add per move&apos; from time methods.</source>
-        <translation type="unfinished">方式として「秒読み」または「1手毎加算」を選択</translation>
+        <translation type="unfinished">方式として「秒読み」または「1手毎加算」を選択します</translation>
+    </message>
+    <message>
+        <location filename="../forms/startdialog2.ui" line="309"/>
+        <location filename="ui_startdialog2.h" line="148"/>
+        <source>Your turn is determined at random.</source>
+        <translation type="unfinished">手番はランダムに決まります</translation>
     </message>
     <message>
         <source>Fischer Mode</source>

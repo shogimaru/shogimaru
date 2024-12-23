@@ -37,6 +37,7 @@ protected slots:
 protected:
     void loadSettings(int currentIndex);
     void updateEngineOptions(int index);
+    void setItemValue(const QString &name, const QString &value);
 
 private:
     Ui::SettingsDialog *_ui {nullptr};

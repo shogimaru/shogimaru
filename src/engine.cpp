@@ -465,7 +465,7 @@ bool Engine::mated(const QByteArray &startPosition, const QByteArrayList &moves)
             cmd += " moves ";
             cmd += moves.join(" ");
         }
-        qDebug() << cmd.toStdString();
+
         Command::instance().request(cmd.toStdString());
         Command::instance().request("mated");
         auto res = Command::instance().poll(1000);
@@ -536,6 +536,9 @@ void Engine::getResponse()
     }
 
     for (auto &s : response) {
+        // if (s.find("rep") != std::string::npos)  // 千日手?
+        //     qDebug() << "res:" << s;
+
         if (s.find("readyok") == 0) {
             // 準備完了
             usiNewGame();

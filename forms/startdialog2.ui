@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>430</width>
-    <height>230</height>
+    <height>250</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>190</y>
+     <y>210</y>
      <width>291</width>
      <height>32</height>
     </rect>
@@ -289,6 +289,24 @@
    </property>
    <property name="text">
     <string>Select 'Byoyomi' or 'Add per move' from time methods.</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelInfo">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>180</y>
+     <width>381</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Your turn is determined at random.</string>
    </property>
   </widget>
  </widget>
