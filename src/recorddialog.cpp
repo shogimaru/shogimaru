@@ -72,6 +72,11 @@ void RecordDialog::loadUrlRecord()
         return;
     }
 
+#ifdef Q_OS_WASM
+    url = QUrl::toPercentEncoding(url);
+    url.prepend("https://shogimaru.com/rd/?u=");
+#endif
+
     request(url, &RecordDialog::parseRecord);
 }
 
@@ -186,6 +191,7 @@ void RecordDialog::open()
     constexpr int NUM_RECORDS = 100;
     QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
 #ifdef Q_OS_WASM
+    ShogiDbUrl = QUrl::toPercentEncoding(ShogiDbUrl);
     ShogiDbUrl.prepend("https://shogimaru.com/rd/?u=");
 #endif
 
@@ -249,6 +255,7 @@ void RecordDialog::readRecord(const QString &hash)
 {
     QString Url("https://api.shogidb2.com/games/%1");
 #ifdef Q_OS_WASM
+    Url = QUrl::toPercentEncoding(Url);
     Url.prepend("https://shogimaru.com/rd/?u=");
 #endif
 
