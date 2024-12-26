@@ -610,6 +610,7 @@ void MainController::startGame()
 
     _clock->setTime((maru::TimeMethod)user.method(), basicTimeMsecs, byoyomiMsecs);
     _ponderFlag = (_players[maru::Sente].type() != _players[maru::Gote].type()); // 人間対コンピュータか
+    _stochasticPonder = EngineSettings::instance().currentEngine().options.value("Stochastic_Ponder").toBool();
 
     showSpinner();  // スピナー表示
 
@@ -1044,7 +1045,7 @@ void MainController::slotPonderedItemSelected(int row, int column)
     }
 
     if (scoreItem.pv.isEmpty() || column - 1 >= scoreItem.pv.count()) {
-        qDebug() << "No item" << idx;
+        //qDebug() << "No item" << idx;
         return;
     }
 
@@ -1080,7 +1081,7 @@ void MainController::pondered(const PonderInfo &info)
 
     if (_mode == Rating || _mode == Game) {  // 対局
         bool pondering = (Engine::instance().state() == Engine::Pondering); // 先読みか
-        bool minus = (pondering) ? (_clock->currentTurn() == maru::Sente) : (_clock->currentTurn() == maru::Gote);
+        bool minus = (pondering) ? ((_clock->currentTurn() == maru::Sente) ^ _stochasticPonder) : (_clock->currentTurn() == maru::Gote);  // 確率論的先読みの場合はさらにマイナス
         updateScore(pi, minus);  // 後手がコンピュータならマイナス
         // qDebug() << "turn:" << ((_clock->currentTurn()== maru::Sente) ? "b" : "w") << "score:" << pi.scoreCp << "mateCount:" << pi.mateCount << "mate:" << pi.mate << "nodes:" << pi.nodes << "pv:" << pi.pv;
 
@@ -1099,10 +1100,12 @@ void MainController::pondered(const PonderInfo &info)
             QByteArray sfen = _recorder->sfen(_recorder->count() - 1);
             sfen += " moves ";
             if (pondering) {
-                // 先読みの場合
-                pi.pv.prepend(Engine::instance().lastPondered());
+                if (!_stochasticPonder) {  // 通常の先読みの場合
+                    pi.pv.prepend(Engine::instance().lastPondered());
+                }
             }
             sfen += pi.pv.join(' ');
+
             bool ok;
             Sfen::fromSfen(sfen, &ok);
             if (!ok) {
@@ -1533,10 +1536,21 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
         }
         messageTableWidget->setItem(row, col++, new QTableWidgetItem(str));
 
+        // Clear items
+        const int colnum = 9;
+        for (int i = col; i < colnum; i++) {
+            delete messageTableWidget->takeItem(row, i);
+        }
+
         // 候補手
-        int colnum = std::min((int)item.pv.count(), 9);
         for (auto &move : sf.generateKif(item.pv)) {
-            messageTableWidget->setItem(row, col++, new QTableWidgetItem(move));
+            auto *tbitem = new QTableWidgetItem(move);
+            if (col > item.pv.count()) {
+                // 選択不可
+                tbitem->setFlags(tbitem->flags() & ~Qt::ItemIsSelectable);
+            }
+
+            messageTableWidget->setItem(row, col++, tbitem);
             if (col > colnum) {
                 break;
             }
@@ -1733,7 +1747,7 @@ void MainController::timerEvent(QTimerEvent *event)
 
 void MainController::keyPressEvent(QKeyEvent *event)
 {
-    qDebug() << "keyPressEvent" << event->key() << event->modifiers();
+    //qDebug() << "keyPressEvent" << event->key() << event->modifiers();
 
     // ショートカットキー
     switch (event->key()) {

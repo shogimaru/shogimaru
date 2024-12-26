@@ -149,6 +149,7 @@ private:
     OperationButtonGroup *_opeButtonGroup {nullptr};
     bool _rotated {false};  // 上下回転表示
     bool _ponderFlag {true};  // 先読み
+    bool _stochasticPonder {false};  // 確率論的先読み
     int _boardScale {0};
     int _analysisMoves {0};
     int _analysisTimerId {0};

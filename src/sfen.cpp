@@ -149,6 +149,12 @@ bool Sfen::parse(const QByteArray &s)
             qCritical() << "Move-string empty";
             goto error;
         }
+
+        if (mv.startsWith("rep_")) {
+            // 千日手
+            break;
+        }
+
         auto p = move(mv);
         if (p.isEmpty()) {
             qWarning() << "Invalid move" << mv;

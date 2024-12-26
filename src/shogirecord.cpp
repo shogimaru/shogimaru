@@ -84,9 +84,22 @@ QString ShogiRecord::kanjiName(const QString &piece)
 //
 QString ShogiRecord::kifString(maru::Turn turn, const QByteArray &usi, const QByteArray &piece, int prevCoord, bool compact)
 {
+    static const QMap<QString, QString> RepetitionMap = {
+        {QString("rep_draw"), QObject::tr("(repetition)")},  // 千日手
+        {QString("rep_sup"),  QObject::tr("(%1superior)")},  // 優等局面
+        {QString("rep_inf"),  QObject::tr("(%1inferior)")},  // 劣等局面
+        {QString("rep_win"),  QObject::tr("(win by illegal)")},  // 反則勝ち
+        {QString("rep_lose"), QObject::tr("(lose by illegal)")},  // 反則負け
+    };
+
     QString kifFormat = QObject::tr("%1%2%3%4%5");
     // 先手／後手
     QString bw = (turn == maru::Sente) ? QString::fromUtf8(u8"▲") : QString::fromUtf8(u8"△");
+
+    QString rep = RepetitionMap.value(usi);
+    if (!rep.isEmpty()) {
+        return rep.arg(bw);
+    }
 
     // マス
     QString coord;
