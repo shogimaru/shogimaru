@@ -146,6 +146,16 @@ void SettingsDialog::switchEngineOptions(int index)
 
 void SettingsDialog::showEngineOptions(int index)
 {
+    static const QStringList HideOptions {  // 非表示オプション（設定不可項目）
+        QLatin1String("USI_Ponder"),
+#ifdef Q_OS_WASM
+        QLatin1String("BookDir"),
+        QLatin1String("BookFile"),
+        QLatin1String("EvalDir"),
+        QLatin1String("WriteDebugLog"),
+#endif
+    };
+
     // 該当するエンジン設定を取得
     const auto &availableEngines = EngineSettings::instance().availableEngines();
 
@@ -157,23 +167,28 @@ void SettingsDialog::showEngineOptions(int index)
     // エンジンオプション
     const auto &engineData = availableEngines[index];
     auto info = Engine::getEngineInfo(engineData.path);
-    _defaultOptions = info.options;  // デフォルトオプション取得
-    auto options = engineData.options;
+    _defaultOptions = info.options;  // USIデフォルトオプション取得
+    auto options = engineData.options;  // ユーザ設定オプション
 
     _ui->tableEngineOptions->clearContents();
-    _ui->tableEngineOptions->setRowCount(options.count());
+    _ui->tableEngineOptions->setRowCount(_defaultOptions.count());
 
-    QStringList keys = options.keys();
+    QStringList keys = _defaultOptions.keys();
     keys.sort(Qt::CaseInsensitive);  // ソート
     int row = -1;
     for (auto &key : keys) {
+        if (HideOptions.contains(key)) {
+            // 非表示
+            continue;
+        }
+
         row++;
         auto item = new QTableWidgetItem(key);
         item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
         _ui->tableEngineOptions->setItem(row, 0, item);
 
         int type = engineData.types.value(key).toInt();
-        auto value = options[key].toString();
+        auto value = options.value(key).toString();
         item = new QTableWidgetItem(value, type);
 
         if (type == QMetaType::Bool) {
@@ -211,6 +226,7 @@ void SettingsDialog::showEngineOptions(int index)
         }
         _ui->tableEngineOptions->setItem(row, 1, item);
     }
+    _ui->tableEngineOptions->setRowCount(row + 1);  // 行数を合わせる
 
     // オプション情報非表示
     _ui->labelEngineOptInfo->setText("");
@@ -451,7 +467,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
             QString defpath = (fi.isDir() && fi.exists()) ? fi.absoluteFilePath() : engineDir;
 
             if (optItem->text().toLower() == "bookdir") {  // 定跡ファイル
-                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Book File"), defpath, "*.db");
+                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Book File"), defpath, "*.db book.bin");
                 if (!fileName.isEmpty()) {
                     QFileInfo bookdb(fileName);
                     if (bookdb.exists()) {
@@ -571,17 +587,18 @@ void SettingsDialog::updateEngineOptions(int index)
     if (index >= 0 && index < EngineSettings::instance().availableEngineCount()) {
         QVariantMap options;  // 画面の設定取得
         for (int i = 0; i < _ui->tableEngineOptions->rowCount(); i++) {
-            auto *optItem = _ui->tableEngineOptions->item(i, 0);
+            auto *optItem = _ui->tableEngineOptions->item(i, 0);  // 名称
             auto *valItem = _ui->tableEngineOptions->item(i, 1);
             if (!optItem || optItem->text().isEmpty()) {
                 continue;
             }
 
-            if (valItem && !valItem->text().isEmpty()) {
+            if (valItem) {  // 値
                 if (valItem->type() == QMetaType::Bool) {
                     bool check = (valItem->checkState() == Qt::Checked);
                     options.insert(optItem->text(), check);  // boolean
                 } else {
+                    // 文字列
                     options.insert(optItem->text(), valItem->text());
                 }
             } else {

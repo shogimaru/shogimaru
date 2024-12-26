@@ -139,9 +139,10 @@ void EngineSettings::updateEngine(int index, const EngineData &data)
 
 #ifdef Q_OS_WASM
 
+// 将棋丸用デフォルト値
 void EngineSettings::setCustomOptions(QVariantMap &options)
 {
-    // 将棋丸用デフォルト値
+    // 読み筋の数
     options["MultiPV"].setValue(5);
 
     // エンジンスレッド数
@@ -151,16 +152,17 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
 
     options["BookDir"].setValue(maru::appResourcePath("assets/YaneuraOu"));
     options["BookFile"].setValue(maru::appResourcePath("user_book1.db"));
-    //options["EvalDir"].setValue(maru::appResourcePath("assets/YaneuraOu/nnue-kp256"));
     options["EvalDir"].setValue(maru::appResourcePath("assets/YaneuraOu/nnue-halfkp256"));
     options["FV_SCALE"].setValue(24);
+    options["Stochastic_Ponder"].setValue(true);
 }
 
 #else
 
+// 将棋丸用デフォルト値
 void EngineSettings::setCustomOptions(QVariantMap &options)
 {
-    // 将棋丸用デフォルト値
+    // 読み筋の数
     if (options.contains("MultiPV")) {
         options["MultiPV"].setValue(5);
     }
@@ -170,6 +172,11 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
         int con = std::thread::hardware_concurrency();  // コア（スレッド）数
         int threads = std::max((int)std::round(con * 0.8), 1);  // 80%
         options["Threads"].setValue(threads);
+    }
+
+    // 確率論的先読み
+    if (options.contains("Stochastic_Ponder")) {
+        options["Stochastic_Ponder"].setValue(true);
     }
 }
 

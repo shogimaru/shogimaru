@@ -105,11 +105,12 @@ bool Engine::open(const QString &path)
                         default:
                             continue;
                         }
+
                         option.value = option.defaultValue;  // 最初は現在値と初期値は同じ
                         option.max = nextWord(items, "max").toLongLong();
                         option.min = nextWord(items, "min").toLongLong();
                         _usiDefaultOptions.insert(items[0], option);
-                        //qInfo() << "insert:" << option.defaultValue;
+                        //qInfo() << "insert:" << items[0] << option.defaultValue;
                     }
                 }
             }

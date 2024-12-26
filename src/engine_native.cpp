@@ -46,6 +46,7 @@ void Engine::closeContext()
 }
 
 
+// Get Engine information, name, author, USI default options, etc.
 Engine::EngineInfo Engine::getEngineInfo(const QString &path)
 {
     Engine::EngineInfo info;
