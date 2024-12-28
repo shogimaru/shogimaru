@@ -942,47 +942,47 @@
         <translation type="unfinished">と</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="84"/>
+        <location filename="shogirecord.cpp" line="91"/>
         <source>(win by illegal)</source>
         <translation type="unfinished">(反則勝ち)</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="85"/>
+        <location filename="shogirecord.cpp" line="92"/>
         <source>(lose by illegal)</source>
         <translation type="unfinished">(反則負け)</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="86"/>
+        <location filename="shogirecord.cpp" line="88"/>
         <source>(repetition)</source>
         <translation type="unfinished">(千日手)</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="87"/>
+        <location filename="shogirecord.cpp" line="89"/>
         <source>(%1superior)</source>
         <translation type="unfinished">(%1優等)</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="88"/>
+        <location filename="shogirecord.cpp" line="90"/>
         <source>(%1inferior)</source>
         <translation type="unfinished">(%1劣等)</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="97"/>
+        <location filename="shogirecord.cpp" line="95"/>
         <source>%1%2%3%4%5</source>
         <translation type="unfinished">%1%4%2%5%3</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="125"/>
+        <location filename="shogirecord.cpp" line="123"/>
         <source>+</source>
         <translation type="unfinished">成</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="133"/>
+        <location filename="shogirecord.cpp" line="131"/>
         <source>*</source>
         <translation type="unfinished">打</translation>
     </message>
     <message>
-        <location filename="shogirecord.cpp" line="136"/>
+        <location filename="shogirecord.cpp" line="134"/>
         <source>%1%2%3%4%5</source>
         <comment>char order</comment>
         <translation type="unfinished">%1%4%2%5%3</translation>
@@ -1111,17 +1111,17 @@
         <translation type="obsolete">実行ファイル (*.exe)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="229"/>
+        <location filename="settingsdialog.cpp" line="246"/>
         <source>Executable (*)</source>
         <translation type="unfinished">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="230"/>
+        <location filename="settingsdialog.cpp" line="247"/>
         <source>Select Engine</source>
         <translation type="unfinished">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="476"/>
+        <location filename="settingsdialog.cpp" line="493"/>
         <source>Select Directory</source>
         <translation type="unfinished">ディレクトリ選択</translation>
     </message>
@@ -1164,9 +1164,7 @@
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="110"/>
-        <location filename="../forms/recorddialog.ui" line="128"/>
         <location filename="ui_recorddialog.h" line="132"/>
-        <location filename="ui_recorddialog.h" line="134"/>
         <source>Load a game record in CSA or SFEN format.</source>
         <translation type="unfinished">棋譜を読み込みます (CSA/SFEN)</translation>
     </message>
@@ -1175,6 +1173,12 @@
         <location filename="ui_recorddialog.h" line="139"/>
         <source>URL</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="128"/>
+        <location filename="ui_recorddialog.h" line="134"/>
+        <source>Load a game record from the Net in CSA or SFEN format.</source>
+        <translation type="unfinished">ネットから棋譜を読み込みます (CSA/SFEN)</translation>
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="147"/>
@@ -1397,68 +1401,68 @@
         <translation type="obsolete">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="238"/>
+        <location filename="settingsdialog.cpp" line="255"/>
         <source>Invalid file</source>
         <translation type="unfinished">ファイル不正</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="238"/>
+        <location filename="settingsdialog.cpp" line="255"/>
         <source>File not executable</source>
         <translation type="unfinished">実行可能なファイルではありません</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="269"/>
+        <location filename="settingsdialog.cpp" line="286"/>
         <source>Delete %1.
 Are you sure?</source>
         <translation type="unfinished">%1 を削除します。
 よろしいですか。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="270"/>
+        <location filename="settingsdialog.cpp" line="287"/>
         <source>Delete engine</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="454"/>
+        <location filename="settingsdialog.cpp" line="471"/>
         <source>Select Book File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="465"/>
+        <location filename="settingsdialog.cpp" line="482"/>
         <source>Select Eval File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="492"/>
+        <location filename="settingsdialog.cpp" line="509"/>
         <source>Select File</source>
         <translation type="unfinished">ファイル選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="520"/>
+        <location filename="settingsdialog.cpp" line="537"/>
         <source>Default</source>
         <translation type="unfinished">初期値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="532"/>
+        <location filename="settingsdialog.cpp" line="549"/>
         <source>Max</source>
         <translation type="unfinished">最大</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="536"/>
+        <location filename="settingsdialog.cpp" line="553"/>
         <source>Min</source>
         <translation type="unfinished">最小</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="183"/>
-        <location filename="settingsdialog.cpp" line="504"/>
-        <location filename="settingsdialog.cpp" line="523"/>
+        <location filename="settingsdialog.cpp" line="199"/>
+        <location filename="settingsdialog.cpp" line="521"/>
+        <location filename="settingsdialog.cpp" line="540"/>
         <source>true</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="183"/>
-        <location filename="settingsdialog.cpp" line="504"/>
-        <location filename="settingsdialog.cpp" line="523"/>
+        <location filename="settingsdialog.cpp" line="199"/>
+        <location filename="settingsdialog.cpp" line="521"/>
+        <location filename="settingsdialog.cpp" line="540"/>
         <source>false</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1467,12 +1471,12 @@ Are you sure?</source>
         <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="547"/>
+        <location filename="settingsdialog.cpp" line="564"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="547"/>
+        <location filename="settingsdialog.cpp" line="564"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。
