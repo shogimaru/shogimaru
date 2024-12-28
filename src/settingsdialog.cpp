@@ -458,7 +458,6 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
     auto *optItem = optionTableWidget->item(item->row(), 0);  // Optionセル
 
     if (item->column() == 1) {
-#ifndef Q_OS_WASM
         // クリックされた項目によってファイル選択ダイアログを表示
         if (optItem) {
             auto engineDir = QFileInfo(engineData.path).dir().absolutePath();
@@ -487,6 +486,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
                     }
                 }
             } else if (matchd.hasMatch()) {
+                // 末尾にDirと付く名称
                 if (!fi.isDir() || !fi.exists()) {
                     fi.setFile(engineDir, item->text());
                 }
@@ -513,7 +513,6 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
                 }
             }
         }
-#endif
 
         if (item->type() == QMetaType::Bool) {
             // チェックステートを変更
@@ -570,10 +569,8 @@ void SettingsDialog::resetEngineOptions()
                 // コンボボックス
                 QString def = it.value().defaultValue.toStringList().value(0);
                 engineData.options.insert(it.key(), def);
-                //qDebug() << it.key() << def;
             } else {
                 engineData.options.insert(it.key(), it.value().defaultValue);
-                //qDebug() << it.key() << it.value().value;
             }
         }
         EngineSettings::setCustomOptions(engineData.options);

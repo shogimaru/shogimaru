@@ -58,7 +58,7 @@ bool Engine::open(const QString &path)
 
             for (auto &response : responses) {
                 auto str = QString::fromStdString(response).trimmed();
-                //qDebug() << str;
+                // qDebug() << str;
                 if (str == "usiok") {
                     return true;
                 }
@@ -110,7 +110,7 @@ bool Engine::open(const QString &path)
                         option.max = nextWord(items, "max").toLongLong();
                         option.min = nextWord(items, "min").toLongLong();
                         _usiDefaultOptions.insert(items[0], option);
-                        //qInfo() << "insert:" << items[0] << option.defaultValue;
+                        //qInfo() << "usi default insert:" << items[0] << option.defaultValue;
                     }
                 }
             }
