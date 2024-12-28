@@ -75,13 +75,30 @@ int main(int argc, char *argv[])
     QString path = maru::appLocalDataLocation();
     QDir(path).mkpath(".");
 
-    MainController control;
-    control.show();
+    // MainController表示
+    auto showMainController = [&]() {
+        auto control = new MainController();
+        control->show();
 
-    auto hash = parser.value(showRecord);
-    if (!hash.isEmpty()) {
-        control.showUrlRecord(hash);
-    }
+        auto hash = parser.value(showRecord);
+        if (!hash.isEmpty()) {
+            control->showUrlRecord(hash);
+        }
+    };
+
+#ifdef Q_OS_WASM
+    // IDBFSのマウントが完了するのを待機
+    std::function<void()> checkMount = [&] {
+        if (File::isDeviceMounted()) {
+            showMainController();
+        } else {
+            QTimer::singleShot(20, checkMount);
+        }
+    };
+    QTimer::singleShot(20, checkMount);
+#else
+    QTimer::singleShot(1, showMainController);
+#endif
 
     int ret = app.exec();
     std::exit(ret);

@@ -2,18 +2,12 @@
 #include "file.h"
 #include <QFileInfo>
 
-const QLatin1String workspace("/workspace/");
-static int mountDone = 0;
+/*
+  IDBFS:  /workspace/..
+  組込FS: /assets/..
+*/
 
-
-static void waitForMounted()
-{
-    if (!mountDone) {
-        while (!(mountDone = emscripten_run_script_int("Module.mountDone"))) {
-            emscripten_sleep(10);
-        }
-    }
-}
+const QLatin1String workspace("/workspace/");  // 書き込み可能
 
 
 File::File(const QString &name) :
@@ -27,55 +21,67 @@ File::File(const QString &name) :
 }
 
 
-File::~File()
-{
-    close();
-}
-
-
-bool File::open(QIODevice::OpenMode mode)
-{
-    waitForMounted();
-    return QFile::open(mode);
-}
-
-
-void File::close()
-{
-    if (isOpen()) {
-        QFile::close();
-        flush();
-    }
-}
-
-
 bool File::flush()
 {
-    waitForMounted();
+    QFile::flush();
+    // qDebug() << "flush:" << QFileInfo(*this).absoluteFilePath();
 
-    // syncfs
-    EM_ASM(
-        FS.syncfs(function(err) {
-            // do nothing
-        });
-    );
+    if (QFileInfo(*this).absoluteFilePath().startsWith(workspace)) {
+        // syncfs
+        EM_ASM(
+            // then()に追加して順番に処理
+            Module.syncfsQueue = Module.syncfsQueue.then(() => {
+                return new Promise((resolve, reject) => {
+                    FS.syncfs((err) => {
+                        if (err) {
+                            console.error("FS synchronization failed:", err);
+                            reject(err);
+                        } else {
+                            console.log("FS synchronization completed");
+                            resolve();
+                        }
+                    });
+                });
+            });
+        );
+    }
     return true;
 }
 
 
 void File::mountDevice()
 {
+    // /workspaceのマウント
     EM_ASM(
-        FS.mkdir('/workspace');
-        FS.mount(IDBFS, {}, '/workspace');
+        const mountPoint = "/workspace";
+
+        if (typeof Module.mountDone !== "undefined") {
+            return;
+        }
+
         Module.mountDone = 0;
+        FS.mkdir(mountPoint);
+        FS.mount(IDBFS, {}, mountPoint);
+        Module.syncfsQueue = Promise.resolve();  // flush関数用
 
         // sync from persisted state into memory
         FS.syncfs(true, function(err) {
             // populate: ファイルシステム投入  （省略時:false）
             //   true:  IDBからファイルシステムへ同期
             //   false: ファイルシステムからIDBへ同期
-            Module.mountDone = 1;
+            if (err) {
+                console.error("IDBFS mount failed:", err);
+            } else {
+                Module.mountDone = 1;
+                console.log("IDBFS mount completed");
+            }
         });
     );
+}
+
+
+bool File::isDeviceMounted()
+{
+    static bool mountDone = 0;
+    return mountDone ? mountDone : (mountDone = emscripten_run_script_int("Module.mountDone"));
 }

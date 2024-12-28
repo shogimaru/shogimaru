@@ -2,7 +2,7 @@
 #include "messagebox.h"
 #include "recorder.h"
 #include "sfen.h"
-#include <QFile>
+#include "file.h"
 
 
 void MainController::saveFile(const QString &filePath)
@@ -15,7 +15,7 @@ void MainController::saveFile(const QString &filePath)
     sfen.setPlayers(_players[maru::Sente].name(), _players[maru::Gote].name());
     sfen.setEventName(eventName());
     auto data = sfen.toCsa().toLocal8Bit();
-    QFile file(filePath);
+    File file(filePath);
 
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         int len = file.write(data);

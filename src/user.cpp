@@ -71,6 +71,7 @@ bool User::save()
     }
 
     int len = file.write(QJsonDocument(json).toJson(QJsonDocument::Compact));
+    file.flush();
     file.close();
     return len > 0;
 }
@@ -79,6 +80,7 @@ bool User::save()
 User &User::load()
 {
     static User user;
+    const int LatestVersion = 1;  // バージョン
 
     if (!user.isEmpty()) {
         return user;
@@ -99,6 +101,8 @@ User &User::load()
 
     if (json.contains(Version)) {
         user._version = json[Version].toInt();
+    } else {
+        user._version = LatestVersion;
     }
 
     if (json.contains(Nickname)) {

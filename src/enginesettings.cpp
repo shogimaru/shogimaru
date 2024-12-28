@@ -1,4 +1,5 @@
 #include "enginesettings.h"
+#include "file.h"
 
 #ifdef Q_OS_WASM
 constexpr auto DEFAULT_SETTINGS_JSON_FILE_NAME = "assets/defaults/engines.json";
@@ -10,11 +11,8 @@ constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
 
 static QString settingsJsonPath()
 {
-#ifdef Q_OS_WASM
-    return QLatin1String(SETTINGS_JSON_FILE_NAME);
-#else
+    // 書き込みが可能なパス
     return QDir(maru::appLocalDataLocation()).absoluteFilePath(SETTINGS_JSON_FILE_NAME);
-#endif
 }
 
 
@@ -32,35 +30,50 @@ void EngineSettings::removeEngine(int index)
 }
 
 
-EngineSettings EngineSettings::loadJson(const QString &path)
+EngineSettings EngineSettings::loadJsonFile(const QString &path)
 {
-    EngineSettings settings;
-    QFile file(path);
+    File file(path);
 
     if (!file.open(QIODevice::ReadOnly)) {
-        return settings;
+        qWarning() << "File open error: " << path;  // 初回時は存在しない
+        return EngineSettings();
     }
 
-    auto json = QJsonDocument::fromJson(file.readAll()).object();
+    auto data = file.readAll();
+    return loadJsonData(data);
+}
+
+
+EngineSettings EngineSettings::loadJsonData(const QByteArray &data)
+{
+    EngineSettings settings;
+
+    auto json = QJsonDocument::fromJson(data).object();
+    //qDebug() << "## loadJsonFile(): " << json;
     for (const auto &engine : json.value(AVAILABLE_ENGINES_KEY).toArray()) {
         settings._availableEngines << EngineData::fromJsonObject(engine.toObject());
     }
 
     settings._currentIndex = json.value(SELECTED_ENGINE_INDEX_KEY).toInt();
-    //qDebug() << json;
     return settings;
 }
 
 
 EngineSettings EngineSettings::load()
 {
-    EngineSettings settings = loadJson(settingsJsonPath());
+    EngineSettings settings = loadJsonFile(settingsJsonPath());
 
 #ifdef Q_OS_WASM
     if (settings._availableEngines.isEmpty()) {
-        settings = loadJson(DEFAULT_SETTINGS_JSON_FILE_NAME);
+        File file(maru::appResourcePath(DEFAULT_SETTINGS_JSON_FILE_NAME));
+        if (!file.open(QIODevice::ReadOnly)) {
+            qCritical() << "File open error: " << file.fileName();
+            return settings;
+        }
+
+        settings = loadJsonData(file.readAll());
         if (settings.availableEngines().isEmpty()) {
-            qCritical() << "Error load settings:" << DEFAULT_SETTINGS_JSON_FILE_NAME;
+            qCritical() << "Error load settings:" << file.fileName();
             return settings;
         }
 
@@ -68,7 +81,6 @@ EngineSettings EngineSettings::load()
         auto info = Engine::getEngineInfo(QString());
         for (auto it = info.options.begin(); it != info.options.end(); ++it) {
             options.insert(it.key(), it.value().defaultValue);
-            //qDebug() << it.key() << it.value().value;
         }
         setCustomOptions(options);  // カスタムオプション
         settings._availableEngines[0].options = options;
@@ -103,13 +115,15 @@ void EngineSettings::save() const
     jsonObject["version"] = 1;
 
     // ファイル書き込み
-    QFile file(settingsJsonPath());
+    File file(settingsJsonPath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qCritical() << "File open error" << file.fileName();
         return;
     }
 
     file.write(QJsonDocument(jsonObject).toJson(QJsonDocument::Compact));
+    // qDebug() << "save json:" << QJsonDocument(jsonObject).toJson(QJsonDocument::Compact);
+    file.flush();
     file.close();
 }
 

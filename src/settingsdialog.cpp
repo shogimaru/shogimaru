@@ -152,6 +152,7 @@ void SettingsDialog::showEngineOptions(int index)
         QLatin1String("BookDir"),
         QLatin1String("BookFile"),
         QLatin1String("EvalDir"),
+        QLatin1String("EvalFile"),
         QLatin1String("WriteDebugLog"),
 #endif
     };
@@ -584,45 +585,55 @@ void SettingsDialog::resetEngineOptions()
 
 void SettingsDialog::updateEngineOptions(int index)
 {
-    if (index >= 0 && index < EngineSettings::instance().availableEngineCount()) {
-        QVariantMap options;  // 画面の設定取得
-        for (int i = 0; i < _ui->tableEngineOptions->rowCount(); i++) {
-            auto *optItem = _ui->tableEngineOptions->item(i, 0);  // 名称
-            auto *valItem = _ui->tableEngineOptions->item(i, 1);
-            if (!optItem || optItem->text().isEmpty()) {
-                continue;
-            }
+    if (index < 0 || index >= EngineSettings::instance().availableEngineCount()) {
+        return;
+    }
 
-            if (valItem) {  // 値
-                if (valItem->type() == QMetaType::Bool) {
-                    bool check = (valItem->checkState() == Qt::Checked);
-                    options.insert(optItem->text(), check);  // boolean
-                } else {
-                    // 文字列
-                    options.insert(optItem->text(), valItem->text());
-                }
+    QVariantMap options;
+
+    // USIデフォルトオプション反映
+    for (auto it = _defaultOptions.begin(); it != _defaultOptions.end(); ++it) {
+        options.insert(it.key(), it.value().defaultValue);
+    }
+    EngineSettings::setCustomOptions(options);  // カスタムオプション反映
+
+    // 画面の設定取得
+    for (int i = 0; i < _ui->tableEngineOptions->rowCount(); i++) {
+        auto *optItem = _ui->tableEngineOptions->item(i, 0);  // 名称
+        auto *valItem = _ui->tableEngineOptions->item(i, 1);
+        if (!optItem || optItem->text().isEmpty() || !options.contains(optItem->text())) {
+            continue;
+        }
+
+        if (valItem) {  // 値
+            if (valItem->type() == QMetaType::Bool) {
+                bool check = (valItem->checkState() == Qt::Checked);
+                options.insert(optItem->text(), check);  // boolean
             } else {
-                // コンボボックス
-                auto *widget = _ui->tableEngineOptions->cellWidget(i, 1);
-                auto *combo = dynamic_cast<QComboBox *>(widget);
-                if (combo) {
-                    options.insert(optItem->text(), combo->currentText());
-                }
+                // 文字列
+                options.insert(optItem->text(), valItem->text());
+            }
+        } else {
+            // コンボボックス
+            auto *widget = _ui->tableEngineOptions->cellWidget(i, 1);
+            auto *combo = dynamic_cast<QComboBox *>(widget);
+            if (combo) {
+                options.insert(optItem->text(), combo->currentText());
             }
         }
+    }
 
-        // 設定に反映
-        if (options.count() > 0) {
-            auto engine = EngineSettings::instance().getEngine(index);
+    // 設定に反映
+    if (options.count() > 0) {
+        auto engine = EngineSettings::instance().getEngine(index);
 
-            QString name = _ui->engineComboBox->itemText(index);
-            if (!name.isEmpty()) {
-                engine.name = name;
-            }
-
-            engine.options = options;
-            EngineSettings::instance().updateEngine(index, engine);
+        QString name = _ui->engineComboBox->itemText(index);
+        if (!name.isEmpty()) {
+            engine.name = name;
         }
+
+        engine.options = options;
+        EngineSettings::instance().updateEngine(index, engine);
     }
 }
 

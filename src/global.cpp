@@ -170,7 +170,7 @@ bool isLocaleLangJapanese()
 QString appLocalDataLocation()
 {
 #ifdef Q_OS_WASM
-    return QLatin1String(".");
+    return QLatin1String("/workspace/");
 #else
     return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 #endif
@@ -179,7 +179,7 @@ QString appLocalDataLocation()
 QString appResourcePath(const QString &relativePath)
 {
 #ifdef Q_OS_WASM
-    return QLatin1String("./") + relativePath;
+    return QLatin1String("/") + relativePath;
 #elif defined(Q_OS_DARWIN)
     QString resourcesPath = QCoreApplication::applicationDirPath() + "/../Resources/";
     return QDir(resourcesPath).absolutePath() + "/" + relativePath;

@@ -42,7 +42,7 @@ public:
     int version() const { return _version; }
     void setVersion(int version) { _version = version; }
 
-    bool isEmpty() const { return _nickname.isEmpty() && !_rating && !_wins && !_losses && !_draws; }
+    bool isEmpty() const { return _nickname.isEmpty() && !_rating && !_wins && !_losses && !_draws && !_version; }
     bool save();
     static User &load();
 
@@ -67,5 +67,5 @@ private:
     int _pieceType {1};  // 駒種類
     int _startPosition {0};  // 開始局面
     int _method {1};  // 持ち時間方式
-    int _version {1};
+    int _version {0};
 };

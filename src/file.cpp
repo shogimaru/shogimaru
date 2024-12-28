@@ -6,27 +6,12 @@ File::File(const QString &name) :
 { }
 
 
-File::~File()
-{ }
-
-
-bool File::open(QIODevice::OpenMode mode)
-{
-    return QFile::open(mode);
-}
-
-
-void File::close()
-{
-    QFile::close();
-}
-
-
 bool File::flush()
 {
     return QFile::flush();
 }
 
 
-void File::mountDevice()
-{ }
+void File::mountDevice() { }
+
+bool File::isDeviceMounted() { return true; }

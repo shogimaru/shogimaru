@@ -42,7 +42,8 @@ private:
     EngineSettings &operator=(EngineSettings &&) = default;
 
     static EngineSettings load();
-    static EngineSettings loadJson(const QString &path);
+    static EngineSettings loadJsonFile(const QString &path);
+    static EngineSettings loadJsonData(const QByteArray &json);
 
     QList<EngineData> _availableEngines;
     int _currentIndex {0};
