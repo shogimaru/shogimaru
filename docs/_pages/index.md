@@ -13,9 +13,9 @@ toc: true
 将棋思考エンジンと通信するための USI プロトコルに対応しており、次の特徴があります。
 
 - クロスプラットフォーム - Windows, Mac, Linux, WebAssembly
-- MultiPV 表示
 - 棋譜の解析モード、評価グラフ
-- 棋譜読込・保存
+- 複数の読み筋を表示（MultiPV対応）
+- CSA形式棋譜の読込・保存（インターネット上の棋譜も読込可能）
 - 多言語対応（日本語、英語）
 
 [<i class="fas fa-cloud-download-alt"></i> ダウンロード]({{ "https://github.com/shogimaru/shogimaru/releases" }}){: .btn .btn--success .btn--medium}
