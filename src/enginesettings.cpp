@@ -34,8 +34,13 @@ EngineSettings EngineSettings::loadJsonFile(const QString &path)
 {
     File file(path);
 
+    if (!file.exists()) {
+        qWarning() << "No such file: " << path;
+        return EngineSettings();
+    }
+
     if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "File open error: " << path;  // 初回時は存在しない
+        qCritical() << "File open error: " << path;
         return EngineSettings();
     }
 
@@ -49,7 +54,6 @@ EngineSettings EngineSettings::loadJsonData(const QByteArray &data)
     EngineSettings settings;
 
     auto json = QJsonDocument::fromJson(data).object();
-    //qDebug() << "## loadJsonFile(): " << json;
     for (const auto &engine : json.value(AVAILABLE_ENGINES_KEY).toArray()) {
         settings._availableEngines << EngineData::fromJsonObject(engine.toObject());
     }
@@ -65,15 +69,9 @@ EngineSettings EngineSettings::load()
 
 #ifdef Q_OS_WASM
     if (settings._availableEngines.isEmpty()) {
-        File file(maru::appResourcePath(DEFAULT_SETTINGS_JSON_FILE_NAME));
-        if (!file.open(QIODevice::ReadOnly)) {
-            qCritical() << "File open error: " << file.fileName();
-            return settings;
-        }
-
-        settings = loadJsonData(file.readAll());
+        settings = loadJsonFile(maru::appResourcePath(DEFAULT_SETTINGS_JSON_FILE_NAME));
         if (settings.availableEngines().isEmpty()) {
-            qCritical() << "Error load settings:" << file.fileName();
+            qCritical() << "Error load settings:" << maru::appResourcePath(DEFAULT_SETTINGS_JSON_FILE_NAME);
             return settings;
         }
 
