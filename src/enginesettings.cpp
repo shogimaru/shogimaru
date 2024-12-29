@@ -2,7 +2,7 @@
 #include "file.h"
 
 #ifdef Q_OS_WASM
-constexpr auto DEFAULT_SETTINGS_JSON_FILE_NAME = "assets/defaults/engines.json";
+constexpr auto DEFAULT_SETTINGS_JSON_FILE_NAME = "assets/defaults/wasm_engines.json";
 #endif
 constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
