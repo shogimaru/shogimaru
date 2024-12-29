@@ -264,10 +264,11 @@ void Recorder::removeAfter(int index)
     }
 
     int n = _pvList.count() - index;
-
-    _illegalItems.remove(index - 1, n);
-    _pvList.remove(index, n);
-    _moveRoutes.remove(index -1, n);
+    if (n > 0) {
+        _illegalItems.remove(index - 1, n);
+        _pvList.remove(index, n);
+        _moveRoutes.remove(index -1, n);
+    }
 }
 
 

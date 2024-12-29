@@ -468,7 +468,7 @@ void MainController::newGame()
     MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
 
     _mode = Game;
-    int index = std::max(_ui->recordWidget->currentRow(), 0);
+    int index = qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
     if (_startDialog->position() == maru::Initial || index == 0) {
         clear();  // 画面クリア
         _board->startGame(Sfen::defaultPostion());

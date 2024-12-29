@@ -57,6 +57,7 @@ EngineSettings EngineSettings::loadJsonData(const QByteArray &data)
 
 #ifdef Q_OS_WASM
     if (json["version"] != SETTINGS_JSON_VERSION) {
+        // WASM版の思考エンジンが変わったら、バージョンを変えて再読み込みさせる
         return settings;
     }
 #endif
