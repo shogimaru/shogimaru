@@ -28,9 +28,7 @@ toc: true
 今後対応予定です。
 {: .notice--info}
 
-<img width="900" src="{{ site.baseurl }}/assets/images/shogimaru-main.png" alt="将棋丸メイン画面">
-
-![将棋丸メイン画面]({{ site.baseurl }}/assets/images/shogimaru-main.png "将棋丸メイン画面")
+<img width="600" src="{{ site.baseurl }}/assets/images/shogimaru-main.png" alt="将棋丸メイン画面">
 
 ## <i class="far fa-paper-plane"></i> 実行
 
