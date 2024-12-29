@@ -1423,12 +1423,12 @@ Are you sure?</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="471"/>
+        <location filename="settingsdialog.cpp" line="470"/>
         <source>Select Book File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="482"/>
+        <location filename="settingsdialog.cpp" line="481"/>
         <source>Select Eval File</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1438,31 +1438,31 @@ Are you sure?</source>
         <translation type="unfinished">ファイル選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="537"/>
+        <location filename="settingsdialog.cpp" line="536"/>
         <source>Default</source>
         <translation type="unfinished">初期値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="549"/>
+        <location filename="settingsdialog.cpp" line="548"/>
         <source>Max</source>
         <translation type="unfinished">最大</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="553"/>
+        <location filename="settingsdialog.cpp" line="552"/>
         <source>Min</source>
         <translation type="unfinished">最小</translation>
     </message>
     <message>
         <location filename="settingsdialog.cpp" line="199"/>
-        <location filename="settingsdialog.cpp" line="521"/>
-        <location filename="settingsdialog.cpp" line="540"/>
+        <location filename="settingsdialog.cpp" line="520"/>
+        <location filename="settingsdialog.cpp" line="539"/>
         <source>true</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
         <location filename="settingsdialog.cpp" line="199"/>
-        <location filename="settingsdialog.cpp" line="521"/>
-        <location filename="settingsdialog.cpp" line="540"/>
+        <location filename="settingsdialog.cpp" line="520"/>
+        <location filename="settingsdialog.cpp" line="539"/>
         <source>false</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1471,12 +1471,12 @@ Are you sure?</source>
         <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="564"/>
+        <location filename="settingsdialog.cpp" line="563"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="564"/>
+        <location filename="settingsdialog.cpp" line="563"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。
