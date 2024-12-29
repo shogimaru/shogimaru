@@ -21,6 +21,8 @@ toc: true
 [<i class="fas fa-cloud-download-alt"></i> ダウンロード]({{ "https://github.com/shogimaru/shogimaru/releases" }}){: .btn .btn--success .btn--medium}
 [将棋丸ブラウザ版 <i class="fas fa-arrow-right"></i>]({{ "https://shogimaru.com" }}){: .btn .btn--info .btn--medium}
 
+ダウンロードページには Windows 向け（zip）と Mac 向け（dmg）のアプリが置いてあります。
+
 デスクトップ版では **[将棋思考エンジン](#-将棋思考エンジン)** が別途必要です。[こちら](#-デスクトップ版)を参考にセットアップしてください。
 {: .notice--warning}
 
