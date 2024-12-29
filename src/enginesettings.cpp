@@ -7,6 +7,7 @@ constexpr auto DEFAULT_SETTINGS_JSON_FILE_NAME = "assets/defaults/wasm_engines.j
 constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
 constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
+constexpr int  SETTINGS_JSON_VERSION = 2;
 
 
 static QString settingsJsonPath()
@@ -52,8 +53,14 @@ EngineSettings EngineSettings::loadJsonFile(const QString &path)
 EngineSettings EngineSettings::loadJsonData(const QByteArray &data)
 {
     EngineSettings settings;
-
     auto json = QJsonDocument::fromJson(data).object();
+
+#ifdef Q_OS_WASM
+    if (json["version"] != SETTINGS_JSON_VERSION) {
+        return settings;
+    }
+#endif
+
     for (const auto &engine : json.value(AVAILABLE_ENGINES_KEY).toArray()) {
         settings._availableEngines << EngineData::fromJsonObject(engine.toObject());
     }
@@ -117,7 +124,7 @@ void EngineSettings::save() const
     }();
 
     jsonObject[SELECTED_ENGINE_INDEX_KEY] = _currentIndex;
-    jsonObject["version"] = 1;
+    jsonObject["version"] = SETTINGS_JSON_VERSION;
 
     // ファイル書き込み
     File file(settingsJsonPath());
@@ -263,6 +270,6 @@ EngineSettings::EngineData EngineSettings::EngineData::fromJsonObject(const QJso
         }
     ],
     "selectedEngineIndex": 0,
-    "version": 1
+    "version": 2
 }
 */
