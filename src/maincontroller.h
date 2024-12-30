@@ -31,6 +31,7 @@ class QAbstractButton;
 class QComboBox;
 class QMessageBox;
 class ScoreItem;
+class ProcessingDialog;
 
 
 class MainController : public QMainWindow {
@@ -93,6 +94,7 @@ public slots:
     void saveFile(const QString &filePath);
     void slotAnalysisTimeout();
     void engineError();
+    void showSerializingModel();
     void showSpinner();
     void hideSpinner();
     // 棋譜操作
@@ -145,6 +147,7 @@ private:
     RecordDialog *_recordDialog {nullptr};
     MyPage *_myPage {nullptr};
     QMessageBox *_infoBox {nullptr};
+    ProcessingDialog *_processDialog {nullptr};
     EvaluationGraph *_graph {nullptr};
     OperationButtonGroup *_opeButtonGroup {nullptr};
     bool _rotated {false};  // 上下回転表示

@@ -21,6 +21,7 @@
 #include "startdialog2.h"
 #include "ui_mainwindow.h"
 #include "user.h"
+#include "processingdialog.h"
 #include <QComboBox>
 #include <QDebug>
 #include <QGraphicsPixmapItem>
@@ -164,6 +165,7 @@ MainController::MainController(QWidget *parent) :
     connect(&Engine::instance(), &Engine::win, this, &MainController::engineWin);
     connect(&Engine::instance(), &Engine::resign, this, &MainController::engineResign);
     connect(&Engine::instance(), &Engine::errorOccurred, this, &MainController::engineError);
+    connect(&Engine::instance(), &Engine::serializingModel, this, &MainController::showSerializingModel);
     connect(_clock, &ChessClock::secondElapsed, this, &MainController::updateRemainingTime);
     connect(_clock, &ChessClock::timeout, this, &MainController::gameoverTimeout);
     connect(_board, &Board::moved, this, &MainController::move);
@@ -635,6 +637,9 @@ void MainController::startGame()
 void MainController::startGo()
 {
     hideSpinner();  // スピナー非表示
+    if (_processDialog) {
+        _processDialog->accept();  // 非表示
+    }
 
     if (_mode == Rating || _mode == Game) {
         _clock->start();
@@ -1277,6 +1282,9 @@ void MainController::slotAnalysisTimeout()
 void MainController::engineError()
 {
     hideSpinner();
+    if (_processDialog) {
+        _processDialog->accept();  // 非表示
+    }
     _clock->stop();
     _board->stopGame();
     _lastPonder.clear();
@@ -1285,6 +1293,14 @@ void MainController::engineError()
     _mode = Watch;
     updateButtonStates();
     MessageBox::information(tr("Engine Error"), Engine::instance().error());
+}
+
+// モデル変換中ダイヤログ
+void MainController::showSerializingModel()
+{
+    delete _processDialog;
+    _processDialog = new ProcessingDialog(tr("Converting the model now.\nPlease wait a moment."));
+    _processDialog->show();
 }
 
 /*!

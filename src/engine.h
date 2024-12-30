@@ -88,6 +88,7 @@ signals:
     void resign();  // 投了
     void win();  // 入玉勝ち宣言
     void errorOccurred();
+    void serializingModel();  // モデル変換中（処理に時間がかかる）
 
 protected slots:
     void getResponse();

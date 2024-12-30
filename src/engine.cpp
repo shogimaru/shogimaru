@@ -583,6 +583,14 @@ void Engine::getResponse()
                 PonderInfo info(QByteArray::fromStdString(s));
                 //qDebug() << "multipv" << info.multipv << "pondering score:" << info.scoreCp << "mate:" << info.mate << "mateCount:" << info.mateCount << "depth:" << info.depth << "nodes:" << info.nodes << "pv:" << info.pv;
                 emit pondering(info);
+            } else if (_state == GameReady) {
+                if (s.find("info string ") == 0 && s.find("serialized filename") != std::string::npos) {
+                    emit serializingModel();
+                    _errorTimer->start(120000);  // 最大2分でリスタート
+                }
+                qDebug() << s;
+            } else {
+                qDebug() << s;
             }
         } else {
             if (maru::toLower(s).find("error") != std::string::npos) {  // errorがある場合

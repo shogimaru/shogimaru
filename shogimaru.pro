@@ -93,6 +93,7 @@ SOURCES += \
         src/messagebox.cpp \
         src/evaluationgraph.cpp \
         src/operationbuttongroup.cpp \
+        src/processingdialog.cpp \
         src/maincontroller.cpp
 
 HEADERS += \
@@ -127,6 +128,7 @@ HEADERS += \
         src/evaluationgraph.h \
         src/operationbuttongroup.h \
         src/commandlineparser.h \
+        src/processingdialog.h \
         src/maincontroller.h
 
 FORMS += \
