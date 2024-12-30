@@ -478,7 +478,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
                     }
                 }
             } else if (optItem->text().toLower() == "evaldir") {  // 評価関数ファイル
-                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Eval File"), defpath, "*.bin");
+                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Eval File"), defpath, "*.bin *.onnx");
                 if (!fileName.isEmpty()) {
                     QFileInfo evalbin(fileName);
                     if (evalbin.exists()) {
