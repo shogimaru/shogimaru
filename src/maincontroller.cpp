@@ -1299,7 +1299,7 @@ void MainController::engineError()
 void MainController::showSerializingModel()
 {
     delete _processDialog;
-    _processDialog = new ProcessingDialog(tr("Converting the model now.\nPlease wait a moment."), this);
+    _processDialog = new ProcessingDialog(tr("Converting the evaluation function model now.\nPlease wait a moment."), this);
     _processDialog->show();
 }
 
