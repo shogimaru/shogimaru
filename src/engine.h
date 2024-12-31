@@ -55,6 +55,8 @@ public:
     const QVariantMap &options() const { return _options; }
     QVariantMap &options() { return _options; }
     void setOptions(const QVariantMap &options) { _options = options; }
+    const QVariantList &environment() const { return _environment; }
+    void setEnvironment(const QVariantList &env) { _environment = env; }
     QByteArray startPosition() const { return _startPositionSfen; }
     void setStartPosition(const QByteArray &sfen = QByteArray());
     QByteArrayList allMoves() const { return _allMoves; }  // 全指し手（SFEN形式）
@@ -79,7 +81,7 @@ public:
     bool analysis(const QByteArray &sfen);
 
     static Engine &instance();
-    static EngineInfo getEngineInfo(const QString &path);
+    static EngineInfo getEngineInfo(const QString &path, const QVariantList &environment = QVariantList());
 
 signals:
     void readyGame();  // 準備完了
@@ -111,6 +113,7 @@ private:
     QString _author;
     QVariantMap _options;  // カスタムオプション
     QMap<QString, Option> _usiDefaultOptions;  // デフォルトオプション
+    QVariantList _environment;
 #ifdef Q_OS_WASM
     static EngineInfo wasmEngineInfo;  // WASMではデフォルトオプションをstaticに保持
 #endif

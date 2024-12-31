@@ -2,6 +2,7 @@
 #include "engine.h"
 #include "engineprocess.h"
 #include <QCoreApplication>
+#include <QProcessEnvironment>
 #include <QDebug>
 
 
@@ -20,6 +21,29 @@ bool Engine::openContext(const QString &path)
 {
     delete _engineContext;
     auto process = new EngineProcess(path, this);
+
+#ifdef Q_OS_WIN
+    const QChar Delimiter(';');
+#else
+    const QChar Delimiter(':');
+#endif
+
+    // 環境変数設定
+    if (!_environment.isEmpty()) {
+        auto env = process->processEnvironment();
+        for (auto &variable : _environment) {
+            auto var = variable.toMap();
+            QString name = var.value("name").toString();
+            if (!name.isEmpty()) {
+                QString val = env.value(name);
+                val.prepend(var.value("value").toString() + Delimiter);
+                qDebug() << name << ":" << val;
+                env.insert(name, val);
+            }
+        }
+        process->setProcessEnvironment(env);
+    }
+
     process->start();
 
     bool ret = process->waitForStarted(5000);
@@ -47,10 +71,12 @@ void Engine::closeContext()
 
 
 // Get Engine information, name, author, USI default options, etc.
-Engine::EngineInfo Engine::getEngineInfo(const QString &path)
+Engine::EngineInfo Engine::getEngineInfo(const QString &path, const QVariantList &environment)
 {
     Engine::EngineInfo info;
     auto engine = new Engine;
+    engine->setEnvironment(environment);
+
     if (engine->open(path)) {
         info.name = engine->name();
         info.path = path;

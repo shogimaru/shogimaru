@@ -94,6 +94,8 @@ SOURCES += \
         src/evaluationgraph.cpp \
         src/operationbuttongroup.cpp \
         src/processingdialog.cpp \
+        src/environmentvariablesdialog.cpp \
+        src/userenvironmentvariabledialog.cpp \
         src/maincontroller.cpp
 
 HEADERS += \
@@ -129,6 +131,8 @@ HEADERS += \
         src/operationbuttongroup.h \
         src/commandlineparser.h \
         src/processingdialog.h \
+        src/environmentvariablesdialog.h \
+        src/userenvironmentvariabledialog.h \
         src/maincontroller.h
 
 FORMS += \
@@ -139,6 +143,8 @@ FORMS += \
         forms/recorddialog.ui \
         forms/settingsdialog.ui \
         forms/operationbuttongroup.ui \
+        forms/environmentvariablesdialog.ui \
+        forms/userenvironmentvariabledialog.ui \
         forms/startdialog.ui \
         forms/startdialog2.ui
 

@@ -43,7 +43,7 @@ void Engine::closeContext()
 }
 
 
-Engine::EngineInfo Engine::getEngineInfo(const QString &path)
+Engine::EngineInfo Engine::getEngineInfo(const QString &path, const QVariantList &)
 {
     // メモリ使用量を抑えるために何度もエンジンを起動しない
 

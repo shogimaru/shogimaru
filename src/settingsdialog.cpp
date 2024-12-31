@@ -1,8 +1,9 @@
 #include "settingsdialog.h"
+#include "ui_settingsdialog.h"
 #include "engine.h"
 #include "enginesettings.h"
 #include "messagebox.h"
-#include "ui_settingsdialog.h"
+#include "environmentvariablesdialog.h"
 #include "user.h"
 #include "westerntabstyle.h"
 #include <QFileDialog>
@@ -31,9 +32,14 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(_ui->tableEngineOptions, &QTableWidget::itemClicked, this, &SettingsDialog::slotItemClicked);
     connect(_ui->tableEngineOptions, &QTableWidget::currentItemChanged, this, &SettingsDialog::slotItemClicked);
     connect(_ui->engineComboBox, &QComboBox::currentIndexChanged, this, &SettingsDialog::switchEngineOptions);
-    connect(_ui->soundOnOffButton, &QToolButton::toggled, [this](bool checked) {
+    connect(_ui->soundOnOffButton, &QToolButton::toggled, [this](bool checked) {  // サウンドオン・オフ
         auto text = (checked) ? tr("ON") : tr("OFF");
         _ui->soundOnOffButton->setText(text);
+    });
+    connect(_ui->envButton, &QPushButton::clicked, [this]() {
+        int engineIndex = _ui->engineComboBox->currentIndex();
+        auto *dialog = new EnvironmentVariablesDialog(engineIndex, this);
+        dialog->open();
     });
 
 #ifdef Q_OS_WASM
@@ -79,6 +85,10 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
         }
     };
     _ui->engineComboBox->installEventFilter(new ComboBoxEventFileter(_ui->engineComboBox));
+
+#ifdef Q_OS_WASM
+    _ui->envButton->setEnabled(false);
+#endif
 }
 
 
@@ -167,7 +177,7 @@ void SettingsDialog::showEngineOptions(int index)
 
     // エンジンオプション
     const auto &engineData = availableEngines[index];
-    auto info = Engine::getEngineInfo(engineData.path);
+    auto info = Engine::getEngineInfo(engineData.path, engineData.environment);
     _defaultOptions = info.options;  // USIデフォルトオプション取得
     auto options = engineData.options;  // ユーザ設定オプション
 

@@ -228,6 +228,7 @@ QJsonObject EngineSettings::EngineData::toJsonObject() const
     SET_JSON_VALUE(jo, path);
     SET_JSON_VALUE(jo, options);
     SET_JSON_VALUE(jo, types);
+    SET_JSON_VALUE(jo, environment);
     return jo;
 }
 
@@ -240,6 +241,7 @@ EngineSettings::EngineData EngineSettings::EngineData::fromJsonObject(const QJso
     data.path = object["path"].toString();
     data.options = object["options"].toVariant().toMap();
     data.types = object["types"].toVariant().toMap();
+    data.environment = object["environment"].toVariant().toList();
     return data;
 }
 
@@ -256,7 +258,11 @@ EngineSettings::EngineData EngineSettings::EngineData::fromJsonObject(const QJso
                 "BookDir": "fuga",
                 "option1": 1,
                 "option2": 3
-            }
+            },
+            "environment": [
+                { "name": "LANG", "value": "C" },
+                { "name": "PATH", "value": "/usr/local/share/foo" },
+            ],
         },
         {
             "name": "engine2",
@@ -267,7 +273,10 @@ EngineSettings::EngineData EngineSettings::EngineData::fromJsonObject(const QJso
                 "BookDir": "foo2",
                 "option1": 16,
                 "option2": 32
-            }
+            },
+            "environment": [
+                { "name": "LANG", "value": "ja_JP.UTF-8" }
+            ],
         }
     ],
     "selectedEngineIndex": 0,

@@ -73,6 +73,63 @@
     </message>
 </context>
 <context>
+    <name>EnvironmentVariablesDialog</name>
+    <message>
+        <location filename="../forms/environmentvariablesdialog.ui" line="14"/>
+        <location filename="ui_environmentvariablesdialog.h" line="84"/>
+        <source>Environment Variables</source>
+        <translation type="unfinished">環境変数</translation>
+    </message>
+    <message>
+        <location filename="../forms/environmentvariablesdialog.ui" line="61"/>
+        <location filename="ui_environmentvariablesdialog.h" line="86"/>
+        <source>Variable</source>
+        <translation type="unfinished">変数</translation>
+    </message>
+    <message>
+        <location filename="../forms/environmentvariablesdialog.ui" line="66"/>
+        <location filename="ui_environmentvariablesdialog.h" line="88"/>
+        <source>Value</source>
+        <translation type="unfinished">値</translation>
+    </message>
+    <message>
+        <location filename="../forms/environmentvariablesdialog.ui" line="80"/>
+        <location filename="ui_environmentvariablesdialog.h" line="89"/>
+        <source>New...</source>
+        <translation type="unfinished">新規...</translation>
+    </message>
+    <message>
+        <location filename="../forms/environmentvariablesdialog.ui" line="93"/>
+        <location filename="ui_environmentvariablesdialog.h" line="90"/>
+        <source>Edit...</source>
+        <translation type="unfinished">編集...</translation>
+    </message>
+    <message>
+        <location filename="../forms/environmentvariablesdialog.ui" line="106"/>
+        <location filename="ui_environmentvariablesdialog.h" line="91"/>
+        <source>Delete</source>
+        <translation type="unfinished">削除</translation>
+    </message>
+    <message>
+        <location filename="../forms/environmentvariablesdialog.ui" line="124"/>
+        <location filename="ui_environmentvariablesdialog.h" line="92"/>
+        <source>These are added to the current variables when the engine runs.</source>
+        <translation type="unfinished">設定された変数はエンジンの実行時に現在の変数へ追加されます</translation>
+    </message>
+    <message>
+        <location filename="environmentvariablesdialog.cpp" line="45"/>
+        <source>Delete %1 variable.
+Are you sure?</source>
+        <translation type="unfinished">%1 変数を削除します。
+よろしいですか。</translation>
+    </message>
+    <message>
+        <location filename="environmentvariablesdialog.cpp" line="46"/>
+        <source>Delete variable</source>
+        <translation type="unfinished">変数削除</translation>
+    </message>
+</context>
+<context>
     <name>KanjiMap</name>
     <message>
         <location filename="piece.cpp" line="288"/>
@@ -1104,12 +1161,12 @@ Please wait a moment.</source>
         <translation type="unfinished">持将棋</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="48"/>
+        <location filename="settingsdialog.cpp" line="54"/>
         <source>Option</source>
         <translation type="unfinished">オプション</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="49"/>
+        <location filename="settingsdialog.cpp" line="55"/>
         <source>Value</source>
         <translation type="unfinished">値</translation>
     </message>
@@ -1118,17 +1175,17 @@ Please wait a moment.</source>
         <translation type="obsolete">実行ファイル (*.exe)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="246"/>
+        <location filename="settingsdialog.cpp" line="256"/>
         <source>Executable (*)</source>
         <translation type="unfinished">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="247"/>
+        <location filename="settingsdialog.cpp" line="257"/>
         <source>Select Engine</source>
         <translation type="unfinished">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="493"/>
+        <location filename="settingsdialog.cpp" line="503"/>
         <source>Select Directory</source>
         <translation type="unfinished">ディレクトリ選択</translation>
     </message>
@@ -1295,32 +1352,44 @@ Please wait a moment.</source>
     <name>SettingsDialog</name>
     <message>
         <location filename="../forms/settingsdialog.ui" line="14"/>
-        <location filename="ui_settingsdialog.h" line="148"/>
+        <location filename="ui_settingsdialog.h" line="153"/>
         <source>Settings</source>
         <translation type="unfinished">設定</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="36"/>
-        <location filename="ui_settingsdialog.h" line="155"/>
+        <location filename="ui_settingsdialog.h" line="162"/>
         <source>Engine</source>
         <translation type="unfinished">エンジン</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="51"/>
-        <location filename="ui_settingsdialog.h" line="149"/>
+        <location filename="ui_settingsdialog.h" line="154"/>
         <source>New</source>
         <translation type="unfinished">追加</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="67"/>
-        <location filename="ui_settingsdialog.h" line="150"/>
+        <location filename="ui_settingsdialog.h" line="155"/>
         <source>Delete</source>
         <translation type="unfinished">削除</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="212"/>
-        <location filename="settingsdialog.cpp" line="35"/>
+        <location filename="../forms/settingsdialog.ui" line="145"/>
         <location filename="ui_settingsdialog.h" line="158"/>
+        <source>The selected engine is used for the game or analysis</source>
+        <translation type="unfinished">ここで選択されているエンジンが対局や解析で使用されます</translation>
+    </message>
+    <message>
+        <location filename="../forms/settingsdialog.ui" line="189"/>
+        <location filename="ui_settingsdialog.h" line="161"/>
+        <source>Set environment variables for the engine :</source>
+        <translation type="unfinished">エンジン向けの環境変数を設定：</translation>
+    </message>
+    <message>
+        <location filename="../forms/settingsdialog.ui" line="233"/>
+        <location filename="settingsdialog.cpp" line="36"/>
+        <location filename="ui_settingsdialog.h" line="165"/>
         <source>OFF</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1330,7 +1399,7 @@ Please wait a moment.</source>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="132"/>
-        <location filename="ui_settingsdialog.h" line="152"/>
+        <location filename="ui_settingsdialog.h" line="157"/>
         <source>Reset</source>
         <translation type="unfinished">リセット</translation>
     </message>
@@ -1343,55 +1412,55 @@ Please wait a moment.</source>
         <translation type="obsolete">オプション</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="150"/>
-        <location filename="ui_settingsdialog.h" line="153"/>
-        <source>The selected engine is used for the game or analysis.</source>
-        <translation type="unfinished">ここで選択されているエンジンが対局や解析で使用されます。</translation>
-    </message>
-    <message>
         <location filename="../forms/settingsdialog.ui" line="116"/>
-        <location filename="ui_settingsdialog.h" line="151"/>
+        <location filename="ui_settingsdialog.h" line="156"/>
         <source>Engine options</source>
         <translation type="unfinished">エンジンオプション</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="174"/>
-        <location filename="ui_settingsdialog.h" line="161"/>
+        <location filename="../forms/settingsdialog.ui" line="176"/>
+        <location filename="ui_settingsdialog.h" line="160"/>
+        <source>Env...</source>
+        <translation type="unfinished">環境変数...</translation>
+    </message>
+    <message>
+        <location filename="../forms/settingsdialog.ui" line="195"/>
+        <location filename="ui_settingsdialog.h" line="168"/>
         <source>Preference</source>
         <translation type="unfinished">設定</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="186"/>
-        <location filename="ui_settingsdialog.h" line="156"/>
+        <location filename="../forms/settingsdialog.ui" line="207"/>
+        <location filename="ui_settingsdialog.h" line="163"/>
         <source>Sound</source>
         <translation type="unfinished">サウンド</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="199"/>
-        <location filename="ui_settingsdialog.h" line="157"/>
+        <location filename="../forms/settingsdialog.ui" line="220"/>
+        <location filename="ui_settingsdialog.h" line="164"/>
         <source>Piece Type</source>
         <translation type="unfinished">駒の種類</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="35"/>
+        <location filename="settingsdialog.cpp" line="36"/>
         <source>ON</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="228"/>
-        <location filename="ui_settingsdialog.h" line="159"/>
+        <location filename="../forms/settingsdialog.ui" line="249"/>
+        <location filename="ui_settingsdialog.h" line="166"/>
         <source>Piece1</source>
         <translation type="unfinished">駒１</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="244"/>
-        <location filename="ui_settingsdialog.h" line="160"/>
+        <location filename="../forms/settingsdialog.ui" line="265"/>
+        <location filename="ui_settingsdialog.h" line="167"/>
         <source>Piece2</source>
         <translation type="unfinished">駒２</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="265"/>
-        <location filename="ui_settingsdialog.h" line="162"/>
+        <location filename="../forms/settingsdialog.ui" line="286"/>
+        <location filename="ui_settingsdialog.h" line="169"/>
         <source>Close</source>
         <translation type="unfinished">閉じる</translation>
     </message>
@@ -1408,68 +1477,68 @@ Please wait a moment.</source>
         <translation type="obsolete">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="255"/>
+        <location filename="settingsdialog.cpp" line="265"/>
         <source>Invalid file</source>
         <translation type="unfinished">ファイル不正</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="255"/>
+        <location filename="settingsdialog.cpp" line="265"/>
         <source>File not executable</source>
         <translation type="unfinished">実行可能なファイルではありません</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="286"/>
+        <location filename="settingsdialog.cpp" line="296"/>
         <source>Delete %1.
 Are you sure?</source>
         <translation type="unfinished">%1 を削除します。
 よろしいですか。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="287"/>
+        <location filename="settingsdialog.cpp" line="297"/>
         <source>Delete engine</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="470"/>
+        <location filename="settingsdialog.cpp" line="480"/>
         <source>Select Book File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="481"/>
+        <location filename="settingsdialog.cpp" line="491"/>
         <source>Select Eval File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="509"/>
+        <location filename="settingsdialog.cpp" line="519"/>
         <source>Select File</source>
         <translation type="unfinished">ファイル選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="536"/>
+        <location filename="settingsdialog.cpp" line="546"/>
         <source>Default</source>
         <translation type="unfinished">初期値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="548"/>
+        <location filename="settingsdialog.cpp" line="558"/>
         <source>Max</source>
         <translation type="unfinished">最大</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="552"/>
+        <location filename="settingsdialog.cpp" line="562"/>
         <source>Min</source>
         <translation type="unfinished">最小</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="199"/>
-        <location filename="settingsdialog.cpp" line="520"/>
-        <location filename="settingsdialog.cpp" line="539"/>
+        <location filename="settingsdialog.cpp" line="209"/>
+        <location filename="settingsdialog.cpp" line="530"/>
+        <location filename="settingsdialog.cpp" line="549"/>
         <source>true</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="199"/>
-        <location filename="settingsdialog.cpp" line="520"/>
-        <location filename="settingsdialog.cpp" line="539"/>
+        <location filename="settingsdialog.cpp" line="209"/>
+        <location filename="settingsdialog.cpp" line="530"/>
+        <location filename="settingsdialog.cpp" line="549"/>
         <source>false</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1478,12 +1547,12 @@ Are you sure?</source>
         <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="563"/>
+        <location filename="settingsdialog.cpp" line="573"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="563"/>
+        <location filename="settingsdialog.cpp" line="573"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。
@@ -1833,6 +1902,49 @@ Are you sure?</source>
     <message>
         <source>Fischer Mode</source>
         <translation type="obsolete">１手毎加算</translation>
+    </message>
+</context>
+<context>
+    <name>UserEnvironmentVariableDialog</name>
+    <message>
+        <location filename="../forms/userenvironmentvariabledialog.ui" line="14"/>
+        <location filename="ui_userenvironmentvariabledialog.h" line="72"/>
+        <source>Dialog</source>
+        <translation type="unfinished">確認</translation>
+    </message>
+    <message>
+        <location filename="../forms/userenvironmentvariabledialog.ui" line="42"/>
+        <location filename="ui_userenvironmentvariabledialog.h" line="73"/>
+        <source>Browse Dir...</source>
+        <translation type="unfinished">ディレクトリ参照...</translation>
+    </message>
+    <message>
+        <location filename="../forms/userenvironmentvariabledialog.ui" line="55"/>
+        <location filename="ui_userenvironmentvariabledialog.h" line="74"/>
+        <source>Browse File...</source>
+        <translation type="unfinished">ファイル参照...</translation>
+    </message>
+    <message>
+        <location filename="../forms/userenvironmentvariabledialog.ui" line="68"/>
+        <location filename="ui_userenvironmentvariabledialog.h" line="75"/>
+        <source>Variable name:</source>
+        <translation type="unfinished">変数名：</translation>
+    </message>
+    <message>
+        <location filename="../forms/userenvironmentvariabledialog.ui" line="81"/>
+        <location filename="ui_userenvironmentvariabledialog.h" line="76"/>
+        <source>Variable value:</source>
+        <translation type="unfinished">変数値：</translation>
+    </message>
+    <message>
+        <location filename="userenvironmentvariabledialog.cpp" line="13"/>
+        <source>Open Directory</source>
+        <translation type="unfinished">ディレクトリ参照</translation>
+    </message>
+    <message>
+        <location filename="userenvironmentvariabledialog.cpp" line="19"/>
+        <source>Open File</source>
+        <translation type="unfinished">ファイル参照</translation>
     </message>
 </context>
 </TS>

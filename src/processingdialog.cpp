@@ -20,7 +20,7 @@ ProcessingDialog::ProcessingDialog(const QString &message, QWidget *parent) :
     // レイアウトを設定
     auto *layout = new QVBoxLayout(this);
     layout->addWidget(label);
-    setFixedSize(300, 120);
+    setFixedSize(360, 120);
 
     if (parent) {
         // 中央に表示

@@ -589,11 +589,11 @@ bool MainController::openEngine()
     }
 #endif
 
+    Engine::instance().setEnvironment(data.environment);  // 環境変数
     bool ret = Engine::instance().open(data.path);
     if (ret) {
         // オプション設定
-        auto engineData = EngineSettings::instance().currentEngine();
-        Engine::instance().setOptions(engineData.options);
+        Engine::instance().setOptions(data.options);
     }
     return ret;
 }

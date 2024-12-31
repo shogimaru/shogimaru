@@ -12,6 +12,7 @@ public:
         QString path;
         QVariantMap options;  // <QString, QVariant>
         QVariantMap types;  // type of option <QString, QMetaType::Type>
+        QVariantList environment;  // environment variables
 
         EngineData() { }
         EngineData(const EngineData &) = default;
