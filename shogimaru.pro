@@ -96,6 +96,7 @@ SOURCES += \
         src/processingdialog.cpp \
         src/environmentvariablesdialog.cpp \
         src/userenvironmentvariabledialog.cpp \
+        src/browseenginedialog.cpp \
         src/maincontroller.cpp
 
 HEADERS += \
@@ -133,6 +134,7 @@ HEADERS += \
         src/processingdialog.h \
         src/environmentvariablesdialog.h \
         src/userenvironmentvariabledialog.h \
+        src/browseenginedialog.h \
         src/maincontroller.h
 
 FORMS += \
@@ -145,6 +147,7 @@ FORMS += \
         forms/operationbuttongroup.ui \
         forms/environmentvariablesdialog.ui \
         forms/userenvironmentvariabledialog.ui \
+        forms/browseenginedialog.ui \
         forms/startdialog.ui \
         forms/startdialog2.ui
 

@@ -1,14 +1,12 @@
 #include "environmentvariablesdialog.h"
 #include "ui_environmentvariablesdialog.h"
 #include "userenvironmentvariabledialog.h"
-#include "enginesettings.h"
 #include "messagebox.h"
 
 
-EnvironmentVariablesDialog::EnvironmentVariablesDialog(int engineIndex, QWidget *parent) :
+EnvironmentVariablesDialog::EnvironmentVariablesDialog(QWidget *parent) :
     QDialog(parent),
-    _ui(new Ui::EnvironmentVariablesDialog),
-    _index(engineIndex)
+    _ui(new Ui::EnvironmentVariablesDialog)
 {
     _ui->setupUi(this);
 
@@ -54,11 +52,38 @@ EnvironmentVariablesDialog::EnvironmentVariablesDialog(int engineIndex, QWidget 
 
 void EnvironmentVariablesDialog::open()
 {
-    // Loads variables
-    auto engineData = EngineSettings::instance().availableEngines().value(_index);
+    QDialog::open();
+}
 
+
+void EnvironmentVariablesDialog::accept()
+{
+    QDialog::accept();
+}
+
+
+QVariantList EnvironmentVariablesDialog::environmentVariables() const
+{
+    QVariantList variables;
+
+    for (int row = 0; row < _ui->tableWidget->rowCount(); ++row) {
+        QVariantMap var;
+        auto* nameItem = _ui->tableWidget->item(row, 0);
+        auto* valueItem = _ui->tableWidget->item(row, 1);
+        if (!nameItem->text().isEmpty()) {
+            var["name"] = nameItem->text();
+            var["value"] = valueItem->text();
+            variables << var;
+        }
+    }
+    return variables;
+}
+
+
+void EnvironmentVariablesDialog::setEnvironmentVariables(const QVariantList &variables)
+{
     int i = 0;
-    for (auto &variable : engineData.environment) {
+    for (auto &variable : variables) {
         _ui->tableWidget->setRowCount(i + 1);
         auto var = variable.toMap();
         auto item = new QTableWidgetItem(var.value("name").toString());
@@ -73,31 +98,6 @@ void EnvironmentVariablesDialog::open()
     if (i > 0) {
         _ui->tableWidget->setCurrentCell(0, 0);
     }
-    QDialog::open();
-}
-
-
-void EnvironmentVariablesDialog::accept()
-{
-    QVariantList newEnv;
-
-    for (int row = 0; row < _ui->tableWidget->rowCount(); ++row) {
-        QVariantMap var;
-        auto* nameItem = _ui->tableWidget->item(row, 0);
-        auto* valueItem = _ui->tableWidget->item(row, 1);
-        if (!nameItem->text().isEmpty()) {
-            var["name"] = nameItem->text();
-            var["value"] = valueItem->text();
-            newEnv << var;
-        }
-    }
-
-    auto engineData = EngineSettings::instance().availableEngines()[_index];
-    engineData.environment = newEnv;
-    EngineSettings::instance().updateEngine(_index, engineData);
-    EngineSettings::instance().save();
-
-    QDialog::accept();
 }
 
 

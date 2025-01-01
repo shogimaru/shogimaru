@@ -1,6 +1,7 @@
 #include "command.h"
 #include "engine.h"
 #include "engineprocess.h"
+#include "messagebox.h"
 #include <QCoreApplication>
 #include <QProcessEnvironment>
 #include <QDebug>
@@ -82,6 +83,8 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path, const QVariantList
         info.path = path;
         info.author = engine->author();
         info.options = engine->_usiDefaultOptions;
+    } else {
+        MessageBox::information(tr("Engine Error"), tr("Failed to start the engine"));
     }
     engine->close();
     delete engine;

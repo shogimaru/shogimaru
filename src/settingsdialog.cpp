@@ -4,6 +4,7 @@
 #include "enginesettings.h"
 #include "messagebox.h"
 #include "environmentvariablesdialog.h"
+#include "browseenginedialog.h"
 #include "user.h"
 #include "westerntabstyle.h"
 #include <QFileDialog>
@@ -37,9 +38,17 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
         _ui->soundOnOffButton->setText(text);
     });
     connect(_ui->envButton, &QPushButton::clicked, [this]() {
+        EnvironmentVariablesDialog dialog(this);
         int engineIndex = _ui->engineComboBox->currentIndex();
-        auto *dialog = new EnvironmentVariablesDialog(engineIndex, this);
-        dialog->open();
+        auto engineData = EngineSettings::instance().availableEngines()[engineIndex];
+        dialog.setEnvironmentVariables(engineData.environment);
+
+        if (dialog.exec() == QDialog::Accepted) {
+            auto engineData = EngineSettings::instance().availableEngines()[engineIndex];
+            engineData.environment = dialog.environmentVariables();
+            EngineSettings::instance().updateEngine(engineIndex, engineData);
+            EngineSettings::instance().save();
+        }
     });
 
 #ifdef Q_OS_WASM
@@ -178,6 +187,9 @@ void SettingsDialog::showEngineOptions(int index)
     // エンジンオプション
     const auto &engineData = availableEngines[index];
     auto info = Engine::getEngineInfo(engineData.path, engineData.environment);
+    if (info.name.isEmpty()) {
+        return;
+    }
     _defaultOptions = info.options;  // USIデフォルトオプション取得
     auto options = engineData.options;  // ユーザ設定オプション
 
@@ -253,21 +265,25 @@ void SettingsDialog::accept()
 
 void SettingsDialog::getEnginePath()
 {
-    QString filter = QObject::tr("Executable (*)");
-    QString path = QFileDialog::getOpenFileName(this, QObject::tr("Select Engine"), QString(), filter);
+    BrowseEngineDialog dialog(this);
+    dialog.open();
 
-    if (path.trimmed().isEmpty()) {
+    if (dialog.exec() != QDialog::Accepted) {
         return;
     }
 
-    QFileInfo fi(path);
+    QFileInfo fi(dialog.enginePath());
     if (!fi.isExecutable()) {
         MessageBox::information(tr("Invalid file"), tr("File not executable"));
         return;
     }
 
     // エンジン追加
-    auto info = Engine::getEngineInfo(path);
+    auto info = Engine::getEngineInfo(fi.absoluteFilePath(), dialog.environmentVariables());
+    if (info.name.isEmpty()) {
+        return;
+    }
+
     EngineSettings::EngineData newEngine;
     newEngine.name = info.name;
     if (!info.author.isEmpty()) {
@@ -276,7 +292,7 @@ void SettingsDialog::getEnginePath()
         newEngine.name += ")";
     }
     newEngine.author = info.author;
-    newEngine.path = path;
+    newEngine.path = fi.absoluteFilePath();
     for (auto it = info.options.begin(); it != info.options.end(); ++it) {
         newEngine.options.insert(it.key(), it.value().defaultValue);
         newEngine.types.insert(it.key(), QVariant((int)it.value().type));
