@@ -37,13 +37,14 @@ wasm {
   SOURCES += src/sound_native.cpp
   HEADERS += src/engineprocess.h
   SOURCES += src/engineprocess.cpp
-  DESTDIR  = ./
 
   HEADERS += src/stringconverter.h
   msvc {
     SOURCES += src/stringconverter_win.cpp
+    DESTDIR = dist/
   } else {
     SOURCES += src/stringconverter_iconv.cpp
+    DESTDIR  = ./
   }
 }
 
