@@ -21,24 +21,17 @@ Engine::Engine(QObject *parent) :
 bool Engine::openContext(const QString &path)
 {
     delete _engineContext;
+    _engineContext = nullptr;
     auto process = new EngineProcess(path, this);
-
-#ifdef Q_OS_WIN
-    const QChar Delimiter(';');
-#else
-    const QChar Delimiter(':');
-#endif
 
     // 環境変数設定
     if (!_environment.isEmpty()) {
-        auto env = process->processEnvironment();
-        for (auto &variable : _environment) {
+        QProcessEnvironment env;
+        for (const auto &variable : _environment) {
             auto var = variable.toMap();
             QString name = var.value("name").toString();
             if (!name.isEmpty()) {
-                QString val = env.value(name);
-                val.prepend(var.value("value").toString() + Delimiter);
-                env.insert(name, val);
+                env.insert(name, var.value("value").toString());
             }
         }
         process->setProcessEnvironment(env);
