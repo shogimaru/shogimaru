@@ -38,7 +38,6 @@ bool Engine::openContext(const QString &path)
             if (!name.isEmpty()) {
                 QString val = env.value(name);
                 val.prepend(var.value("value").toString() + Delimiter);
-                qDebug() << name << ":" << val;
                 env.insert(name, val);
             }
         }
@@ -84,7 +83,7 @@ Engine::EngineInfo Engine::getEngineInfo(const QString &path, const QVariantList
         info.author = engine->author();
         info.options = engine->_usiDefaultOptions;
     } else {
-        MessageBox::information(tr("Engine Error"), tr("Failed to start the engine"));
+        MessageBox::information(tr("Engine error"), tr("Failed to start the engine"));
     }
     engine->close();
     delete engine;

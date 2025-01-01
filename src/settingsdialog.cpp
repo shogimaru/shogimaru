@@ -298,6 +298,7 @@ void SettingsDialog::getEnginePath()
         newEngine.types.insert(it.key(), QVariant((int)it.value().type));
     }
 
+    newEngine.environment = dialog.environmentVariables();
     EngineSettings::setCustomOptions(newEngine.options);
     EngineSettings::instance().addEngine(newEngine);
     _defaultOptions.clear();

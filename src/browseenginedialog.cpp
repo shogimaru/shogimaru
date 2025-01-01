@@ -20,7 +20,7 @@ BrowseEngineDialog::BrowseEngineDialog(QWidget *parent) :
         QString path = QFileDialog::getOpenFileName(this, QObject::tr("Select Engine"), QString(), filter);
 
         if (!path.trimmed().isEmpty()) {
-            _ui->pathLineEdit->setText(path.trimmed());
+            _ui->pathLineEdit->setText(QDir::toNativeSeparators(path.trimmed()));
         }
     });
 

@@ -12,13 +12,13 @@ UserEnvironmentVariableDialog::UserEnvironmentVariableDialog(QWidget *parent) :
     connect(_ui->browseDirButton, &QPushButton::clicked, [&] {
         QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "", QFileDialog::ShowDirsOnly);
         if (!dir.isEmpty()) {
-            _ui->valueLineEdit->setText(dir);
+            _ui->valueLineEdit->setText(QDir::toNativeSeparators(dir));
         }
     });
     connect(_ui->browseFileButton, &QPushButton::clicked, [&] {
         QString path = QFileDialog::getOpenFileName(this, tr("Open File"), "", "*");
         if (!path.isEmpty()) {
-            _ui->valueLineEdit->setText(path);
+            _ui->valueLineEdit->setText(QDir::toNativeSeparators(path));
         }
     });
 
