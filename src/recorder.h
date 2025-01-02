@@ -57,6 +57,7 @@ public:
     bool setFirstPosition(const QByteArray &sfen);
     QString record(const QByteArray &piece, const QByteArray &usi, bool check, const PonderInfo &info = PonderInfo());
     QString record(const QPair<Piece*, QString> &move, bool check, const PonderInfo &info = PonderInfo());
+    QPair<maru::GameResult, maru::ResultDetail> gameResult() const { return _result; }
     void setGameResult(maru::GameResult result, maru::ResultDetail detail);
     void recordPonderingScore(int index, int multipv, const ScoreItem &item);
     QVector<ScoreItem> scores(int index) const { return _pvList.value(index).second; }

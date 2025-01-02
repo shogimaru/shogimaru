@@ -1,6 +1,6 @@
 #pragma once
-#include "global.h"
 #include <QDialog>
+#include <QPair>
 
 class QTableWidget;
 class QTableWidgetItem;
