@@ -272,8 +272,15 @@ void Recorder::removeAfter(int index)
 }
 
 
+void Recorder::clearGameResult()
+{
+    _result = {maru::None, maru::NoDetail};
+}
+
+
 void Recorder::clear()
 {
+    clearGameResult();
     _illegalItems.clear();
     _pvList.clear();
     _pvList << qMakePair(Sfen::defaultPostion(), QVector<ScoreItem>({ScoreItem()}));

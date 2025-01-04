@@ -59,6 +59,7 @@ public:
     QString record(const QPair<Piece*, QString> &move, bool check, const PonderInfo &info = PonderInfo());
     QPair<maru::GameResult, maru::ResultDetail> gameResult() const { return _result; }
     void setGameResult(maru::GameResult result, maru::ResultDetail detail);
+    void clearGameResult();
     void recordPonderingScore(int index, int multipv, const ScoreItem &item);
     QVector<ScoreItem> scores(int index) const { return _pvList.value(index).second; }
     bool isRepetition() const;  // 最後の手が千日手か
@@ -84,7 +85,7 @@ private:
     void addIllegalItem(bool check, const QByteArray &sfen);
 
     QList<IllegalCheck> _illegalItems;
-    QPair<maru::GameResult, maru::ResultDetail> _result;
+    QPair<maru::GameResult, maru::ResultDetail> _result {maru::None, maru::NoDetail};
 
     // 棋譜検討用
     QList<QPair<QByteArray, QVector<ScoreItem>>> _pvList;  // <USI, PV[]>のリスト

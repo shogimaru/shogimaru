@@ -469,15 +469,26 @@ void MainController::newGame()
 
     MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
 
-    _mode = Game;
     int index = qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
     if (_startDialog->position() == maru::Initial || index == 0) {
+        // 初期画面から開始
         clear();  // 画面クリア
         _board->startGame(Sfen::defaultPostion());
         _clock->setTurn(maru::Sente);
         Engine::instance().setStartPosition();  // デフォルト初期局面
     } else {
         // 現在局面から開始
+        auto res = _recorder->gameResult();
+        if (res.second == maru::Illegal_TwoPawns
+            || res.second == maru::Illegal_DropPawnMate
+            || res.second == maru::Illegal_OverlookedCheck
+            || res.second == maru::Illegal_PerpetualCheck
+            || res.second == maru::Draw_Repetition) {
+            // 反則手は除く
+            index = qBound(0, index, _recorder->count() - 2);
+        }
+
+        setCurrentRecordRow(index);
         maru::Turn turn = _recorder->turn(index);
         _clock->setTurn(turn);
         _recorder->removeAfter(index + 1);
@@ -493,6 +504,10 @@ void MainController::newGame()
         _ui->messageTableWidget->clear();
         _graph->clear();  // グラフクリア
     }
+
+    // 結果クリア
+    _recorder->clearGameResult();
+    _mode = Game;
 }
 
 
@@ -560,12 +575,12 @@ void MainController::newRatingGame()
     msg += "\n\n";
     msg += tr("Good Luck!");
 
-    _mode = Rating;
     clear();  // 画面クリア
     _board->startGame(Sfen::defaultPostion());
     _clock->setTurn(maru::Sente);
     Engine::instance().setStartPosition();  // デフォルト初期局面
     MessageBox::information(tr("Game Start"), msg, this, SLOT(startGame()));
+   _mode = Rating;
 }
 
 

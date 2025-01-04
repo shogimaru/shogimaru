@@ -28,8 +28,6 @@ public:
     QPair<Piece*, QString> lastMovedPiece() const { return _lastMove; }
     bool isCheck() const;  // 最終手が王手か
     QList<Piece*> searchMovablePeace(maru::Turn turn, int coord) const;
-    // QByteArray toStaticSfen(int moveNumber) const;  // SFEN形式へ変換
-    // QByteArray toStaticSfen(maru::Turn turn, int moveNumber) const;  // SFEN形式へ変換
     bool startGame(const QByteArray &sfen);
     void setSfen(const QByteArray &sfen, bool movable, const QByteArray &lastMove = QByteArray());
 

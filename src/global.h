@@ -41,16 +41,18 @@ enum PlayerType : int {
 
 // 試合結果
 enum GameResult : int {
+    None = 0,
     Win = 1,  // 勝利
     Loss,  // 敗北
     Draw,  // 引き分け
-    Illegal,  // 反則（負け）
+    Illegal,  // 反則
     Abort,  // 中断
     ResultMask = 0xF,
 };
 
 // 結果詳細
 enum ResultDetail : int {
+    NoDetail = 0 << 4,
     Win_Declare = 1 << 4,  // 入玉勝ち宣言
     Loss_Resign = 2 << 4,  // 投了
     Draw_Repetition = 3 << 4,  // 千日手
