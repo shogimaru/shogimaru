@@ -38,7 +38,7 @@ jobs:
         qmake CONFIG+=release
         nmake
     - name: deploy
-      run: windeployqt.exe .\shogimaru.exe
+      run: windeployqt.exe .\dist\shogimaru.exe
 
   build-macos:
     runs-on: macos-latest
