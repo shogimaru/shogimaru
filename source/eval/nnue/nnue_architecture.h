@@ -11,7 +11,12 @@
 // Defines the network structure
 // 入力特徴量とネットワーク構造が定義されたヘッダをincludeする
 
-#if defined(EVAL_NNUE_HALFKP256)
+#if defined(NNUE_ARCHITECTURE_HEADER)
+
+// 動的に生成されたファイルがある。
+#include NNUE_ARCHITECTURE_HEADER
+
+#elif defined(EVAL_NNUE_HALFKP256)
 
 // 標準NNUE型。NNUE評価関数のデフォルトは、halfKP256
 
@@ -19,12 +24,12 @@
 
 #elif defined(EVAL_NNUE_KP256)
 
-// KP256型
-#include "architectures/k-p_256x2-32-32.h"
+// kp型
+#include "architectures/kp_256x2-32-32.h"
 
 #elif defined(EVAL_NNUE_HALFKPE9)
 
-// halfKPE9型
+// halfkpe9型
 #include "architectures/halfkpe9_256x2-32-32.h"
 
 #elif defined(YANEURAOU_ENGINE_NNUE_HALFKP_512X2_16_32)
@@ -45,8 +50,8 @@
 
 #elif defined(EVAL_NNUE_HALFKP_VM_256X2_32_32)
 
-// halfkp_vm_256x2-32-32型
-#include "architectures/halfkp_vm_256x2-32-32.h"
+// halfkpvm_256x2-32-32型
+#include "architectures/halfkpvm_256x2-32-32.h"
 
 #else
 

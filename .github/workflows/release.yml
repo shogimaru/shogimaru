@@ -8,6 +8,11 @@ on:
       - "v*"
       - "V*"
 
+      # ⇨ 先頭が"v"または"V"で始まるtagをつけてpushしたら、以下のjobが走って成果物が
+      # Releasesのところに生える。
+      # この方法で実行ファイルを公開する予定がないので、この.ymlは不要なのだが、
+      # 参考のため残してある。[2024/10/09]
+
 jobs:
   build-msys2-general:
     # windows-latest = windows-2019 => windows-2022
@@ -87,9 +92,9 @@ jobs:
           main\script\msys2_build.ps1 -Edition ${{ matrix.edition }} -Compiler ${{ matrix.compiler }} -Target ${{ matrix.target }} -Cpu ${{ matrix.archcpu }}
         shell: pwsh
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-windows_${{ github.run_number }}_${{ github.sha }}
+          name: build-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/*
 
   build-msys2-material:
@@ -168,9 +173,9 @@ jobs:
           main\script\msys2_build.ps1 -Edition ${{ matrix.edition }} -Compiler ${{ matrix.compiler }} -Target ${{ matrix.target }} -Cpu ${{ matrix.archcpu }}
         shell: pwsh
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-windows-material_${{ github.run_number }}_${{ github.sha }}
+          name: build-windows-material_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/*
 
 
@@ -204,9 +209,9 @@ jobs:
           MSBuild.exe /t:build /p:Configuration=Release-Deep-ORT-TRT /p:Platform=x64
         working-directory: main
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-deep-windows_${{ github.run_number }}_${{ github.sha }}
+          name: build-deep-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/*
 
 
@@ -234,10 +239,10 @@ jobs:
           - edition: USER_ENGINE
 
     steps:
-      - name: Setup Android NDK r23b
+      - name: Setup Android NDK r27
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r23b
+          ndk-version: r27
 
       - name: Checkout own repository
         uses: actions/checkout@v2
@@ -247,9 +252,9 @@ jobs:
       - name: ndk-build
         run: main/script/android_build.sh -e ${{ matrix.edition }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-android_${{ github.run_number }}_${{ github.sha }}
+          name: build-android_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/*
 
   build-macos-general:
@@ -393,9 +398,9 @@ jobs:
               fs.writeFileSync(`./main/source/${builddir}/${filename}.log`, log);
             }}}}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-macos_${{ github.run_number }}_${{ github.sha }}
+          name: build-macos_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/**/*
 
   build-msys2-suisho:
@@ -455,9 +460,9 @@ jobs:
           echo 'Suisho5(20211123)-${{ steps.version.outputs.filename }}' > main/build/windows/NNUE/engine_name.txt;
           echo 'yaneurao, tayayan' >> main/build/windows/NNUE/engine_name.txt;
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-windows-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-windows-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/*
 
   build-android-suisho:
@@ -503,9 +508,9 @@ jobs:
           echo 'Suisho5(20211123)-${{ steps.version.outputs.filename }}' > main/build/android/NNUE/engine_name.txt;
           echo 'yaneurao, tayayan' >> main/build/android/NNUE/engine_name.txt;
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-android-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-android-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/*
 
   build-macos-suisho:
@@ -605,9 +610,9 @@ jobs:
           echo 'Suisho5(20211123)-YaneuraOu' > main/build/macos11/NNUE/engine_name.txt;
           echo 'yaneurao, tayayan' >> main/build/macos11/NNUE/engine_name.txt;
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-macos-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-macos-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: main/build/**/**/*
 
   build-wasm:
@@ -642,9 +647,9 @@ jobs:
         run: |
           docker run --rm -v ${PWD}/main:/src emscripten/emsdk:3.1.43 node script/wasm_build.js ${{ matrix.edition }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-wasm_${{ github.run_number }}_${{ github.sha }}
+          name: build-wasm_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: ./main/build/**/**/*
 
   build-wasm-suisho:
@@ -672,9 +677,9 @@ jobs:
         run: |
           docker run --rm -v ${PWD}/main:/src emscripten/emsdk:3.1.43 node script/wasm_build.js ${{ matrix.edition }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-wasm-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-wasm-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: ./main/build/**/**/*
 
   build-wasm-suishopetite:
@@ -702,9 +707,9 @@ jobs:
         run: |
           docker run --rm -v ${PWD}/main:/src emscripten/emsdk:3.1.43 node script/wasm_build.js ${{ matrix.edition }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: build-wasm-suishopetite_${{ github.run_number }}_${{ github.sha }}
+          name: build-wasm-suishopetite_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: ./main/build/**/**/*
 
   archive-msys2-general:
@@ -723,9 +728,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-windows
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-windows_${{ github.run_number }}_${{ github.sha }}
+          name: build-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -739,9 +744,9 @@ jobs:
           7z a -tzip build-windows.zip windows
           7z a -t7z build-windows.7z windows
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-windows_${{ github.run_number }}_${{ github.sha }}
+          name: archive-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -761,9 +766,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-windows-material
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-windows-material_${{ github.run_number }}_${{ github.sha }}
+          name: build-windows-material_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -777,9 +782,9 @@ jobs:
           7z a -tzip build-windows-material.zip windows
           7z a -t7z build-windows-material.7z windows
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-windows-material_${{ github.run_number }}_${{ github.sha }}
+          name: archive-windows-material_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -799,9 +804,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-windows-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-windows-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-windows-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -817,9 +822,9 @@ jobs:
           7z a -tzip ../../build-windows-suisho.zip *
           7z a -t7z ../../build-windows-suisho.7z *
         working-directory: release/windows/NNUE
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-windows-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-windows-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -839,9 +844,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-deep-windows
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-deep-windows_${{ github.run_number }}_${{ github.sha }}
+          name: build-deep-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -855,9 +860,9 @@ jobs:
           7z a -tzip build-deep-windows.zip *
           7z a -t7z build-deep-windows.7z *
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-deep-windows_${{ github.run_number }}_${{ github.sha }}
+          name: archive-deep-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -877,9 +882,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-android
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-android_${{ github.run_number }}_${{ github.sha }}
+          name: build-android_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -893,9 +898,9 @@ jobs:
           7z a -tzip build-android.zip android
           7z a -t7z build-android.7z android
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-android_${{ github.run_number }}_${{ github.sha }}
+          name: archive-android_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -915,9 +920,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-android-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-android-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-android-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -933,9 +938,9 @@ jobs:
           7z a -tzip ../../build-android-suisho.zip *
           7z a -t7z ../../build-android-suisho.7z *
         working-directory: release/android/NNUE
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-android-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-android-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -955,9 +960,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-macos
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-macos_${{ github.run_number }}_${{ github.sha }}
+          name: build-macos_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: set executable
         run: |
@@ -973,9 +978,9 @@ jobs:
         run: |
           tar -Jcf build-macos.tar.xz macos11
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-macos_${{ github.run_number }}_${{ github.sha }}
+          name: archive-macos_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.tar.xz
   archive-macos-suisho:
@@ -994,9 +999,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-macos-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-macos-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-macos-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: set executable
         run: |
@@ -1014,9 +1019,9 @@ jobs:
         run: |
           tar -Jcf ../../build-macos-suisho.tar.xz *
         working-directory: release/macos11/NNUE
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-macos-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-macos-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.tar.xz
   archive-wasm:
@@ -1035,9 +1040,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-wasm
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-wasm_${{ github.run_number }}_${{ github.sha }}
+          name: build-wasm_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -1051,9 +1056,9 @@ jobs:
           7z a -tzip build-wasm.zip wasm
           7z a -t7z build-wasm.7z wasm
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-wasm_${{ github.run_number }}_${{ github.sha }}
+          name: archive-wasm_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -1073,9 +1078,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-wasm-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-wasm-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: build-wasm-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -1091,9 +1096,9 @@ jobs:
           7z a -tzip build-wasm-suisho.zip wasm
           7z a -t7z build-wasm-suisho.7z wasm
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-wasm-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-wasm-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -1113,9 +1118,9 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-wasm-suishopetite
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: build-wasm-suishopetite_${{ github.run_number }}_${{ github.sha }}
+          name: build-wasm-suishopetite_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release
       - name: copy docs
         run: |
@@ -1131,9 +1136,9 @@ jobs:
           7z a -tzip build-wasm-suishopetite.zip wasm
           7z a -t7z build-wasm-suishopetite.7z wasm
         working-directory: release
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: archive-wasm-suishopetite_${{ github.run_number }}_${{ github.sha }}
+          name: archive-wasm-suishopetite_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: |
             release/*.zip
             release/*.7z
@@ -1168,59 +1173,59 @@ jobs:
         with:
           path: main
       - name: Download artifact to get build-windows
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-windows_${{ github.run_number }}_${{ github.sha }}
+          name: archive-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-windows
       - name: Download artifact to get build-windows-material
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-windows-material_${{ github.run_number }}_${{ github.sha }}
+          name: archive-windows-material_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-windows-material
       - name: Download artifact to get build-windows-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-windows-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-windows-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-windows-suisho
       - name: Download artifact to get build-deep-windows
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-deep-windows_${{ github.run_number }}_${{ github.sha }}
+          name: archive-deep-windows_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-deep-windows
       - name: Download artifact to get build-android
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-android_${{ github.run_number }}_${{ github.sha }}
+          name: archive-android_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-android
       - name: Download artifact to get build-android-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-android-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-android-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-android-suisho
       - name: Download artifact to get build-macos
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-macos_${{ github.run_number }}_${{ github.sha }}
+          name: archive-macos_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-macos
       - name: Download artifact to get build-macos-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-macos-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-macos-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-macos-suisho
       - name: Download artifact to get build-wasm
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-wasm_${{ github.run_number }}_${{ github.sha }}
+          name: archive-wasm_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-wasm
       - name: Download artifact to get build-wasm-suisho
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-wasm-suisho_${{ github.run_number }}_${{ github.sha }}
+          name: archive-wasm-suisho_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-wasm-suisho
       - name: Download artifact to get build-wasm-suishopetite
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
-          name: archive-wasm-suishopetite_${{ github.run_number }}_${{ github.sha }}
+          name: archive-wasm-suishopetite_${{ github.run_number }}_${{ github.job }}_${{ github.run_id }}_${{ github.sha }}
           path: release-wasm-suishopetite
       - name: Display structure of downloaded files
         run: ls -R release-windows release-windows-material release-windows-suisho release-deep-windows release-android release-android-suisho release-macos-suisho release-macos-suisho release-wasm

@@ -464,9 +464,10 @@ namespace MakeBook2023
 			is >> readbook_path >> writebook_path;
 
 			string BOOK_DIR = Options["BookDir"];
+			this->sfen_temp_path = Path::Combine(BOOK_DIR, SFEN_TEMP_FILENAME);
 			readbook_path  = Path::Combine(BOOK_DIR, readbook_path );
 			writebook_path = Path::Combine(BOOK_DIR, writebook_path);
-			
+
 			if (next)
 			{
 				is >> next_nodes;
@@ -574,7 +575,7 @@ namespace MakeBook2023
 
 			// sfen文字列はファイルに書き出す。
 			SystemIO::TextWriter sfen_writer;
-			sfen_writer.Open(Path::Combine(BOOK_DIR, SFEN_TEMP_FILENAME)); // ファイルここでいいかな？
+			sfen_writer.Open(sfen_temp_path);
 
 			while(reader.ReadLine(line).is_ok())
 			{
@@ -602,7 +603,7 @@ namespace MakeBook2023
 								auto& token = splited2[0];
 								if (token == "NOE" && splited2.size() == 2) // numbers of entires
 								{
-									size_t noe = StringExtension::to_int(splited2[1],0);
+									size_t noe = StringExtension::to_int(string(splited2[1]), 0);
 									cout << "Number of Sfen Entries = " << noe << endl;
 
 									// エントリー数が事前にわかったので、その分だけそれぞれの構造体配列を確保する。
@@ -693,8 +694,8 @@ namespace MakeBook2023
 				auto ponder_str = scanner.get_text();
 				auto value = (s16)std::clamp((int)scanner.get_number(0), BOOK_VALUE_MIN , BOOK_VALUE_MAX);
 				auto depth = (s16)scanner.get_number(0);
-				Move16 move16   = (move_str   == "none" || move_str   == "None" || move_str   == "resign") ? MOVE_NONE : USI::to_move16(move_str  );
-				//Move16 ponder = (ponder_str == "none" || ponder_str == "None" || ponder_str == "resign") ? MOVE_NONE : USI::to_move16(ponder_str);
+				Move16 move16   = (move_str   == "none" || move_str   == "None" || move_str   == "resign") ? Move16::none() : USI::to_move16(move_str  );
+				//Move16 ponder = (ponder_str == "none" || ponder_str == "None" || ponder_str == "resign") ? Move16::none() : USI::to_move16(ponder_str);
 
 				// 後手番であるなら、先手の局面として登録しないといけないので指し手もflipする。
 				// posは上でblack_sfenが設定されているので先手番になるようにflipされている。
@@ -730,7 +731,7 @@ namespace MakeBook2023
 			u64 converged_moves = 0;
 
 			SystemIO::TextReader sfen_reader;
-			sfen_reader.Open(SFEN_TEMP_FILENAME);
+			sfen_reader.Open(sfen_temp_path);
 
 			progress.reset(book_nodes.size() - 1);
 			for(BookNodeIndex book_node_index = 0 ; book_node_index < BookNodeIndex(book_nodes.size()) ; ++book_node_index)
@@ -778,7 +779,7 @@ namespace MakeBook2023
 						//	value = draw_value
 						//	depth = ∞
 						//  draw_state = 先後ともに回避できない
-						BookMove book_move(Move16(move.move),
+						BookMove book_move(move.to_move16(),
 							ValueDepth(
 								draw_value(REPETITION_DRAW, book_node.color()),
 								BOOK_DEPTH_INF
@@ -1083,7 +1084,7 @@ namespace MakeBook2023
 				const auto& book_move = node.moves[i];
 
 				// MOVE_NONEならこの枝はないものとして扱う。
-				if (book_move.move == MOVE_NONE)
+				if (book_move.move.to_u16() == MOVE_NONE)
 					continue;
 
 				if (book_move.vd.is_superior(best, node.color()))
@@ -1157,7 +1158,7 @@ namespace MakeBook2023
 			writer.WriteLine(::Book::BookDBHeader2016_100);
 
 			SystemIO::TextReader sfen_reader;
-			sfen_reader.Open(SFEN_TEMP_FILENAME);
+			sfen_reader.Open(sfen_temp_path);
 
 			for(size_t i = 0 ; i < n ; ++i)
 			{
@@ -1334,7 +1335,7 @@ namespace MakeBook2023
 							write_counter2++;
 
 							// この手はないものとして、この book_node_index を起点として上流に更新していけばOK。
-							book_node.moves[best_index].move = MOVE_NONE;
+							book_node.moves[best_index].move = Move16::none();
 
 							break;
 						}
@@ -1355,7 +1356,7 @@ namespace MakeBook2023
 							p.erase(std::find_if(p.begin(), p.end(), [&](auto& pm){ return pm.parent == book_node_index; }));
 
 							// この手はないものとして、この book_node_index を起点として上流に更新していけばOK。
-							book_node.moves[best_index].move = MOVE_NONE;
+							book_node.moves[best_index].move = Move16::none();
 
 							break;
 						}
@@ -1436,7 +1437,7 @@ namespace MakeBook2023
 
 							if (delete_flag)
 								// 1a. この局面に至る親からの指し手をすべて削除。
-								book_nodes[pm.parent].moves[pm.move_index].move = MOVE_NONE;
+								book_nodes[pm.parent].moves[pm.move_index].move = Move16::none();
 							else
 								// 1b. この局面に至る親からの指し手の評価値を更新
 								book_nodes[pm.parent].moves[pm.move_index].vd = best_vd;
@@ -1699,6 +1700,9 @@ namespace MakeBook2023
 		// 　そこから1手進めると後手の局面となる。この時に、hash keyから既存の局面かどうかを調べたいので…。
 		using HashKey2Index = unordered_map<HASH_KEY,BookNodeIndex>;
 		HashKey2Index hashkey_to_index;
+
+		// sfenファイルの一時ファイルを書き出すpath
+		string sfen_temp_path;
 	};
 }
 

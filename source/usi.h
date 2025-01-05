@@ -157,10 +157,6 @@ namespace USI
 	// " 7g7f 8c8d" のように返る。
 	std::string move(const std::vector<Move>& moves);
 
-	// pv(読み筋)をUSIプロトコルに基いて出力する。
-	// depth : 反復深化のiteration深さ。
-	std::string pv(const Position& pos, Depth depth);
-
 	// 局面posとUSIプロトコルによる指し手を与えて
 	// もし可能なら等価で合法な指し手を返す。
 	// 合法でないときはMOVE_NONEを返す。(この時、エラーである旨を出力する。)
@@ -189,21 +185,21 @@ namespace USI
 
 #if defined (USE_ENTERING_KING_WIN)
 	// 入玉ルール文字列をEnteringKingRule型に変換する。
-	extern EnteringKingRule to_entering_king_rule(const std::string& rule);
+	EnteringKingRule to_entering_king_rule(const std::string& rule);
 #endif
 
 	// エンジンオプションをコンパイル時に設定する機能
 	// "ENGINE_OPTIONS"で指定した内容を設定する。
 	// 例) #define ENGINE_OPTIONS "FV_SCALE=24;BookFile=no_book"
-	extern void set_engine_options(const std::string& options);
+	void set_engine_options(const std::string& options);
 
 	// エンジンオプションのoverrideのためにファイルから設定を読み込む。
 	// 1) これは起動時に"engine_options.txt"という設定ファイルを読み込むのに用いる。
 	// 2) "isready"応答に対して、EvalDirのなかにある"eval_options.txt"という設定ファイルを読み込むのにも用いる。
-	extern void read_engine_options(const std::string& filename);
+	void read_engine_options(const std::string& filename);
 
 	// namespace USI内のUnitTest。
-	extern void UnitTest(Test::UnitTester& tester);
+	void UnitTest(Test::UnitTester& tester);
 }
 
 // USIのoption設定はここに保持されている。
@@ -215,11 +211,23 @@ extern USI::OptionsMap Options;
 // benchmarkコマンドのハンドラなどで"isready"が来ていないときに評価関数を読み込ませたいときに用いる。
 // skipCorruptCheck == trueのときは評価関数の2度目の読み込みのときのcheck sumによるメモリ破損チェックを省略する。
 // ※　この関数は、Stockfishにはないがないと不便なので追加しておく。
-extern void is_ready(bool skipCorruptCheck = false);
+void is_ready(bool skipCorruptCheck = false);
 
 // positionコマンドのparserを呼び出したいことがあるので外部から呼び出せるようにしておく。
 // 使い方はbenchコマンド(benchmark.cpp)のコードを見てほしい。
-extern void position_cmd(Position& pos, std::istringstream& is, StateListPtr& states);
+void position_cmd(Position& pos, std::istringstream& is, StateListPtr& states);
+
+// エンジン本体
+// TODO : あとでengine.hに移動させる。
+class USIEngine
+{
+public:
+	USIEngine(int argc, char** argv) :
+		cli(argc, argv) {
+	}
+
+	CommandLine cli; // TODO : あとでUSIEngineに移動させる。
+};
 
 
 #endif // #ifndef USI_H_INCLUDED

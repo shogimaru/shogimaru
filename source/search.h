@@ -7,7 +7,25 @@
 #include "config.h"
 #include "misc.h"
 #include "movepick.h"
+#include "numa.h"
 #include "position.h"
+#include "tt.h"
+
+// -----------------------
+//      探索用の定数
+// -----------------------
+
+// Different node types, used as a template parameter
+// テンプレートパラメータとして使用される異なるノードタイプ
+enum NodeType {
+	NonPV,
+	PV,
+	Root
+};
+
+class TranspositionTable;
+class ThreadPool;
+class OptionsMap;
 
 // 探索関係
 namespace Search {
@@ -18,22 +36,26 @@ namespace Search {
 //  探索のときに使うStack
 // -----------------------
 
-struct Stack {
-	Move* pv;							// PVへのポインター。RootMovesのvector<Move> pvを指している。
-	PieceToHistory* continuationHistory;// historyのうち、counter moveに関するhistoryへのポインタ。実体はThreadが持っている。
-	int ply;							// rootからの手数。rootならば0。
-	Move currentMove;					// そのスレッドの探索においてこの局面で現在選択されている指し手
-	Move excludedMove;					// singular extension判定のときに置換表の指し手をそのnodeで除外して探索したいのでその除外する指し手
-	Move killers[2];					// killer move
-	Value staticEval;					// 評価関数を呼び出して得た値。NULL MOVEのときに親nodeでの評価値が欲しいので保存しておく。
-	int statScore;						// 一度計算したhistoryの合計値をcacheしておくのに用いる。
-	int moveCount;						// このnodeでdo_move()した生成した何手目の指し手か。(1ならおそらく置換表の指し手だろう)
+// Stack struct keeps track of the information we need to remember from nodes
+// shallower and deeper in the tree during the search. Each search thread has
+// its own array of Stack objects, indexed by the current ply.
 
-	bool inCheck;						// この局面で王手がかかっていたかのフラグ
-	bool ttPv;							// 置換表にPV nodeで調べた値が格納されていたか(これは価値が高い)
-	bool ttHit;							// 置換表にhitしたかのフラグ
-	int multipleExtensions;				// 前のノードで延長した手数と今回のノードで延長したか手数を加算した値
-	int cutoffCnt;						// cut off(betaを超えたので枝刈りとしてreturn)した回数。
+// Stack構造体は、検索中にツリーの浅いノードや深いノードから記憶する必要がある情報を管理します。
+// 各検索スレッドは、現在の深さ（ply）に基づいてインデックスされた、独自のStackオブジェクトの配列を持っています。
+
+struct Stack {
+	Move*           pv;					// PVへのポインター。RootMovesのvector<Move> pvを指している。
+	PieceToHistory* continuationHistory;// historyのうち、counter moveに関するhistoryへのポインタ。実体はThreadが持っている。
+	int             ply;				// rootからの手数。rootならば0。
+	Move            currentMove;		// そのスレッドの探索においてこの局面で現在選択されている指し手
+	Move            excludedMove;		// singular extension判定のときに置換表の指し手をそのnodeで除外して探索したいのでその除外する指し手
+	Value           staticEval;			// 評価関数を呼び出して得た値。NULL MOVEのときに親nodeでの評価値が欲しいので保存しておく。
+	int             statScore;			// 一度計算したhistoryの合計値をcacheしておくのに用いる。
+	int             moveCount;			// このnodeでdo_move()した生成した何手目の指し手か。(1ならおそらく置換表の指し手だろう)
+	bool            inCheck;			// この局面で王手がかかっていたかのフラグ
+	bool            ttPv;				// 置換表にPV nodeで調べた値が格納されていたか(これは価値が高い)
+	bool            ttHit;				// 置換表にhitしたかのフラグ
+	int             cutoffCnt;			// cut off(betaを超えたので枝刈りとしてreturn)した回数。
 };
 
 #endif
@@ -50,11 +72,17 @@ struct RootMove
 	// pv[0]には、このコンストラクタの引数で渡されたmを設定する。
 	explicit RootMove(Move m) : pv(1, m) {}
 
-	// ponderの指し手がないときにponderの指し手を置換表からひねり出す。pv[1]に格納する。
-	// ponder_candidateが2手目の局面で合法手なら、それをpv[1]に格納する。
-	// それすらなかった場合はfalseを返す。
-	// ※　Stockfishにはこの関数に第二引数はない。やねうら王が独自に追加した。
-	bool extract_ponder_from_tt(Position& pos, Move ponder_candidate);
+	// Called in case we have no ponder move before exiting the search,
+	// for instance, in case we stop the search during a fail high at root.
+	// We try hard to have a ponder move to return to the GUI,
+	// otherwise in case of 'ponder on' we have nothing to think about.
+
+	// 探索を終了する前にponder moveがない場合に呼び出されます。
+	// 例えば、rootでfail highが発生して探索を中断した場合などです。
+	// GUIに返すponder moveをできる限り準備しようとしますが、
+	// そうでない場合、「ponder on」の際に考えるべきものが何もなくなります。
+
+	bool extract_ponder_from_tt(const TranspositionTable& tt, Position& pos, Move ponder_candidate);
 
 	// std::count(),std::find()などで指し手と比較するときに必要。
 	bool operator==(const Move& m) const { return pv[0] == m; }
@@ -75,6 +103,9 @@ struct RootMove
 
 	// aspiration searchの時に用いる。previousScoreの移動平均。
 	Value averageScore	= -VALUE_INFINITE;
+
+	// aspiration searchの時に用いる。二乗平均スコア。
+	Value meanSquaredScore = - VALUE_INFINITE * VALUE_INFINITE;
 
 	// USIに出力する用のscore
 	Value usiScore		= -VALUE_INFINITE;
@@ -236,6 +267,42 @@ void init();
 // 探索部のclear。
 // 置換表のクリアなど時間のかかる探索の初期化処理をここでやる。isreadyに対して呼び出される。
 void clear();
+
+// pv(読み筋)をUSIプロトコルに基いて出力する。
+// pos   : 局面
+// tt    : このスレッドに属する置換表
+// depth : 反復深化のiteration深さ。
+std::string pv(const Position& pos, const TranspositionTable& tt, Depth depth);
+
+// TODO : 以下、作業中
+
+// Engineが持つべき短い情報
+struct InfoShort {
+	int   depth;
+	Value score;
+};
+
+// Engineが持つべき長い情報
+struct InfoFull : InfoShort {
+	int              selDepth;
+	size_t           multiPV;
+	std::string_view wdl;
+	std::string_view bound;
+	size_t           timeMs;
+	size_t           nodes;
+	size_t           nps;
+	size_t           tbHits;
+	std::string_view pv;
+	int              hashfull;
+};
+
+// Engineが持つべき反復深化の情報
+struct InfoIteration {
+	int              depth;
+	std::string_view currmove;
+	size_t           currmovenumber;
+};
+
 
 } // end of namespace Search
 

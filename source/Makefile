@@ -15,6 +15,10 @@
 # YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_32 : NNUE型評価関数(halfkp_1024x2-8-32)
 # YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_64 : NNUE型評価関数(halfkp_1024x2-8-64)
 # YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32 : NNUE型評価関数(halfkp_vm_256x2-32-32)
+# // ⇨ 上記以外のアーキテクチャのNNUE評価関数用のやねうら王をビルドしたい時は、
+# //   やねうら王のビルド手順 - やねうら王 Wiki
+# //   https://github.com/yaneurao/YaneuraOu/wiki/%E3%82%84%E3%81%AD%E3%81%86%E3%82%89%E7%8E%8B%E3%81%AE%E3%83%93%E3%83%AB%E3%83%89%E6%89%8B%E9%A0%86
+# // の「NNUEの任意アーキテクチャのビルドについて」をご覧ください。
 # YANEURAOU_ENGINE_KPPT          : KPPT型評価関数
 # YANEURAOU_ENGINE_KPP_KKPT      : KPP_KKPT型評価関数
 # YANEURAOU_ENGINE_MATERIAL      : 駒得のみの評価関数(複数変種あり。MATERIAL_LEVELで選択できる)
@@ -59,10 +63,14 @@ YO_CLUSTER = OFF
 # AVX-512対応(サーバー向けSkylake以降)ならAVX512を指定する。
 # AVX-512対応でさらにVNNI命令対応(Cascade Lake以降)なら、AVX512VNNIを指定する。
 
+# macOSの場合、
+# 1. IntelMacでSSE4.2までしか対応していないなら、APPLESSE42 を指定。AVX2に対応しているなら APPLEAVX2を指定する。
+# 2. M1以降のCPUであれば、APPLEM1を指定する。(M2でもM3でもAPPLEM1を指定する。)
 
 # --- Intel/AMD系 (x86/x64 Platform)
 #TARGET_CPU = AVX512VNNI
 #TARGET_CPU = AVX512
+#TARGET_CPU = AVXVNNI
 #TARGET_CPU = AVX2
 #TARGET_CPU = SSE42
 #TARGET_CPU = SSE41
@@ -77,11 +85,13 @@ YO_CLUSTER = OFF
 #TARGET_CPU = OTHER
 #TARGET_CPU = GRAVITON2
 TARGET_CPU = WASM
-# -- macOSとか
+# -- macOS for Intel
+#TARGET_CPU = APPLEAVX2
+#TARGET_CPU = APPLESSE42
+# -- macOS for M1/M2/M3
 #TARGET_CPU = APPLEM1
 #TARGET_CPU = APPLEM2
 #TARGET_CPU = APPLEM3
-
 
 
 # デバッガーを使用するか (debugger)
@@ -95,6 +105,9 @@ DEBUG = OFF
 #COMPILER = clang++
 COMPILER = em++
 
+# Python
+# ※ NNUEの未知なarchitectureの時にarchitecture headerを動的に生成するのに用いる。
+PYTHON = python
 
 # エンジンの表示名 (engine displayname)
 # ("usi"コマンドに対して出力される)
@@ -164,6 +177,7 @@ endif
 
 # clang用にCPPFLAGSなどを変更
 ifneq (,$(findstring clang++,$(COMPILER)))
+
 	# stdlib
 	# CPPFLAGS += -stdlib=libstdc++
 
@@ -180,6 +194,16 @@ ifneq (,$(findstring clang++,$(COMPILER)))
 	# 最初の実行なら初期化するスレッドセーフなコードを生成するためのもの。
 	# → 本当に消してしまっても大丈夫か？
 	WCPPFLAGS += -fno-threadsafe-statics
+
+	# note : clang++で-flto指定時に、LDFLAGSに -fuse-ld=lld を指定しないと
+	#      MSYS2、Ubuntu 24.04のclang-18でのlinkに失敗する。
+	#   ⇨ このオプションはそれ以前のclangでもつけて問題ないのでclangならば必ずつけるようにする。
+	#   ⇨ gccでコンパイルする時にこのオプションをつけるとエラーになるので、gccの時はつけてはいけない。
+	# note : macOSでは、デフォルトではclangのlinkerではなくld64を用いるので、この指定をするとエラーになる。(いまのところ)
+	#   ⇨ よってTARGET_CPUにAPPLEの文字が入っている場合は、これを付与してはならない。
+	ifeq (,$(findstring APPLE,$(TARGET_CPU)))
+		LDFLAGS       += -fuse-ld=lld
+	endif
 
 else
 	ifneq (,$(findstring g++,$(COMPILER)))
@@ -235,13 +259,6 @@ endif
 # CPPFLAGSとLDFLAGSの両方で-fltoを指定する必要がある。
 # cf. https://gcc.gnu.org/onlinedocs/gcc-6.3.0/gcc/Optimize-Options.html#Optimize-Options
 LTOFLAGS = -flto
-
-# MSYS2 clang++ で -flto 指定時にリンクを行えない問題の回避
-ifneq (,$(findstring clang++,$(COMPILER)))
-	ifeq ($(OS),Windows_NT)
-		LDFLAGS += -fuse-ld=lld
-	endif
-endif
 
 # wstringを使うためにこのシンボル定義が必要。
 #CPPFLAGS  += -DUNICODE
@@ -330,8 +347,10 @@ SOURCES  = \
 	tt.cpp                                                                     \
 	movepick.cpp                                                               \
 	timeman.cpp                                                                \
+	memory.cpp                                                                 \
 	book/book.cpp                                                              \
 	book/apery_book.cpp                                                        \
+	book/policybook.cpp                                                        \
 	extra/bitop.cpp                                                            \
 	extra/long_effect.cpp                                                      \
 	extra/sfen_packer.cpp                                                      \
@@ -470,6 +489,11 @@ ifneq (,$(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)))
 		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKP_VM_256X2_32_32)
 			CPPFLAGS += -DEVAL_NNUE_HALFKP_VM_256X2_32_32
 
+		else
+			# 知らないNNUEのarchitectureなので、architecture headerを動的に生成する。
+			ARCH_HEADER_FILE = \"architectures/$(subst YANEURAOU_ENGINE_NNUE_,,$(YANEURAOU_EDITION)).h\"
+			CPPFLAGS += -DNNUE_ARCHITECTURE_HEADER=$(ARCH_HEADER_FILE)
+			ARCH_GEN_SCRIPT = $(PYTHON) eval/nnue/architectures/nnue_arch_gen.py $(YANEURAOU_EDITION) eval/nnue/architectures
 		endif
 	endif
 
@@ -579,7 +603,7 @@ else ifeq ($(TARGET_CPU),AVX512VNNI)
 	# cascadelakeとicelakeとの違いがあるのかは知らないので、cascadelakeのみでいいや。
 
 else ifeq ($(TARGET_CPU),AVXVNNI)
-	CPPFLAGS += -DUSE_AVX2 -DUSE_BMI2 -DUSE_VNNI -march=alderlake
+	CPPFLAGS += -DUSE_AVX2 -DUSE_BMI2 -DUSE_VNNI -DUSE_AVXVNNI -march=alderlake
 	# NNUEのコード、USE_VNNIが指定されているとVNNI対応のコードになる。
 	# Intel Alder Lake、Sapphire Rapids 以降追加の命令群。LLVM12, GCC11 以降。
 	# AVXVNNI (AVX2VNNI という表記も有り?) は AVX512VNNIの256bit幅以下限定版。
@@ -610,7 +634,7 @@ else ifeq ($(TARGET_CPU),NO_SSE)
 else ifeq ($(TARGET_CPU),GRAVITON2)
 	# for Amazon Web Servece EC2, the Graviton2 CPU [M6g/M6gd, C6g/C6gd/C6gn, R6g/R6gd, T4g, X2gd] instances
 	# https://github.com/aws/aws-graviton-getting-started/blob/main/c-c++.md
-	CPPFLAGS += -DIS_64BIT -DUSE_NEON -march=armv8.2-a+fp16+rcpc+dotprod+crypto
+	CPPFLAGS += -DIS_64BIT -DUSE_NEON=8 -march=armv8.2-a+fp16+rcpc+dotprod+crypto
 else ifeq ($(TARGET_CPU),APPLEAVX2)
 	CPPFLAGS += -DIS_64BIT -DUSE_AVX2 -DUSE_BMI2 -target x86_64-apple-macos11 -mbmi -mbmi2 -mavx2 -mpopcnt
 else ifeq ($(TARGET_CPU),APPLESSE42)
@@ -657,16 +681,22 @@ $(OBJDIR)/%.o: %.mm
 
 # ビルドターゲット
 
+# Pythonスクリプトを実行する共通のターゲット
+run_python_script:
+ifneq ($(ARCH_GEN_SCRIPT),)
+	$(ARCH_GEN_SCRIPT)
+endif
+
 # 通常使用。
-normal:
+normal: run_python_script
 	$(MAKE) CPPFLAGS='$(CPPFLAGS) $(LTOFLAGS)' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
 
 # 学習用。openmp , openblasなどを有効にする。
-evallearn:
+evallearn: run_python_script
 	$(MAKE) CPPFLAGS='$(CPPFLAGS) $(LTOFLAGS) $(OPENMP) $(BLAS_CPPFLAGS) -DEVAL_LEARN' LDFLAGS='$(LDFLAGS) $(OPENMP_LDFLAGS) $(BLAS_LDFLAGS) $(LTOFLAGS)' $(TARGET)
 
 # トーナメント用
-tournament:
+tournament: run_python_script
 	$(MAKE) CPPFLAGS='$(CPPFLAGS) $(LTOFLAGS) -DFOR_TOURNAMENT' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
 
 #　とりあえずPGOはAVX2とSSE4.2専用

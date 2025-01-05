@@ -22,6 +22,7 @@
 #include "../../evaluate.h"
 #include "../../position.h"
 #include "../../misc.h"
+#include "../../memory.h"
 #include "../../usi.h"
 #include "../../extra/bitop.h"
 
@@ -167,16 +168,17 @@ namespace Eval
 	}
 
 	// 評価関数テーブルの読み込み用のメモリ
-	LargeMemory eval_memory;
+	void* eval_memory = nullptr;
 
 	void eval_malloc()
 	{
 		// benchコマンドなどでOptionsを保存して復元するのでこのときEvalDirが変更されたことになって、
 		// 評価関数の再読込の必要があるというフラグを立てるため、この関数は2度呼び出されることがある。
-		// その場合でもLargeMemoryクラスが前のを開放してくれるので安全。
 
 		// メモリ確保は一回にして、連続性のある確保にする。
-		eval_assign(eval_memory.alloc(size_of_eval));
+		aligned_large_pages_free(eval_memory);
+		eval_memory = aligned_large_pages_alloc(size_of_eval);
+		eval_assign(eval_memory);
 	}
 
 #if defined (USE_SHARED_MEMORY_IN_EVAL) && defined(_WIN32)
@@ -929,11 +931,7 @@ namespace Eval
 
 		// 返す値の絶対値がVALUE_MAX_EVALを超えてないことを保証しないといけないのだが…。
 		// いまの評価関数、手番を過学習したりして、ときどき超えてそう…。
-		//ASSERT_LV3(abs(v) < VALUE_MAX_EVAL);
-#if 0
-		if (!((abs(v) < VALUE_MAX_EVAL)))
-			std::cout << pos << std::endl;
-#endif
+		//ASSERT_LV3(abs(v) <= VALUE_MAX_EVAL);
 
 		return v;
 	}

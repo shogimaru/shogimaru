@@ -35,13 +35,14 @@ int YaneuraOu()
 	char* argv[] = { (char*)"." };
 
 	static bool once = [&]() {
-	CommandLine::init(argc,argv);
-	USI::init(Options);
 	Bitboards::init();
 	Position::init();
+
+	USIEngine engine(argc,argv);
+
+	USI::init(Options);
 	Search::init();
 
-	//Search::clear();
 	Eval::init();
 	return true;
 	}();

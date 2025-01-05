@@ -8,7 +8,7 @@
 
 #include "../../evaluate.h"
 #include "../../position.h"
-#include "../../misc.h"
+#include "../../memory.h"
 #include "../../usi.h"
 
 #if defined(USE_EVAL_HASH)
@@ -24,7 +24,7 @@ namespace Eval {
 		int FV_SCALE = 16; // 水匠5では24がベストらしいのでエンジンオプション"FV_SCALE"で変更可能にした。
 
         // 入力特徴量変換器
-        AlignedPtr<FeatureTransformer> feature_transformer;
+		LargePagePtr<FeatureTransformer> feature_transformer;
 
         // 評価関数
         AlignedPtr<Network> network;
@@ -35,7 +35,7 @@ namespace Eval {
         // 評価関数の構造を表す文字列を取得する
         std::string GetArchitectureString() {
             return "Features=" + FeatureTransformer::GetStructureString() +
-                ",Network=" + Network::GetStructureString();
+				",Network=" + Network::GetStructureString();
         }
 
         namespace {
@@ -45,24 +45,36 @@ namespace Eval {
                 // 評価関数パラメータを初期化する
                 template <typename T>
                 void Initialize(AlignedPtr<T>& pointer) {
-
-                    // →　メモリはLarge Pageから確保することで高速化する。
-                    void* ptr = LargeMemory::static_alloc(sizeof(T) , alignof(T), true);
-                    pointer.reset(reinterpret_cast<T*>(ptr));
-
-                    //sync_cout << "nnue.alloc(" << sizeof(T) << "," << alignof(T) << ")" << sync_endl;
+					pointer = make_unique_aligned<T>();
                 }
+
+				template <typename T>
+				void Initialize(LargePagePtr<T>& pointer) {
+					// →　メモリはLarge Pageから確保することで高速化する。
+					pointer = make_unique_large_page<T>();
+				}
 
                 // 評価関数パラメータを読み込む
                 template <typename T>
-                bool ReadParameters(std::istream& stream, const AlignedPtr<T>& pointer) {
+                Tools::Result ReadParameters(std::istream& stream, const AlignedPtr<T>& pointer) {
                     std::uint32_t header;
                     stream.read(reinterpret_cast<char*>(&header), sizeof(header));
-                    if (!stream || header != T::GetHashValue()) return false;
+					if (!stream)                     return Tools::ResultCode::FileReadError;
+					if (header != T::GetHashValue()) return Tools::ResultCode::FileMismatch;
                     return pointer->ReadParameters(stream);
                 }
 
-                // 評価関数パラメータを書き込む
+				// 評価関数パラメータを読み込む
+				template <typename T>
+				Tools::Result ReadParameters(std::istream& stream, const LargePagePtr<T>& pointer) {
+					std::uint32_t header;
+					stream.read(reinterpret_cast<char*>(&header), sizeof(header));
+					if (!stream)                     return Tools::ResultCode::FileReadError;
+					if (header != T::GetHashValue()) return Tools::ResultCode::FileMismatch;
+					return pointer->ReadParameters(stream);
+				}
+
+				// 評価関数パラメータを書き込む
                 template <typename T>
                 bool WriteParameters(std::ostream& stream, const AlignedPtr<T>& pointer) {
                     constexpr std::uint32_t header = T::GetHashValue();
@@ -70,27 +82,36 @@ namespace Eval {
                     return pointer->WriteParameters(stream);
                 }
 
+				// 評価関数パラメータを書き込む
+				template <typename T>
+				bool WriteParameters(std::ostream& stream, const LargePagePtr<T>& pointer) {
+					constexpr std::uint32_t header = T::GetHashValue();
+					stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
+					return pointer->WriteParameters(stream);
+				}
+
+
             }  // namespace Detail
 
             // 評価関数パラメータを初期化する
             void Initialize() {
-                Detail::Initialize(feature_transformer);
-                Detail::Initialize(network);
+                Detail::Initialize<FeatureTransformer>(feature_transformer);
+                Detail::Initialize<Network>(network);
             }
 
         }  // namespace
 
         // ヘッダを読み込む
-        bool ReadHeader(std::istream& stream,
+        Tools::Result ReadHeader(std::istream& stream,
             std::uint32_t* hash_value, std::string* architecture) {
             std::uint32_t version, size;
             stream.read(reinterpret_cast<char*>(&version), sizeof(version));
             stream.read(reinterpret_cast<char*>(hash_value), sizeof(*hash_value));
             stream.read(reinterpret_cast<char*>(&size), sizeof(size));
-            if (!stream || version != kVersion) return false;
+			if (!stream || version != kVersion) return Tools::ResultCode::FileMismatch;
             architecture->resize(size);
             stream.read(&(*architecture)[0], size);
-            return !stream.fail();
+			return !stream.fail() ? Tools::ResultCode::Ok : Tools::ResultCode::FileReadError;
         }
 
         // ヘッダを書き込む
@@ -105,21 +126,22 @@ namespace Eval {
         }
 
         // 評価関数パラメータを読み込む
-        bool ReadParameters(std::istream& stream) {
+        Tools::Result ReadParameters(std::istream& stream) {
             std::uint32_t hash_value;
             std::string architecture;
-            if (!ReadHeader(stream, &hash_value, &architecture)) return false;
-            if (hash_value != kHashValue) return false;
-            if (!Detail::ReadParameters(stream, feature_transformer)) return false;
-            if (!Detail::ReadParameters(stream, network)) return false;
-            return stream && stream.peek() == std::ios::traits_type::eof();
+			Tools::Result result = ReadHeader(stream, &hash_value, &architecture);
+            if (result.is_not_ok()) return result;
+            if (hash_value != kHashValue) return Tools::ResultCode::FileMismatch;
+			result = Detail::ReadParameters<FeatureTransformer>(stream, feature_transformer); if (result.is_not_ok()) return result;
+			result = Detail::ReadParameters<Network>(stream, network);             if (result.is_not_ok()) return result;
+            return (stream && stream.peek() == std::ios::traits_type::eof()) ? Tools::ResultCode::Ok : Tools::ResultCode::FileCloseError;
         }
 
         // 評価関数パラメータを書き込む
         bool WriteParameters(std::ostream& stream) {
             if (!WriteHeader(stream, kHashValue, GetArchitectureString())) return false;
-            if (!Detail::WriteParameters(stream, feature_transformer)) return false;
-            if (!Detail::WriteParameters(stream, network)) return false;
+            if (!Detail::WriteParameters<FeatureTransformer>(stream, feature_transformer)) return false;
+            if (!Detail::WriteParameters<Network>(stream, network)) return false;
             return !stream.fail();
         }
 
@@ -237,7 +259,7 @@ namespace Eval {
 			// WASM
 			const std::string file_name = Options["EvalFile"];
 #endif
-            const bool result = [&] {
+            const Tools::Result result = [&] {
                 if (dir_name != "<internal>") {
                     auto full_dir_name = Path::Combine(Directory::GetCurrentFolder(), dir_name);
                     sync_cout << "info string EvalDirectory = " << full_dir_name << sync_endl;
@@ -245,6 +267,8 @@ namespace Eval {
                     const std::string file_path = Path::Combine(dir_name, file_name);
                     std::ifstream stream(file_path, std::ios::binary);
                     sync_cout << "info string loading eval file : " << file_path << sync_endl;
+					if (!stream.is_open())
+						return Tools::Result(Tools::ResultCode::FileNotFound);
 
                     return NNUE::ReadParameters(stream);
                 }
@@ -269,10 +293,10 @@ namespace Eval {
 
             //      ASSERT(result);
 
-            if (!result)
+            if (result.is_not_ok())
             {
                 // 読み込みエラーのとき終了してくれないと困る。
-                sync_cout << "Error! : failed to read " << file_name << sync_endl;
+                sync_cout << "Error! : failed to read " << file_name << " : " << result.to_string() << sync_endl;
                 Tools::exit();
             }
         }

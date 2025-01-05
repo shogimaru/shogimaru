@@ -1,16 +1,18 @@
 ﻿#ifndef _CONFIG_H_INCLUDED
 #define _CONFIG_H_INCLUDED
 
+// ============================================================
 //
 //  やねうら王プロジェクト
 //  公式サイト :  http://yaneuraou.yaneu.com/yaneuraou_mini/
 //
+// ============================================================
 
 // 思考エンジンのバージョンとしてUSIプロトコルの"usi"コマンドに応答するときの文字列。
 // ただし、この値を数値として使用することがあるので数値化できる文字列にしておく必要がある。
 #if !defined(ENGINE_VERSION)
 
-#define ENGINE_VERSION "8.30git"
+#define ENGINE_VERSION "8.50git"
 
 #endif
 // --------------------
@@ -392,6 +394,18 @@
 // 検討目的なら、これをオンにするのは好ましくない。)
 // #define ENABLE_QUICK_DRAW
 
+// 差分計算型の評価関数を用いるのか？
+// ※ 次の子nodeに行くときに必ずevaluate()を呼び出さないといけないタイプの評価関数。
+// #define USE_DIFF_EVAL
+
+// PolicyBookを使うのか？
+// TODO : ⇨ PolicyBookについて、記事を書く。
+// #define USE_POLICY_BOOK
+
+// PolicyBookの局後学習を有効化するのか？
+// TODO : ⇨ PolicyBookの局後学習について、記事を書く。
+// #define ENABLE_POLICY_BOOK_LEARN
+
 // ===============================================================
 // ここ以降では、↑↑↑で設定した内容に基づき必要なdefineを行う。
 // ===============================================================
@@ -433,6 +447,10 @@ constexpr int MAX_PLY_NUM = 246;
 
 		// 評価関数を共用して複数プロセス立ち上げたときのメモリを節約。(いまのところWindows限定)
 		#define USE_SHARED_MEMORY_IN_EVAL
+	#endif
+
+	#if defined(YANEURAOU_ENGINE_KPPT) || defined(YANEURAOU_ENGINE_KPP_KKPT) || defined(YANEURAOU_ENGINE_NNUE)
+		#define USE_DIFF_EVAL
 	#endif
 
 	// 学習機能を有効にするオプション。
@@ -659,6 +677,9 @@ extern GlobalOptions_ GlobalOptions;
 #define ASSERT_LV4(X) ASSERT_LV_EX(4, X)
 #define ASSERT_LV5(X) ASSERT_LV_EX(5, X)
 
+// memoryがalignされているかのassert
+#define ASSERT_ALIGNED(ptr, alignment) assert(reinterpret_cast<uintptr_t>(ptr) % alignment == 0)
+
 // --- declaration of unreachablity
 
 // switchにおいてdefaultに到達しないことを明示して高速化させる
@@ -693,6 +714,12 @@ constexpr bool pretty_jp = true;
 constexpr bool pretty_jp = false;
 #endif
 
+// --- PolicyBook
+
+// PolicyBookを使うときは、hash keyを128bitにする。局面のhash keyが衝突してしまうとまずいので…。
+#if defined(USE_POLICY_BOOK)
+#define HASH_KEY_BITS 128
+#endif
 
 // --- hash key bits and TT_CLUSTER_SIZE
 
@@ -878,5 +905,4 @@ constexpr bool pretty_jp = false;
 #define ADD_BOARD_EFFECT_REWIND(color_,sq_,e1_) { board_effect[color_].e[sq_] += (uint8_t)e1_; }
 #define ADD_BOARD_EFFECT_BOTH_REWIND(color_,sq_,e1_,e2_) { board_effect[color_].e[sq_] += (uint8_t)e1_; board_effect[~color_].e[sq_] += (uint8_t)e2_; }
 
-#endif // ifndef _CONFIG_H_INCLUDED
-
+#endif // if !defined(CONFIG_H_INCLUDED)

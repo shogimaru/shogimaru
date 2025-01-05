@@ -6,7 +6,7 @@ namespace Mate
 {
 	// 1手詰めテーブルの初期化関数
 	// ※　これは、mate1ply_without_effect.cppか、mate1ply_with_effect.cppのいずれかで定義されている。
-	extern void init_mate_1ply();
+	void init_mate_1ply();
 
 	// ---------------------
 	//     Mate::init()
@@ -32,7 +32,7 @@ namespace Mate
 
 		// 詰まない
 		if (ply <= 1)
-			return MOVE_NONE;
+			return Move::none();
 
 		Color us = pos.side_to_move();
 		Color them = ~us;
@@ -45,22 +45,24 @@ namespace Mate
 		StateInfo si2;
 
 		// 近接王手で味方の利きがあり、敵の利きのない場所を探す。
-		for (auto m : MoveList<CHECKS>(pos))
+		for (auto em : MoveList<CHECKS>(pos))
 		{
+			Move m = Move(em);
+
 			// 近接王手で、この指し手による駒の移動先に敵の駒がない。
-			Square to = to_sq(m);
+			Square to = m.to_sq();
 			if ((around8 & to)
 
 #if ! defined(LONG_EFFECT_LIBRARY)
 				// toに利きがあるかどうか。mが移動の指し手の場合、mの元の利きを取り除く必要がある。
-				&& (is_drop(m) ? pos.effected_to(us, to) : (bool)(pos.attackers_to(us, to, pos.pieces() ^ from_sq(m)) ^ from_sq(m)))
+				&& (m.is_drop() ? pos.effected_to(us, to) : (bool)(pos.attackers_to(us, to, pos.pieces() ^ m.from_sq()) ^ m.from_sq()))
 
 				// 敵玉の利きは必ずtoにあるのでそれを除いた利きがあるかどうか。
 				&& (pos.attackers_to(them, to, pos.pieces()) ^ pos.king_square(them))
 #else
-				&& (is_drop(m) ? pos.effected_to(us, to) :
+				&& (m.is_drop() ? pos.effected_to(us, to) :
 					pos.board_effect[us].effect(to) >= 2 ||
-					(pos.long_effect.directions_of(us, from_sq(m)) & Effect8::directions_of(from_sq(m), to)) != 0)
+					(pos.long_effect.directions_of(us, m.from_sq()) & Effect8::directions_of(m.from_sq(), to)) != 0)
 
 				// 敵玉の利きがあるので2つ以上なければそれで良い。
 				&& (pos.board_effect[them].effect(to) <= 1)
@@ -110,7 +112,7 @@ namespace Mate
 				This->undo_move(m);
 			}
 		}
-		return MOVE_NONE;
+		return Move::none();
 	}
 
 	// 連続王手などの千日手判定を行う。

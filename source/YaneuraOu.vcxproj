@@ -588,6 +588,7 @@
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="book\apery_book.h" />
     <ClInclude Include="book\book.h" />
+    <ClInclude Include="book\policybook.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="engine\dlshogi-engine\dlshogi_min.h" />
     <ClInclude Include="engine\dlshogi-engine\dlshogi_types.h" />
@@ -620,8 +621,8 @@
     <ClInclude Include="eval\nnue\architectures\halfkp_1024x2-8-64.h" />
     <ClInclude Include="eval\nnue\architectures\halfkp_256x2-32-32.h" />
     <ClInclude Include="eval\nnue\architectures\halfkp_512x2-16-32.h" />
-    <ClInclude Include="eval\nnue\architectures\halfkp_vm_256x2-32-32.h" />
-    <ClInclude Include="eval\nnue\architectures\k-p_256x2-32-32.h" />
+    <ClInclude Include="eval\nnue\architectures\halfkpvm_256x2-32-32.h" />
+    <ClInclude Include="eval\nnue\architectures\kp_256x2-32-32.h" />
     <ClInclude Include="eval\nnue\evaluate_nnue.h" />
     <ClInclude Include="eval\nnue\evaluate_nnue_learner.h" />
     <ClInclude Include="eval\nnue\features\features_common.h" />
@@ -635,8 +636,10 @@
     <ClInclude Include="eval\nnue\features\p.h" />
     <ClInclude Include="eval\nnue\features\pe9.h" />
     <ClInclude Include="eval\nnue\layers\affine_transform.h" />
+    <ClInclude Include="eval\nnue\layers\affine_transform_sparse_input.h" />
     <ClInclude Include="eval\nnue\layers\clipped_relu.h" />
     <ClInclude Include="eval\nnue\layers\input_slice.h" />
+    <ClInclude Include="eval\nnue\layers\simd.h" />
     <ClInclude Include="eval\nnue\layers\sum.h" />
     <ClInclude Include="eval\nnue\nnue_accumulator.h" />
     <ClInclude Include="eval\nnue\nnue_architecture.h" />
@@ -649,6 +652,7 @@
     <ClInclude Include="eval\nnue\trainer\features\factorizer_half_kpe9.h" />
     <ClInclude Include="eval\nnue\trainer\trainer.h" />
     <ClInclude Include="eval\nnue\trainer\trainer_affine_transform.h" />
+    <ClInclude Include="eval\nnue\trainer\trainer_affine_transform_sparse_input.h" />
     <ClInclude Include="eval\nnue\trainer\trainer_clipped_relu.h" />
     <ClInclude Include="eval\nnue\trainer\trainer_feature_transformer.h" />
     <ClInclude Include="eval\nnue\trainer\trainer_input_slice.h" />
@@ -664,8 +668,10 @@
     <ClInclude Include="learn\multi_think.h" />
     <ClInclude Include="mate\mate.h" />
     <ClInclude Include="mate\mate_move_picker.h" />
+    <ClInclude Include="memory.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="movepick.h" />
+    <ClInclude Include="numa.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="testcmd\unit_test.h" />
     <ClInclude Include="thread_win32_osx.h" />
@@ -674,6 +680,7 @@
     <ClInclude Include="thread.h" />
     <ClInclude Include="tt.h" />
     <ClInclude Include="usi.h" />
+    <ClInclude Include="usi_option.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bitboard.cpp" />
@@ -682,6 +689,7 @@
     <ClCompile Include="book\makebook.cpp" />
     <ClCompile Include="book\makebook2015.cpp" />
     <ClCompile Include="book\makebook2023.cpp" />
+    <ClCompile Include="book\policybook.cpp" />
     <ClCompile Include="engine\dlshogi-engine\dlshogi_searcher.cpp" />
     <ClCompile Include="engine\dlshogi-engine\PrintInfo.cpp" />
     <ClCompile Include="engine\dlshogi-engine\PvMateSearch.cpp" />
@@ -733,6 +741,7 @@
     <ClCompile Include="mate\mate1ply_with_effect.cpp" />
     <ClCompile Include="mate\mate_dfpn.hpp" />
     <ClCompile Include="mate\mate_solver.cpp" />
+    <ClCompile Include="memory.cpp" />
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="movegen.cpp" />
     <ClCompile Include="movepick.cpp" />

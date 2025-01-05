@@ -348,6 +348,45 @@ const std::string config_info()
 	auto o1 = [&o](const char* p , u64  u ) { return o(std::string(p) , std::to_string(u) ); };
 	auto o2 = [&o](const char* p , bool b ) { return o(std::string(p) , b ? "true":"false"); };
 
+	// 評価関数タイプ
+	string eval_type =
+#if defined(YANEURAOU_ENGINE_DEEP)
+	"DEEP";
+#elif defined(YANEURAOU_ENGINE_NNUE)
+
+	// NNUE
+	#if defined(NNUE_ARCHITECTURE_HEADER)
+		NNUE_ARCHITECTURE_HEADER;
+	#elif defined(EVAL_NNUE_HALFKP256)
+		"halfkp_256x2_32_32";
+	#elif defined(EVAL_NNUE_KP256)
+		"kp_256x2_32_32";
+	#elif defined(EVAL_NNUE_HALFKPE9)
+		"halfkpe9_256x2_32_32";
+	#elif defined(YANEURAOU_ENGINE_NNUE_HALFKP_512X2_16_32)
+		"halfkp_512x2_16_32";
+	#elif defined(YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_32)
+		"halfkp_1024x2_8_32";
+	#elif defined(YANEURAOU_ENGINE_NNUE_HALFKP_1024X2_8_64)
+		"halfkp_1024x2_8_64";
+	#elif defined(EVAL_NNUE_HALFKP_VM_256X2_32_32)
+		"halfkpvm_256x2_32_32";
+	#else
+		"halfkp_256x2_32_32";
+	#endif
+
+#elif defined(YANEURAOU_ENGINE_KPPT)
+	"KPPT";
+#elif defined(YANEURAOU_ENGINE_KPP_KKPT)
+	"KPP_KKPT";
+#elif defined(YANEURAOU_ENGINE_MATERIAL)
+	"MATERIAL_LV" + std::to_string(MATERIAL_LEVEL);
+#else
+	"Unknown";
+#endif
+
+	config += o ("EVAL"                , eval_type);
+
 	config += o1("ASSERT_LV"           , ASSERT_LV      );
 	config += o1("HASH_KEY_BITS"       , HASH_KEY_BITS  );
 	config += o1("TT_CLUSTER_SIZE"     , TT_CLUSTER_SIZE);
@@ -425,7 +464,7 @@ const std::string config_info()
 	config += o2("EVAL_LEARN"               , eval_learn         );
 	config += o2("USE_MATE_DFPN"            , use_mate_dfpn      );
 	config += o2("USE_YO_CLUSTER"           , use_yo_cluster     );
-	
+
 	// コンパイラ情報もついでに出力する。
 	//config += "\n\n" + compiler_info();
 
@@ -509,287 +548,6 @@ void prefetch([[maybe_unused]] const void* addr) {
 }
 
 #endif
-
-// --------------------
-//  Large Page確保
-// --------------------
-
-namespace {
-	// LargeMemoryを使っているかどうかがわかるように初回だけその旨を出力する。
-	bool largeMemoryAllocFirstCall = true;
-}
-
-/// std_aligned_alloc() is our wrapper for systems where the c++17 implementation
-/// does not guarantee the availability of aligned_alloc(). Memory allocated with
-/// std_aligned_alloc() must be freed with std_aligned_free().
-
-void* std_aligned_alloc(size_t alignment, size_t size) {
-
-#if defined(POSIXALIGNEDALLOC)
-	void* mem;
-	return posix_memalign(&mem, alignment, size) ? nullptr : mem;
-#elif defined(_WIN32)
-	return _mm_malloc(size, alignment);
-#elif defined(__EMSCRIPTEN__)
-	return aligned_alloc(alignment, size);
-#else
-	return std::aligned_alloc(alignment, size);
-#endif
-}
-
-void std_aligned_free(void* ptr) {
-
-#if defined(POSIXALIGNEDALLOC)
-	free(ptr);
-#elif defined(_WIN32)
-	_mm_free(ptr);
-#else
-	free(ptr);
-#endif
-}
-
-// Windows
-#if defined(_WIN32)
-
-static void* aligned_large_pages_alloc_windows([[maybe_unused]] size_t allocSize) {
-
-	// Windows 64bit用専用。
-	// Windows 32bit用ならこの機能は利用できない。
-	#if !defined(_WIN64)
-		return nullptr;
-	#else
-
-	// ※ やねうら王独自拡張
-	// LargePageはエンジンオプションにより無効化されているなら何もせずに返る。
-	if (!Options["LargePageEnable"])
-		return nullptr;
-
-	HANDLE hProcessToken { };
-	LUID luid { };
-	void* mem = nullptr;
-
-	const size_t largePageSize = GetLargePageMinimum();
-
-	// 普通、最小のLarge Pageサイズは、2MBである。
-	// Large Pageが使えるなら、ここでは 2097152 が返ってきているはず。
-
-	if (!largePageSize)
-		return nullptr;
-
-	// Dynamically link OpenProcessToken, LookupPrivilegeValue and AdjustTokenPrivileges
-
-	HMODULE hAdvapi32 = GetModuleHandle(TEXT("advapi32.dll"));
-
-	if (!hAdvapi32)
-		hAdvapi32 = LoadLibrary(TEXT("advapi32.dll"));
-
-	// Large Pageを使うには、SeLockMemory権限が必要。
-	// cf. http://awesomeprojectsxyz.blogspot.com/2017/11/windows-10-home-how-to-enable-lock.html
-
-	auto fun6 = fun6_t((void(*)())GetProcAddress(hAdvapi32, "OpenProcessToken"));
-	if (!fun6)
-		return nullptr;
-	auto fun7 = fun7_t((void(*)())GetProcAddress(hAdvapi32, "LookupPrivilegeValueA"));
-	if (!fun7)
-		return nullptr;
-	auto fun8 = fun8_t((void(*)())GetProcAddress(hAdvapi32, "AdjustTokenPrivileges"));
-	if (!fun8)
-		return nullptr;
-
-	// We need SeLockMemoryPrivilege, so try to enable it for the process
-	if (!fun6( // OpenProcessToken()
-		GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hProcessToken))
-			return nullptr;
-
-	if (fun7( // LookupPrivilegeValue(nullptr, SE_LOCK_MEMORY_NAME, &luid)
-		nullptr, "SeLockMemoryPrivilege", &luid))
-	{
-		TOKEN_PRIVILEGES tp { };
-		TOKEN_PRIVILEGES prevTp { };
-		DWORD prevTpLen = 0;
-
-		tp.PrivilegeCount = 1;
-		tp.Privileges[0].Luid = luid;
-		tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-		// Try to enable SeLockMemoryPrivilege. Note that even if AdjustTokenPrivileges() succeeds,
-		// we still need to query GetLastError() to ensure that the privileges were actually obtained.
-		if (fun8( // AdjustTokenPrivileges()
-				hProcessToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), &prevTp, &prevTpLen) &&
-			GetLastError() == ERROR_SUCCESS)
-		{
-			// Round up size to full pages and allocate
-			allocSize = (allocSize + largePageSize - 1) & ~size_t(largePageSize - 1);
-			mem = VirtualAlloc(
-				nullptr, allocSize, MEM_RESERVE | MEM_COMMIT | MEM_LARGE_PAGES, PAGE_READWRITE);
-
-			// Privilege no longer needed, restore previous state
-			fun8( // AdjustTokenPrivileges ()
-				hProcessToken, FALSE, &prevTp, 0, nullptr, nullptr);
-		}
-	}
-
-	CloseHandle(hProcessToken);
-
-	return mem;
-
-	#endif // _WIN64
-}
-
-void* aligned_large_pages_alloc(size_t allocSize) {
-
-	// ※　ここでは4KB単位でalignされたメモリが返ることは保証されているので
-	//     引数でalignを指定できる必要はない。(それを超えた大きなalignを行いたいケースがない)
-
-	//static bool firstCall = true;
-
-	// try to allocate large pages
-	void* ptr = aligned_large_pages_alloc_windows(allocSize);
-
-	// Suppress info strings on the first call. The first call occurs before 'uci'
-	// is received and in that case this output confuses some GUIs.
-
-	// uciが送られてくる前に"info string"で余計な文字を出力するとGUI側が誤動作する可能性があるので
-	// 初回は出力を抑制するコードが入っているが、やねうら王ではisreadyでメモリ初期化を行うので
-	// これは気にしなくて良い。
-
-	// 逆に、評価関数用のメモリもこれで確保するので、何度もこのメッセージが表示されると
-	// 煩わしいので、このメッセージは初回のみの出力と変更する。
-
-//	if (!firstCall)
-	if (largeMemoryAllocFirstCall)
-	{
-		if (ptr)
-			sync_cout << "info string Hash table allocation: Windows Large Pages used." << sync_endl;
-		else
-			sync_cout << "info string Hash table allocation: Windows Large Pages not used." << sync_endl;
-
-		largeMemoryAllocFirstCall = false;
-	}
-
-	// fall back to regular, page aligned, allocation if necessary
-	// 4KB単位であることは保証されているはず..
-	if (!ptr)
-		ptr = VirtualAlloc(nullptr, allocSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-
-	// VirtualAlloc()はpage size(4KB)でalignされていること自体は保証されているはず。
-
-	//cout << (u64)mem << "," << allocSize << endl;
-
-	return ptr;
-}
-
-#else
-// LargePage非対応の環境であれば、std::aligned_alloc()を用いて確保しておく。
-// 最低でも4KBでalignされたメモリが返るので、引数でalignを指定できるようにする必要はない。
-
-void* aligned_large_pages_alloc(size_t allocSize) {
-
-#if defined(__linux__)
-	constexpr size_t alignment = 2 * 1024 * 1024; // assumed 2MB page size
-#else
-	constexpr size_t alignment = 4096; // assumed small page size
-#endif
-
-	// Round up to multiples of alignment
-	size_t size = ((allocSize + alignment - 1) / alignment) * alignment;
-	void* mem = std_aligned_alloc(alignment, size);
-#if defined(MADV_HUGEPAGE)
-	madvise(mem, size, MADV_HUGEPAGE);
-#endif
-
-	return mem;
-}
-
-#endif
-
-/// aligned_large_pages_free() will free the previously allocated ttmem
-
-#if defined(_WIN32)
-
-void aligned_large_pages_free(void* mem) {
-
-	if (mem && !VirtualFree(mem, 0, MEM_RELEASE))
-	{
-		DWORD err = GetLastError();
-		std::cerr << "Failed to free large page memory. Error code: 0x"
-			<< std::hex << err
-			<< std::dec << std::endl;
-		exit(EXIT_FAILURE);
-	}
-}
-
-#else
-
-void aligned_large_pages_free(void* mem) {
-	std_aligned_free(mem);
-}
-
-#endif
-
-// --------------------
-//  LargeMemory class
-// --------------------
-
-// メモリを確保する。Large Pageに確保できるなら、そこにする。
-// aligned_ttmem_alloc()を内部的に呼び出すので、アドレスは少なくとも2MBでalignされていることは保証されるが、
-// 気になる人のためにalignmentを明示的に指定できるようになっている。
-// メモリ確保に失敗するか、引数のalignで指定したalignmentになっていなければ、
-// エラーメッセージを出力してプログラムを終了させる。
-void* LargeMemory::alloc(size_t size, size_t align , bool zero_clear)
-{
-	free();
-	return static_alloc(size, align, zero_clear);
-}
-
-// alloc()で確保したメモリを開放する。
-// このクラスのデストラクタからも自動でこの関数が呼び出されるので明示的に呼び出す必要はない(かも)
-void LargeMemory::free()
-{
-	static_free(ptr);
-	ptr = nullptr;
-}
-
-// alloc()のstatic関数版。memには、static_free()に渡すべきポインタが得られる。
-void* LargeMemory::static_alloc(size_t size, size_t align, bool zero_clear)
-{
-	void* mem = aligned_large_pages_alloc(size);
-
-	auto error_exit = [&](std::string mes) {
-		sync_cout << "info string Error! : " << mes << " in LargeMemory::alloc(" << size << "," << align << ")" << sync_endl;
-		Tools::exit();
-	};
-
-	// メモリが正常に確保されていることを保証する
-	if (mem == nullptr)
-		error_exit("can't alloc enough memory.");
-
-	// ptrがalignmentされていることを保証する
-	if ((reinterpret_cast<size_t>(mem) % align) != 0)
-		error_exit("can't alloc algined memory.");
-
-	// ゼロクリアが必要なのか？
-	if (zero_clear)
-	{
-		// 確保したのが256MB以上なら並列化してゼロクリアする。
-		if (size < 256 * 1024 * 1024)
-			// そんなに大きな領域ではないから、普通にmemset()でやっとく。
-			std::memset(mem, 0, size);
-		else
-			// 並列版ゼロクリア
-			Tools::memclear(nullptr, mem, size);
-	}
-
-	return mem;
-}
-
-// static_alloc()で確保したメモリを開放する。
-void LargeMemory::static_free(void* mem)
-{
-	aligned_large_pages_free(mem);
-}
-
-
 
 // --------------------
 //  全プロセッサを使う
@@ -899,10 +657,6 @@ namespace WinProcGroup {
 	/// bindThisThread() set the group affinity of the current thread
 
 	void bindThisThread(size_t idx) {
-
-#if defined(_WIN32)
-		idx += Options["ThreadIdOffset"];
-#endif
 
 		// Use only local variables to be thread-safe
 
@@ -1199,9 +953,12 @@ namespace Tools
 		case ResultCode::Ok                   : return "Ok";
 		case ResultCode::MemoryAllocationError: return "MemoryAllocationError";
 		case ResultCode::SomeError            : return "SomeError";
+		case ResultCode::FileNotFound         : return "FileNotFound";
 		case ResultCode::FileOpenError        : return "FileOpenError";
 		case ResultCode::FileReadError        : return "FileReadError";
 		case ResultCode::FileWriteError       : return "FileWriteError";
+		case ResultCode::FileCloseError       : return "FileCloseError";
+		case ResultCode::FileMismatch         : return "FileMissMatch";
 		case ResultCode::CreateFolderError    : return "CreateFolderError";
 		case ResultCode::NotImplementedError  : return "NotImplementedError";
 		default                               : return "OtherError";
@@ -1621,7 +1378,7 @@ namespace SystemIO
 			// 今回のループで書き込むbyte数
 			write_size = buf_size - write_cursor;
 			std::memcpy(&buf[write_cursor], ptr2, write_size);
-			if (fwrite(&buf[0], buf_size, 1, fp) == 0)
+			if (fwrite(buf.data(), buf_size, 1, fp) == 0)
 				return Tools::ResultCode::FileWriteError;
 
 			// buf[0..write_cursor-1]が窓で、ループごとにその窓がbuf_sizeずつずれていくと考える。
@@ -1740,9 +1497,9 @@ namespace SystemIO
 	// === BinaryWriter ===
 
 	// ファイルのopen
-	Tools::Result BinaryWriter::Open(const std::string& filename)
+	Tools::Result BinaryWriter::Open(const std::string& filename, bool append)
 	{
-		fp = fopen(filename.c_str(), "wb");
+		fp = fopen(filename.c_str(), append ? "ab" : "wb");
 		if (fp == nullptr)
 			return Tools::Result(Tools::ResultCode::FileOpenError);
 
@@ -1757,6 +1514,19 @@ namespace SystemIO
 
 		return Tools::Result::Ok();
 	}
+}
+
+// Reads the file as bytes.
+// Returns std::nullopt if the file does not exist.
+
+// ファイルをバイトとして読み込みます。
+// ファイルが存在しない場合は std::nullopt を返します。
+
+std::optional<std::string> read_file_to_string(const std::string& path) {
+	std::ifstream f(path, std::ios_base::binary);
+	if (!f)
+		return std::nullopt;
+	return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
 }
 
 // --------------------
@@ -1927,7 +1697,7 @@ namespace Directory
 	// カレントフォルダを返す(起動時のフォルダ)
 	// main関数に渡された引数から設定してある。
 	// "GetCurrentDirectory"という名前はWindowsAPI(で定義されているマクロ)と競合する。
-	std::string GetCurrentFolder() { return CommandLine::workingDirectory; }
+	std::string GetCurrentFolder() { return CommandLine::get_working_directory(); }
 }
 
 // ----------------------------
@@ -2226,6 +1996,15 @@ namespace StringExtension
 		return result;
 	}
 
+	// 文字列をfloat化する。float化に失敗した場合はdefault_の値を返す。
+	float to_float(const std::string input, float default_)
+	{
+		std::istringstream ss(input);
+		float result = default_; // 失敗したときはこの値のままになる
+		ss >> result;
+		return result;
+	}
+
 	// スペース、タブなど空白に相当する文字で分割して返す。
 	std::vector<std::string> split(const std::string& input)
 	{
@@ -2253,7 +2032,7 @@ namespace StringExtension
 		return s;
 	}
 
-	// 文字列valueが、文字列endingで終了していればtrueを返す。
+	// 文字列valueが、文字列startingで始まっていればtrueを返す。
 	bool StartsWith(std::string const& value, std::string const& starting)
 	{
 		if (starting.size() > value.size()) return false;
@@ -2292,25 +2071,27 @@ namespace StringExtension
 		return s;
 	}
 
-	// sを文字列sepで分割した文字列集合を返す。
-	std::vector<std::string> Split(const std::string& s, const std::string& sep)
-	{
-		std::vector<std::string> v;
-		string ss = s;
-		size_t p = 0; // 前回の分割場所
-		while (true)
+	// sを文字列spで分割した文字列集合を返す。
+	std::vector<std::string_view> Split(std::string_view s, std::string_view delimiter) {
+		std::vector<std::string_view> res;
+
+		if (s.empty())
+			return res;
+
+		size_t begin = 0;
+		for (;;)
 		{
-			size_t pos = ss.find(sep , p);
-			if (pos == string::npos)
-			{
-				// sepが見つからなかったのでこれでおしまい。
-				v.emplace_back(ss.substr(p));
+			const size_t end = s.find(delimiter, begin);
+			if (end == std::string::npos)
 				break;
-			}
-			v.emplace_back(ss.substr(p, pos - p));
-			p = pos + sep.length();
+
+			res.emplace_back(s.substr(begin, end - begin));
+			begin = end + delimiter.size();
 		}
-		return v;
+
+		res.emplace_back(s.substr(begin));
+
+		return res;
 	}
 
 	// Pythonの delemiter.join(v) みたいなの。
@@ -2329,6 +2110,31 @@ namespace StringExtension
 
 };
 
+// sを文字列spで分割した文字列集合を返す。
+// ※ Stockfishとの互換性のために用意。
+std::vector<std::string_view> split(std::string_view s, std::string_view delimiter)
+{
+	return StringExtension::Split(s, delimiter);
+}
+
+// スペース相当文字列を削除する。⇨ NUMAの処理に必要
+void remove_whitespace(std::string& s) {
+	s.erase(std::remove_if(s.begin(), s.end(), [](char c) { return std::isspace(c); }), s.end());
+}
+
+// スペース相当文字列かどうかを判定する。⇨ NUMAの処理に必要
+bool is_whitespace(std::string_view s) {
+	return std::all_of(s.begin(), s.end(), [](char c) { return std::isspace(c); });
+}
+
+// "123"みたいな文字列を123のように数値型(size_t)に変換する。
+size_t str_to_size_t(const std::string& s) {
+	unsigned long long value = std::stoull(s);
+	if (value > std::numeric_limits<size_t>::max())
+		std::exit(EXIT_FAILURE);
+	return static_cast<size_t>(value);
+}
+
 // ----------------------------
 //     working directory
 // ----------------------------
@@ -2341,52 +2147,48 @@ namespace StringExtension
 #define GETCWD getcwd
 #endif
 
-namespace CommandLine {
-
-	std::string argv0;            // path+name of the executable binary, as given by argv[0]
-	std::string binaryDirectory;  // path of the executable directory
-	std::string workingDirectory; // path of the working directory
-
-	void init([[maybe_unused]] int argc, char* argv[]) {
-
-		std::string pathSeparator;
-
-		// Extract the path+name of the executable binary
-		argv0 = argv[0];
+std::string CommandLine::get_binary_directory(std::string argv0) {
+	std::string pathSeparator;
 
 #ifdef _WIN32
-		pathSeparator = "\\";
+	pathSeparator = "\\";
 #ifdef _MSC_VER
-		// Under windows argv[0] may not have the extension. Also _get_pgmptr() had
-		// issues in some windows 10 versions, so check returned values carefully.
-		char* pgmptr = nullptr;
-		if (!_get_pgmptr(&pgmptr) && pgmptr != nullptr && *pgmptr)
-			argv0 = pgmptr;
+	// Under windows argv[0] may not have the extension. Also _get_pgmptr() had
+	// issues in some Windows 10 versions, so check returned values carefully.
+	char* pgmptr = nullptr;
+	if (!_get_pgmptr(&pgmptr) && pgmptr != nullptr && *pgmptr)
+		argv0 = pgmptr;
 #endif
 #else
-		pathSeparator = "/";
+	pathSeparator = "/";
 #endif
 
-		// Extract the working directory
-		workingDirectory = "";
-		char buff[40000];
-		char* cwd = GETCWD(buff, 40000);
-		if (cwd)
-			workingDirectory = cwd;
+	// Extract the working directory
+	auto workingDirectory = CommandLine::get_working_directory();
 
-		// extract the binary directory path from argv0
-		binaryDirectory = argv0;
-		size_t pos = binaryDirectory.find_last_of("\\/");
-		if (pos == std::string::npos)
-			binaryDirectory = "." + pathSeparator;
-		else
-			binaryDirectory.resize(pos + 1);
+	// Extract the binary directory path from argv0
+	auto   binaryDirectory = argv0;
+	size_t pos = binaryDirectory.find_last_of("\\/");
+	if (pos == std::string::npos)
+		binaryDirectory = "." + pathSeparator;
+	else
+		binaryDirectory.resize(pos + 1);
 
-		// Pattern replacement: "./" at the start of path is replaced by the working directory
-		if (binaryDirectory.find("." + pathSeparator) == 0)
-			binaryDirectory.replace(0, 1, workingDirectory);
-	}
+	// Pattern replacement: "./" at the start of path is replaced by the working directory
+	if (binaryDirectory.find("." + pathSeparator) == 0)
+		binaryDirectory.replace(0, 1, workingDirectory);
 
+	return binaryDirectory;
+}
+
+std::string CommandLine::get_working_directory() {
+	std::string workingDirectory = "";
+	char        buff[40000];
+	char* cwd = GETCWD(buff, 40000);
+	if (cwd)
+		workingDirectory = cwd;
+
+	return workingDirectory;
 }
 
 // --------------------

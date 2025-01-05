@@ -20,6 +20,7 @@
 #include <string>       // std::string使うので仕方ない
 #include <algorithm>    // std::max()を使うので仕方ない
 #include <limits>		// std::numeric_limitsを使うので仕方ない
+#include <cassert>
 
 #if defined(_MSC_VER)
 // Disable some silly and noisy warnings from MSVC compiler
@@ -129,7 +130,7 @@ static std::ostream& operator<<(std::ostream& os, Rank r) { os << (char)('a' + r
 // 盤上の升目に対応する定数。
 // 盤上右上(１一が0)、左下(９九)が80
 // 方角を表現するときにマイナスの値を使うので符号型である必要がある。
-enum Square: int32_t
+enum Square : int32_t
 {
 	// 以下、盤面の右上から左下までの定数。
 	// これを定義していなくとも問題ないのだが、デバッガでSquare型を見たときに
@@ -267,7 +268,7 @@ static std::ostream& operator<<(std::ostream& os, Square sq) { os << file_of(sq)
 // bit 14..18 : いまの升から盤外まで何升上に(略
 // bit 19..23 : いまの升から盤外まで何升下に(略
 // bit 24..28 : いまの升から盤外まで何升左に(略
-enum SquareWithWall: int32_t {
+enum SquareWithWall : int32_t {
 	// 相対移動するときの差分値
 	SQWW_R = SQ_R - (1 << 9) + (1 << 24), SQWW_U = SQ_U - (1 << 14) + (1 << 19), SQWW_D = -int(SQWW_U), SQWW_L = -int(SQWW_R),
 	SQWW_RU = int(SQWW_R) + int(SQWW_U), SQWW_RD = int(SQWW_R) + int(SQWW_D), SQWW_LU = int(SQWW_L) + int(SQWW_U), SQWW_LD = int(SQWW_L) + int(SQWW_D),
@@ -306,7 +307,7 @@ namespace Effect8
 	// 方角を表す。遠方駒の利きや、玉から見た方角を表すのに用いる。
 	// bit0..右上、bit1..右、bit2..右下、bit3..上、bit4..下、bit5..左上、bit6..左、bit7..左下
 	// 同時に複数のbitが1であることがありうる。
-	enum Directions: uint8_t {
+	enum Directions : uint8_t {
 		DIRECTIONS_ZERO  = 0, DIRECTIONS_RU = 1, DIRECTIONS_R = 2, DIRECTIONS_RD = 4,
 		DIRECTIONS_U     = 8, DIRECTIONS_D = 16, DIRECTIONS_LU = 32, DIRECTIONS_L = 64, DIRECTIONS_LD = 128,
 		DIRECTIONS_CROSS = DIRECTIONS_U  | DIRECTIONS_D  | DIRECTIONS_R  | DIRECTIONS_L,
@@ -365,7 +366,7 @@ namespace Effect8
 static bool aligned(Square sq1, Square sq2, Square sq3/* is ksq */)
 {
 	auto d1 = Effect8::directions_of(sq1, sq3);
-	return d1 ? d1 == Effect8::directions_of(sq2, sq3) : false;
+	return d1 && d1 == Effect8::directions_of(sq2, sq3);
 }
 
 // --------------------
@@ -385,14 +386,7 @@ enum : int {
 	// In qsearch, however, TT entries only store the current QS movegen stage (which should thus compare
 	// lower than any regular search depth).
 	// 静止探索で王手がかかっているときにこれより少ない残り探索深さでの探索した結果が置換表にあってもそれは信用しない
-	DEPTH_QS_CHECKS     = 0,
-
-	// 静止探索で王手がかかっていないとき。
-	DEPTH_QS_NORMAL     = -1,
-
-	// 静止探索でこれより深い(残り探索深さが少ない)ところではRECAPTURESしか生成しない。
-	DEPTH_QS_RECAPTURES = -5,
-
+	DEPTH_QS		    = 0,
 
 	// For TT entries where no searching at all was done (whether regular or qsearch) we use
 	// _UNSEARCHED, which should thus compare lower than any QS or regular depth. _ENTRY_OFFSET is used
@@ -424,52 +418,74 @@ enum Bound {
 // --------------------
 
 // 置換表に格納するときにあまりbit数が多いともったいないので値自体は16bitで収まる範囲で。
-enum Value: int32_t
-{
-	VALUE_ZERO = 0,
+// 
+// ■ 注意
+//
+//	1. 評価値evalは、
+//       Stockfishでは、  VALUE_TB_LOSS_IN_MAX_PLY < eval < VALUE_TB_WIN_IN_MAX_PLY の範囲。
+//		 やねうら王でも同様。
+//       やねうら王では、 VALUE_MIN_EVAL <= eval <= VALUE_MAX_EVALの範囲とも言える。
+//			(もしくは、abs(eval) <= VALUE_MAX_EVALの範囲。)
+//  2. 詰みのスコアの下限値は、
+//       Stockfishでは、  VALUE_TB_WIN_IN_MAX_PLY
+//		 やねうら王でも同様。
+//  3. 詰まされスコアの上限値は、
+//		 Stockfishでは、  VALUE_TB_LOSS_IN_MAX_PLY
+//		 やねうら王でも同様。
+//
+// Value is used as an alias for int, this is done to differentiate between a search
+// value and any other integer value. The values used in search are always supposed
+// to be in the range (-VALUE_NONE, VALUE_NONE] and should not exceed this range.
 
-	// 引き分け時のスコア(千日手のスコアリングなどで用いる)
-	VALUE_DRAW = 0,
+// Valueはint型のエイリアスとして使用されています。これは、検索に使用される値と
+// その他の整数値を区別するために行われています。検索で使用される値は
+// 常に(-VALUE_NONE, VALUE_NONE]の範囲内である必要があり、この範囲を超えてはなりません。
 
-	// 無効な値
-	VALUE_NONE = 32002,
+using Value = int;
 
-	// Valueの取りうる最大値(最小値はこの符号を反転させた値)
-	VALUE_INFINITE = 32001,
+constexpr Value VALUE_ZERO     = 0;
+// 引き分け時のスコア(千日手のスコアリングなどで用いる)
+constexpr Value VALUE_DRAW     = 0;
 
-	// 0手詰めのスコア(rootで詰んでいるときのscore)
-	// 例えば、3手詰めならこの値より3少ない。
-	VALUE_MATE = 32000,
+// 無効な値
+constexpr Value VALUE_NONE     = 32002;
 
-	VALUE_MATE_IN_MAX_PLY  =   VALUE_MATE - MAX_PLY , // MAX_PLYでの詰みのときのスコア。
-	VALUE_MATED_IN_MAX_PLY = -VALUE_MATE_IN_MAX_PLY , // MAX_PLYで詰まされるときのスコア。
+// Valueの取りうる最大値(最小値はこの符号を反転させた値)
+constexpr Value VALUE_INFINITE = 32001;
 
-	// チェスの終盤DBによって得られた詰みのスコアらしいが、互換性のためにこのシンボルは同様に定義しておく。
-	VALUE_TB                 = VALUE_MATE_IN_MAX_PLY - 1,
-	VALUE_TB_WIN_IN_MAX_PLY  = VALUE_MATE - MAX_PLY,
-	VALUE_TB_LOSS_IN_MAX_PLY = -VALUE_TB_WIN_IN_MAX_PLY, 
+// 0手詰めのスコア(rootで詰んでいるときのscore)
+// 例えば、3手詰めならこの値より3少ない。
+constexpr Value VALUE_MATE             = 32000;
 
+constexpr Value VALUE_MATE_IN_MAX_PLY  =  VALUE_MATE - MAX_PLY;  // MAX_PLYでの詰みのときのスコア。
+constexpr Value VALUE_MATED_IN_MAX_PLY = -VALUE_MATE_IN_MAX_PLY; // MAX_PLYで詰まされるときのスコア。
 
-	// 千日手による優等局面への突入したときのスコア
-	// これある程度離しておかないと、置換表に書き込んで、相手番から見て、これから
-	// singularの判定なんかをしようと思ったときに
-	// -VALUE_KNOWN_WIN - margin が、VALUE_MATED_IN_MAX_PLYを下回るとまずいので…。
-	VALUE_SUPERIOR = 28000,
+// チェスの終盤DB(tablebase)によって得られた詰みを表現するスコアらしいが、
+// Stockfishとの互換性のためにこのシンボルはStockfishと同様に定義しておく。
+constexpr Value VALUE_TB                 =  VALUE_MATE_IN_MAX_PLY - 1;
+constexpr Value VALUE_TB_WIN_IN_MAX_PLY  =  VALUE_MATE - MAX_PLY;
+constexpr Value VALUE_TB_LOSS_IN_MAX_PLY = -VALUE_TB_WIN_IN_MAX_PLY;
 
-	// 評価関数の返す値の最大値(2**14ぐらいに収まっていて欲しいところだが..)
-	VALUE_MAX_EVAL = 27000,
+// 千日手による優等局面への突入したときのスコア
+// ※ これを詰みのスコアの仲間としてしまうと、詰みのスコアをrootからの手数で
+//    計算しなおすときにおかしくなる。これは評価値の仲間として扱うことにする。
+//   よって、これは、VALUE_MAX_EVALと同じ値にしておく。
+constexpr Value VALUE_SUPERIOR =  VALUE_TB_WIN_IN_MAX_PLY - 1;
 
-	// 評価関数がまだ呼び出されていないということを示すのに使う特殊な定数
-	// StateInfo::sum.p[0][0]にこの値を格納して、マーカーとするのだが、このsumのp[0][0]は、ΣBKPPの計算結果であり、
-	// 16bitの範囲で収まるとは限らないため、もっと大きな数にしておく必要がある。
-	VALUE_NOT_EVALUATED = INT32_MAX,
-};
+// 評価関数の返す値の最大値、最小値
+constexpr Value VALUE_MAX_EVAL =  VALUE_SUPERIOR;
+constexpr Value VALUE_MIN_EVAL = -VALUE_MAX_EVAL;
+
+// 評価関数がまだ呼び出されていないということを示すのに使う特殊な定数
+// StateInfo::sum.p[0][0]にこの値を格納して、マーカーとするのだが、このsumのp[0][0]は、ΣBKPPの計算結果であり、
+// 16bitの範囲で収まるとは限らないため、もっと大きな数にしておく必要がある。
+constexpr Value VALUE_NOT_EVALUATED = INT32_MAX;
 
 // ply手で詰ませるときのスコア
-constexpr Value mate_in(int ply) {  return (Value)(VALUE_MATE - ply);}
+constexpr Value mate_in(int ply) { return (Value)(VALUE_MATE - ply); }
 
 // ply手で詰まされるときのスコア
-constexpr Value mated_in(int ply) {  return (Value)(-VALUE_MATE + ply);}
+constexpr Value mated_in(int ply) { return (Value)(-VALUE_MATE + ply); }
 
 
 // --------------------
@@ -534,7 +550,7 @@ enum Piece : uint32_t
 
 // USIプロトコルで駒を表す文字列を返す。
 // 駒打ちの駒なら先頭に"D"。
-static std::string usi_piece(Piece pc) { return std::string((pc & 32) ? "D":"")
+static std::string usi_piece(Piece pc) { return (pc & 32) ? "D":""
 		  + std::string(USI_PIECE).substr((pc & 31) * 2, 2); }
 
 // 駒に対して、それが先後、どちらの手番の駒であるかを返す。
@@ -623,7 +639,21 @@ constexpr bool is_ok(PieceNumber pn) { return pn < PIECE_NUMBER_NB; }
 //       指し手
 // --------------------
 
-struct Move16;
+// Based on a congruential pseudo-random number generator
+// 合同式による疑似乱数生成器に基づいています。
+// ⇨ Move型のhashを生成するときに用いる。
+
+constexpr /*Key*/size_t make_key(uint64_t seed) {
+	return seed * 6364136223846793005ULL + 1442695040888963407ULL;
+}
+
+class Move;
+class Move16;
+
+// USI形式の文字列にする。
+// USI::move(Move m)と同等。互換性のために残されている。
+std::string to_usi_string(Move m);
+std::string to_usi_string(Move16 m);
 
 // Move16 : 16bit形式の指し手
 //   bit0..6  : 移動先のSquare
@@ -633,12 +663,13 @@ struct Move16;
 //   bit15    : 成りかのフラグ
 //   
 // Move   : 32bit形式の指し手
-//   上位16bitには、この指し手によってto(移動後の升)に来る駒(先後の区別あり)が格納されている。つまりは Piece(5bit)が上位16bitに来る。
+//   上位16bitには、この指し手によってto(移動後の升)に来る駒(先後の区別あり)が格納されている。
+//   つまりは Piece(5bit)が上位16bitに来る。
 //   move = move16 + (piece << 16)
 // なので、Moveが使うのは、16bit(Move16) + 5bit(Piece) = 下位21bit
 //
-enum Move: uint32_t {
 
+enum MoveEnum : uint32_t {
 	MOVE_NONE    = 0,             // 無効な移動
 
 	MOVE_NULL    = (1 << 7) + 1,  // NULL MOVEを意味する指し手。Square(1)からSquare(1)への移動は存在しないのでここを特殊な記号として使う。
@@ -649,125 +680,207 @@ enum Move: uint32_t {
 	MOVE_PROMOTE = 1 << 15,       // 駒成りフラグ
 };
 
-// USI形式の文字列にする。
-// USI::move(Move m)と同等。互換性のために残されている。
-std::string to_usi_string(Move m);
-std::string to_usi_string(Move16 m);
+// 指し手を表現するclass(実体は32bit整数)
+class Move
+{
+public:
+	Move() = default;
+	constexpr explicit Move(std::uint32_t d): data(d) {}
+
+	// -- 定数
+
+	// MOVE_NONEに相当する定数。
+	static constexpr Move none() { return Move(MOVE_NONE); }
+
+	// MOVE_NULLに相当する定数。
+	static constexpr Move null() { return Move(MOVE_NULL); }
+
+	// MOVE_RESIGNに相当する定数。
+	static constexpr Move resign() { return Move(MOVE_RESIGN); }
+
+	// MOVE_WINに相当する定数。
+	static constexpr Move win() { return Move(MOVE_WIN); }
+
+	// -- property
+
+	// 指し手の移動元の升を返す。
+	// → ここ、ASSERT使っててconstexpr式として評価できないかも？
+	Square from_sq() const {
+		ASSERT_LV3(is_ok());
+		return Square((data >> 7) & 0x7f);
+	}
+
+	// 指し手の移動先の升を返す。
+	Square to_sq() const { return Square(data & 0x7f); }
+
+	// 指し手が駒打ちか？
+	bool is_drop() const { return (data & MOVE_DROP) != 0; }
+
+	// 指し手が成りか？
+	bool is_promote() const { return (data & MOVE_PROMOTE) != 0; }
+
+	// 駒打ち(is_drop()==true)のときの打った駒
+	// 先後の区別なし。PAWN～ROOKまでの値が返る。
+	// ※ 打つ駒のPieceTypeはMoveの bit7..13に格納されている。
+	// ※ assert(is_drop(m))はあってもいいかも。
+	PieceType move_dropped_piece() const { return PieceType((data >> 7) & 0x7f); }
+
+	// この指し手のあとにtoに来る駒。(移動させる駒だが、成りのときは、成ったあとの駒。)
+	Piece moved_after_piece() const { return Piece(data >> 16); }
+
+	// fromとtoをシリアライズする。駒打ちのときのfromは普通の移動の指し手とは異なる。
+	// この関数は、0 ～ ((SQ_NB+7) * SQ_NB - 1)までの値が返る。
+	// ※ is_drop() == trueの時、from_sq(m)は、打つ駒のPieceTypeが返る。NO_PIECE = 0で、ここが空番であることに注意。
+	//    ゆえに、is_drop()==trueの時は、from_sq(m)にSQ_NB-1を足して、打つ駒がPAWN(= 1)の時にSQ_NBになるようにしてやる必要がある。
+	// 注) 駒打ちに関して、先手の駒と後手の駒の区別はしない。
+	// 　　これは、この関数は、MovePickerのButterflyHistoryで使うから必要なのだが、そこでは指し手の手番(Color)を別途持っているから。
+	int from_to() const { return int(from_sq() + int(is_drop() ? (SQ_NB - 1) : 0)) * int(SQ_NB) + int(to_sq());}
+
+	// 上記のfrom_toが返す最大値 + 1。
+	static constexpr int FROM_TO_SIZE = int(SQ_NB + 7) * int(SQ_NB);
+
+	// 指し手が普通の指し手(駒打ち/駒成り含む)であるかテストする。
+	// 特殊な指し手(MOVE_NONE/MOVE_NULL/MOVE_WIN)である場合、falseが返る。
+	// それ普通の指し手ならばtrueが返る。
+	constexpr bool is_ok() const {
+		// 通常の指し手ならば、
+		// 1. 32bit moveの場合は、上位16bitに移動させる駒があるからm >> 7が下位7bitと一致することはない。
+		// 2. 16bit moveの場合は、
+		//   2a. 移動させる指し手ならば from == toは満たさない。
+		//   2b. 駒打ちの場合は、m >> 7のbit7が1になっているので右辺とは一致しない。
+		// ということで、以下の条件式で良い。
+		return (data >> 7) != (data & 0x7f);
+	}
+
+	// -- 比較
+
+	bool operator == (const Move rhs) const { return this->to_u32() == rhs.to_u32(); }
+	bool operator != (const Move rhs) const { return !(*this == rhs); }
+
+	// -- 変換子
+
+	// Move16への変換子
+	Move16 to_move16() const;
+	constexpr uint16_t to_u16() const { return (uint16_t)data; }
+	constexpr uint32_t to_u32() const { return (uint32_t)data; }
+	constexpr explicit operator bool() const { return data != 0; }
+	constexpr explicit operator uint32_t() const { return (uint32_t)data; }
+
+	// -- 文字列化
+
+	// USI形式の文字列にする。
+	std::string to_usi_string() const { return ::to_usi_string(*this); }
+
+	// -- unordered_mapなどで比較するときに用いる。operator<()は定義したくないので、こちらを用いる。
+	struct MoveHash {
+		std::size_t operator()(const Move& m) const { return make_key(m.data); }
+	};
+
+protected:
+	std::uint32_t data;
+};
 
 // 16bit型の指し手。Move型の下位16bit。
 // 32bit型のMoveか16bit型のMoveかが不明瞭で、それがバグの原因となりやすいので
 // それらを明確に区別したい時に用いる。
-struct Move16
+class Move16
 {
-	Move16():move(0){}
-	Move16(u16 m): move(m) {}
+public:
 
-	// Moveからの暗黙変換はできないとMOVE_NONEの代入などで困る。
-	Move16(Move m) :move((u16)m){}
+	constexpr Move16() : data(0) {}
+	explicit constexpr Move16(u16 m) : data(m) {}
+
+	// -- 定数
+
+	// MOVE_NONEに相当する定数。
+	static constexpr Move16 none() { return Move16(MOVE_NONE); }
+
+	// MOVE_NULLに相当する定数。
+	static constexpr Move16 null() { return Move16(MOVE_NULL); }
+
+	// MOVE_RESIGNに相当する定数。
+	static constexpr Move16 resign() { return Move16(MOVE_RESIGN); }
+
+	// MOVE_WINに相当する定数。
+	static constexpr Move16 win() { return Move16(MOVE_WIN); }
+
+	// -- property
+
+	Square from_sq() const { ASSERT_LV3(is_ok()); return Square((data >> 7) & 0x7f); }
+	Square to_sq() const { return Square(data & 0x7f); }
+	bool is_drop() const { return (data & MOVE_DROP) != 0; }
+	bool is_promote() const { return (data & MOVE_PROMOTE) != 0; }
+	PieceType move_dropped_piece() const { return PieceType((data >> 7) & 0x7f); }
+
+	int from_to() const { return int(from_sq() + int(is_drop() ? (SQ_NB - 1) : 0)) * int(SQ_NB) + int(to_sq()); }
+	constexpr bool is_ok() const { return (data >> 7) != (data & 0x7f); }
+
+	// -- 比較
+
+	// Move16同士とMoveの定数とも比較はできる。
+	bool operator == (const Move16 rhs) const { return data == rhs.data; }
+	bool operator != (const Move16 rhs) const { return !(*this == rhs); }
+	bool operator == (const Move rhs) const { return this->to_u16() == rhs.to_u16(); }
+	bool operator != (const Move rhs) const { return !(*this == rhs); }
+
+	// -- 変換子
 
 	// uint16_tのまま取り出す。
 	// Moveに変換が必要なときは、そのあとMove()にcastすることはできる。(上位16bitは0のまま)
 	// 内部的に用いる。基本的にはこの関数を呼び出さないこと。
-	// このMove16のinstanceをMoveに戻したい時は、Position::to_move(Move16)を使うこと。
-	constexpr uint16_t to_u16() const { return (u16)move; }
+	// ⇨ このMove16のinstanceをMoveに戻したい時は、Position::to_move(Move16)を使うこと。
+	constexpr uint16_t to_u16() const { return (u16)data; }
 
-	// 比較
-	// Move16同士とMoveの定数とも比較はできる。
-	bool operator == (const Move16 rhs) const { return move == rhs.move; }
-	bool operator != (const Move16 rhs) const { return !(*this == rhs); }
-	bool operator == (const Move rhs) const { return move == (u16)rhs; }
-	bool operator != (const Move rhs) const { return !(*this == rhs); }
+	//constexpr operator bool() const { return data; }
+	// ⇨ これ定義していると余計なバグに悩まされることになる。
+
+	// -- 文字列化
 
 	// USI形式の文字列にする。
-	std::string to_usi_string() const { return ::to_usi_string(move); }
+	std::string to_usi_string() const { return ::to_usi_string(*this); }
 
-	// 通常の指し手であるかのチェック。is_ok(Move)と同等。
-	constexpr bool is_ok() const { return (move >> 7) != (move & 0x7f); }
-
-private:
-	uint16_t move;
+protected:
+	uint16_t data;
 };
+
+// ハッシュ関数(std::unorderd_map<Move16,u32>のようなものを使いたいため)
+namespace std {
+	template<>
+	struct hash<Move16> {
+		size_t operator()(const Move16& m16) const {
+			return hash<u16>()(m16.to_u16());
+		}
+	};
+}
 
 // USI形式で指し手を表示する
 static std::ostream& operator<<(std::ostream& os, Move m)   { os << to_usi_string(m); return os; }
 static std::ostream& operator<<(std::ostream& os, Move16 m) { os << to_usi_string(m); return os; }
 
-// 指し手が普通の指し手(駒打ち/駒成り含む)であるかテストする。
-// 特殊な指し手(MOVE_NONE/MOVE_NULL/MOVE_WIN)である場合、falseが返る。
-// それ普通の指し手ならばtrueが返る。
-constexpr bool is_ok(Move m) {
-	// 通常の指し手ならば、
-	// 1. 32bit moveの場合は、上位16bitに移動させる駒があるからm >> 7が下位7bitと一致することはない。
-	// 2. 16bit moveの場合は、
-	//   2a. 移動させる指し手ならば from == toは満たさない。
-	//   2b. 駒打ちの場合は、m >> 7のbit7が1になっているので右辺とは一致しない。
-	// ということで、以下の条件式で良い。
-	return (m >> 7) != (m & 0x7f);
-}
-static bool is_ok(Move16 m) { return m.is_ok(); }
-
-// 指し手の移動元の升を返す。
-// → ここ、ASSERT使っててconstexpr式として評価できないかも？
-constexpr Square from_sq(Move   m) {
-	ASSERT_LV3(is_ok(m));
-	return Square((m          >> 7) & 0x7f);
-}
-static    Square from_sq(Move16 m) {
-	ASSERT_LV3(is_ok(m));
-	return Square((m.to_u16() >> 7) & 0x7f);
-}
-
-// 指し手の移動先の升を返す。
-constexpr Square to_sq(Move   m) { return Square(m          & 0x7f); }
-static    Square to_sq(Move16 m) { return Square(m.to_u16() & 0x7f); }
-
-// 指し手が駒打ちか？
-constexpr bool is_drop(Move   m){ return (m          & MOVE_DROP)!=0; }
-static    bool is_drop(Move16 m){ return (m.to_u16() & MOVE_DROP)!=0; }
-
-// fromとtoをシリアライズする。駒打ちのときのfromは普通の移動の指し手とは異なる。
-// この関数は、0 ～ ((SQ_NB+7) * SQ_NB - 1)までの値が返る。
-// ※ is_drop() == trueの時、from_sq(m)は、打つ駒のPieceTypeが返る。NO_PIECE = 0で、ここが空番であることに注意。
-//    ゆえに、is_drop()==trueの時は、from_sq(m)にSQ_NB-1を足して、打つ駒がPAWN(= 1)の時にSQ_NBになるようにしてやる必要がある。
-// 注) 駒打ちに関して、先手の駒と後手の駒の区別はしない。
-// 　　これは、この関数は、MovePickerのButterflyHistoryで使うから必要なのだが、そこでは指し手の手番(Color)を別途持っているから。
-constexpr int from_to(Move   m) { return (int)(from_sq(m) + (is_drop(m) ? (SQ_NB - 1) : 0)) * (int)SQ_NB + (int)to_sq(m); }
-static    int from_to(Move16 m) { return (int)(from_sq(m) + (is_drop(m) ? (SQ_NB - 1) : 0)) * (int)SQ_NB + (int)to_sq(m); }
-
-// 指し手が成りか？
-constexpr bool is_promote(Move   m) { return (m          & MOVE_PROMOTE)!=0; }
-static    bool is_promote(Move16 m) { return (m.to_u16() & MOVE_PROMOTE)!=0; }
-
-// 駒打ち(is_drop()==true)のときの打った駒
-// 先後の区別なし。PAWN～ROOKまでの値が返る。
-// ※ 打つ駒のPieceTypeはMoveの bit7..13に格納されている。
-// ※ assert(is_drop(m))はあってもいいかも。
-constexpr PieceType move_dropped_piece(Move   m) { return (PieceType)((m          >> 7) & 0x7f); }
-static    PieceType move_dropped_piece(Move16 m) { return (PieceType)((m.to_u16() >> 7) & 0x7f); }
 
 // us側のptをfromからtoに移動させる指し手を生成して返す。
 // Move16を返すほうは、移動させる駒が何かの情報は持っていない。
-static Move16 make_move16(Square from, Square to) { return Move16(to + (from << 7)); }
-constexpr Move make_move(Square from, Square to, Piece pc ) { return Move(to + (from << 7) + (pc << 16)) ; }
-constexpr Move make_move(Square from, Square to, Color us , PieceType pt ) { return Move(to + (from << 7) + (((us ? u32(PIECE_WHITE) : 0) + (pt)) << 16)) ; }
+static Move16 make_move16(Square from, Square to) { return Move16(u32(to) + (u32(from) << 7)); }
+constexpr Move make_move(Square from, Square to, Piece pc ) { return Move(u32(to) + (u32(from) << 7) + (u32(pc) << 16)) ; }
+constexpr Move make_move(Square from, Square to, Color us , PieceType pt ) { return Move(u32(to) + u32(from << 7) + (((us ? u32(PIECE_WHITE) : 0) + u32(pt)) << 16)) ; }
 
 // us側の駒ptをfromからtoに移動して、成る指し手を生成して返す。
 // Move16を返すほうは、移動させる駒が何かの情報は持っていない。
-static Move16 make_move_promote16(Square from, Square to) { return (Move16)(to + (from << 7) + MOVE_PROMOTE); }
-constexpr Move make_move_promote(Square from, Square to , Piece pc) { return (Move)(to + (from << 7) + MOVE_PROMOTE + ((pc | PIECE_PROMOTE) << 16)); }
-constexpr Move make_move_promote(Square from, Square to , Color us , PieceType pt) { return (Move)(to + (from << 7) + MOVE_PROMOTE + (((us ? u32(PIECE_WHITE) : 0) + (pt | PIECE_PROMOTE)) << 16)); }
+static Move16 make_move_promote16(Square from, Square to) { return Move16(u32(to) + (u32(from) << 7) + MOVE_PROMOTE); }
+constexpr Move make_move_promote(Square from, Square to , Piece pc) { return Move(u32(to) + (u32(from) << 7) + MOVE_PROMOTE + ((pc | PIECE_PROMOTE) << 16)); }
+constexpr Move make_move_promote(Square from, Square to , Color us , PieceType pt) { return Move(u32(to) + (u32(from) << 7) + MOVE_PROMOTE + (((us ? u32(PIECE_WHITE) : 0) + u32(pt | PIECE_PROMOTE)) << 16)); }
 
 // us側の駒ptをtoに打つ指し手を生成して返す
 // Move16を返すほうは、どちらの駒であるかの情報は持っていない。
-static Move16 make_move_drop16(PieceType pt, Square to) { return (Move16)(to + (pt << 7) + MOVE_DROP); }
-constexpr Move make_move_drop(PieceType pt, Square to , Color us ) { return (Move)(to + (pt << 7) + MOVE_DROP + (((us ? u32(PIECE_WHITE) : 0) + (pt)) << 16)); }
+static Move16 make_move_drop16(PieceType pt, Square to) { return Move16(u32(to) + (u32(pt) << 7) + MOVE_DROP); }
+constexpr Move make_move_drop(PieceType pt, Square to , Color us ) { return Move(u32(to) + (u32(pt) << 7) + MOVE_DROP + (((us ? u32(PIECE_WHITE) : 0) + u32(pt)) << 16)); }
 
 // 移動元の升と移動先の升を逆転させた指し手を生成する。探索部で用いる。
 // ※　最新のStockfishでは使っていないのでもはや不要なのだが一応残しておく。
 // 将棋はチェスと違って元の場所に戻れない駒が多いのでreverse_move()を用いるhistory updateは
 // 大抵、悪影響しかない。
 // また、reverse_move()を用いるならば、ifの条件式に " && !is_drop(move)"が要ると思う。
-static Move16 reverse_move(Move m) { return make_move16(to_sq(m), from_sq(m)); }
+static Move16 reverse_move(Move m) { return make_move16(m.to_sq(), m.from_sq()); }
 
 // 指し手を反転させる(盤面を180°回転させた指し手にする)
 // 駒打ちもちゃんと考慮する。mがMOVE_NONEでも良い。(MOVE_NONEが返る)
@@ -776,9 +889,9 @@ static Move16 reverse_move(Move m) { return make_move16(to_sq(m), from_sq(m)); }
 static Move16 flip_move(Move16 m) {
 
 	return 
-		is_drop   (m)  ? make_move_drop16   (move_dropped_piece(m), Flip(to_sq(m))):
-        is_promote(m)  ? make_move_promote16(Flip(from_sq(m))     , Flip(to_sq(m))):
-					     make_move16        (Flip(from_sq(m))     , Flip(to_sq(m)));
+		m.is_drop   ()  ? make_move_drop16   (m.move_dropped_piece(), Flip(m.to_sq())):
+        m.is_promote()  ? make_move_promote16(Flip(m.from_sq())     , Flip(m.to_sq())):
+					      make_move16        (Flip(m.from_sq())     , Flip(m.to_sq()));
 }
 
 // 見た目に、わかりやすい形式で表示する
@@ -793,13 +906,13 @@ static std::string pretty(Move m, PieceType movedPieceType) { return pretty(m, (
 enum MoveType {
 	NORMAL,
 	PROMOTION = MOVE_PROMOTE,
-	DROP = MOVE_DROP,
+	DROP      = MOVE_DROP,
 	//ENPASSANT = 2 << 14,
 	//CASTLING = 3 << 14
 };
 
 // 指し手(Move)のMoveTypeを返す。
-constexpr MoveType type_of(Move m) { return MoveType(m & (MOVE_PROMOTE | MOVE_DROP)); }
+constexpr MoveType type_of(Move m) { return MoveType(m.to_u16() & (MOVE_PROMOTE | MOVE_DROP)); }
 
 // --------------------
 //   拡張された指し手
@@ -807,28 +920,33 @@ constexpr MoveType type_of(Move m) { return MoveType(m & (MOVE_PROMOTE | MOVE_DR
 
 // 指し手とオーダリングのためのスコアがペアになっている構造体。
 // オーダリングのときにスコアで並べ替えしたいが、一つになっているほうが並び替えがしやすいのでこうしてある。
-struct ExtMove {
+// ⇨ Moveがclassになったので、このclass memberを呼び出したいから、Moveから派生させるように変更になった。
+struct ExtMove : public Move {
 
-	Move move;  // 指し手(32bit)
 	int value;	// 指し手オーダリング(並び替え)のときのスコア(符号つき32bit)
 
-	// Move型とは暗黙で変換できていい。
+	// Move型から暗黙で代入できる。
+	// ⇨ こうしておけば、MoveList* curに対して *cur++ = move; のように書ける。
+	void operator=(const Move m) { data = m.to_u32(); }
+	// ⇨ ここ、data = m.dataとしようとするとdataはprotectedなのにアクセスできない。なぜ…？
 
-	operator Move() const { return move; }
-	void operator=(Move m) { move = m; }
+	// 補足 : このクラスの変数をMove型にしたいときは、このクラスの変数を Move(m) のようにすれば良い。
 
-	// 望まない暗黙のMoveへの変換を禁止するために
-	// 曖昧な変換でコンパイルエラーになるようにしておく。
+	// Inhibit unwanted implicit conversions to Move
+	// with an ambiguity that yields to a compile error.
+	// 意図しない暗黙のMoveへの変換を防ぎ、あいまいさによってコンパイルエラーを引き起こします。
+
 	// cf. Fix involuntary conversions of ExtMove to Move : https://github.com/official-stockfish/Stockfish/commit/d482e3a8905ee194bda3f67a21dda5132c21f30b
+
 	operator float() const = delete;
 };
 
-// ExtMoveの並べ替えを行なうので比較オペレーターを定義しておく。
+// partial_insertion_sort()でExtMoveの並べ替えを行なうので比較オペレーターを定義しておく。
 constexpr bool operator<(const ExtMove& first, const ExtMove& second) {
 	return first.value < second.value;
 }
 
-static std::ostream& operator<<(std::ostream& os, ExtMove m) { os << m.move << '(' << m.value << ')'; return os; }
+static std::ostream& operator<<(std::ostream& os, ExtMove m) { os << Move(m) << '(' << m.value << ')'; return os; }
 
 // --------------------
 //       手駒
@@ -1063,23 +1181,6 @@ private:
 // 盤面(盤上の駒 + 手駒)に対して、Zobrist Hashでそれに対応する値を計算する。
 using Key = uint64_t;
 
-#if 0
-// 合同法による擬似乱数生成器
-// 探索で、excludedMoveを考慮した局面のhash keyが欲しいので、それを生成するために
-// excludedMoveをseedとする擬似乱数を発生させる必要があり、そこで用いられる。
-// cf. https://github.com/official-stockfish/Stockfish/commit/de24fcebc873ce2d65b30e039745dbc2e851f443
-//
-// やねうら王独自拡張
-// pos.key()にxorをとるときにbit0(先後フラグ)を潰してはいけないので、
-// ここではbit0が0になっている数(偶数)を返すことにした。
-// あと、HashKeyとして128bitのkeyを使うとき(特殊用途)は、この関数は128bitの値を返さないといけない。(未対応)
-constexpr Key make_key(uint64_t seed) {
-	return (seed * 6364136223846793005ULL + 1442695040888963407ULL) & ~1ULL;
-}
-
-// →　この関数はStockfish 16で使わなくなった。
-#endif
-
 // --------------------
 //        探索
 // --------------------
@@ -1110,7 +1211,7 @@ enum RepetitionState
 constexpr bool is_ok(RepetitionState rs) { return REPETITION_NONE <= rs && rs < REPETITION_NB; }
 
 // RepetitionStateを文字列化する。PVの出力のときにUSI拡張として出力するのに用いる。
-extern std::string to_usi_string(RepetitionState rs);
+std::string to_usi_string(RepetitionState rs);
 
 // RepetitionStateを文字列化して出力する。PVの出力のときにUSI拡張として出力するのに用いる。
 std::ostream& operator<<(std::ostream& os, RepetitionState rs);
@@ -1131,11 +1232,11 @@ namespace Eval
 	// 　1) 16bitだと32bitだと思いこんでいてオーバーフローさせてしまうコードを書いてしまうことが多々あり、保守が困難。
 	// 　2) ここが32bitであってもそんなに速度低下しないし、それはSSE4.2以前に限るから許容範囲。
 	// という2つの理由から、32bitに固定する。
-	enum BonaPiece: int32_t;
+	enum BonaPiece : int32_t;
 
 	// 評価関数本体。
 	// 戻り値は、
-	//  abs(value) < VALUE_MAX_EVAL
+	//  abs(value) < =VALUE_MAX_EVAL
 	// を満たす。
 	Value evaluate(const Position& pos);
 }

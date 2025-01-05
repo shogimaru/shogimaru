@@ -12,7 +12,7 @@ using namespace std;
 
 #if defined(YANEURAOU_ENGINE) && defined (EVAL_LEARN)
 namespace Learner {
-	extern void UnitTest(Test::UnitTester& unittest);
+	void UnitTest(Test::UnitTester& unittest);
 }
 #endif
 
@@ -176,6 +176,9 @@ namespace Test
 
 		// Position class
 		tester.run(Position::UnitTest);
+
+		// Transposition Table
+		tester.run(TranspositionTable::UnitTest);
 
 		// USI namespace
 		tester.run(USI::UnitTest);

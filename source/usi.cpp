@@ -86,7 +86,7 @@ void mate_cmd(Position& pos, istream& is);
 
 // 定跡を作るコマンド
 #if defined (ENABLE_MAKEBOOK_CMD) && (defined(EVAL_LEARN) || defined(YANEURAOU_ENGINE_DEEP))
-namespace Book { extern void makebook_cmd(Position& pos, istringstream& is); }
+namespace Book { void makebook_cmd(Position& pos, istringstream& is); }
 #endif
 
 // ----------------------------------
@@ -109,10 +109,10 @@ namespace Learner
 #endif
 
   // 読み筋と評価値のペア。Learner::search(),Learner::qsearch()が返す。
-  typedef std::pair<Value, std::vector<Move> > ValueAndPV;
+  typedef std::pair<Value, std::vector<Move> > ValuePV;
 
-  ValueAndPV qsearch(Position& pos);
-  ValueAndPV search(Position& pos, int depth_, size_t multiPV = 1 , u64 nodesLimit = 0 );
+  ValuePV qsearch(Position& pos);
+  ValuePV search(Position& pos, int depth_, size_t multiPV = 1 , u64 nodesLimit = 0 );
 
 }
 #endif
@@ -122,11 +122,11 @@ namespace Learner
 // ----------------------------------
 
 // "bench"コマンドは、"test"コマンド群とは別。常に呼び出せるようにしてある。
-extern void bench_cmd(Position& pos, istringstream& is);
+void bench_cmd(Position& pos, istringstream& is);
 
 
 // "gameover"コマンドに対するハンドラ
-#if defined(USE_GAMEOVER_HANDLER)
+#if defined(USE_GAMEOVER_HANDLER) || defined(YANEURAOU_ENGINE_DEEP)
 void gameover_handler(const string& cmd);
 #endif
 
@@ -144,193 +144,6 @@ namespace YaneuraouTheCluster
 }
 #endif
 #endif
-
-namespace USI
-{
-	// --------------------
-	//    読み筋の出力
-	// --------------------
-
-	// depth : iteration深さ
-	std::string pv(const Position& pos, Depth depth)
-	{
-#if defined(YANEURAOU_ENGINE_DEEP)
-		// ふかうら王では、この関数呼び出さないからまるっと要らない。
-
-		return string();
-#else
-		std::stringstream ss;
-
-		TimePoint elapsed = Time.elapsed() + 1;
-#if defined(__EMSCRIPTEN__)
-		// yaneuraou.wasm
-		// Time.elapsed()が-1を返すことがある
-		// https://github.com/lichess-org/stockfish.wasm/issues/5
-		// https://github.com/lichess-org/stockfish.wasm/commit/4f591186650ab9729705dc01dec1b2d099cd5e29
-		elapsed = std::max(elapsed, TimePoint(1));
-#endif
-		const auto& rootMoves = pos.this_thread()->rootMoves;
-		size_t pvIdx = pos.this_thread()->pvIdx;
-		size_t multiPV = std::min(size_t(Options["MultiPV"]), rootMoves.size());
-
-		uint64_t nodes_searched = Threads.nodes_searched();
-
-		// MultiPVでは上位N個の候補手と読み筋を出力する必要がある。
-		for (size_t i = 0; i < multiPV; ++i)
-		{
-			// この指し手のpvの更新が終わっているのか
-			bool updated = rootMoves[i].score != -VALUE_INFINITE;
-
-			if (depth == 1 && !updated && i > 0)
-				continue;
-
-			// 1より小さな探索depthで出力しない。
-			Depth d = updated ? depth : std::max(1, depth - 1);
-			Value v = updated ? rootMoves[i].usiScore : rootMoves[i].previousScore;
-
-			// multi pv時、例えば3個目の候補手までしか評価が終わっていなくて(PVIdx==2)、このとき、
-			// 3,4,5個目にあるのは前回のiterationまでずっと評価されていなかった指し手であるような場合に、
-			// これらのpreviousScoreが-VALUE_INFINITE(未初期化状態)でありうる。
-			// (multi pv状態で"go infinite"～"stop"を繰り返すとこの現象が発生する。おそらく置換表にhitしまくる結果ではないかと思う。)
-			if (v == -VALUE_INFINITE)
-				v = VALUE_ZERO; // この場合でもとりあえず出力は行う。
-
-			//bool tb = TB::RootInTB && abs(v) < VALUE_MATE_IN_MAX_PLY;
-			//v = tb ? rootMoves[i].tbScore : v;
-
-			if (ss.rdbuf()->in_avail()) // 1行目でないなら連結のための改行を出力
-				ss << endl;
-
-			ss  << "info"
-				<< " depth "    << d
-				<< " seldepth " << rootMoves[i].selDepth
-#if defined(USE_PIECE_VALUE)
-				<< " score "    << USI::value(v)
-#endif
-				;
-
-			// これが現在探索中の指し手であるなら、それがlowerboundかupperboundかは表示させる
-	        if (i == pvIdx && /*!tb &&*/ updated) // tablebase- and previous-scores are exact
-				ss << (rootMoves[i].scoreLowerbound ? " lowerbound" : (rootMoves[i].scoreUpperbound ? " upperbound" : ""));
-
-			// 将棋所はmultipvに対応していないが、とりあえず出力はしておく。
-			if (multiPV > 1)
-				ss << " multipv " << (i + 1);
-
-			ss << " nodes " << nodes_searched
-			   << " nps "   << nodes_searched * 1000 / elapsed
-			   << " hashfull " << TT.hashfull()
-			   << " time " << elapsed
-			   << " pv";
-
-
-			// PV配列からPVを出力する。
-			// ※　USIの"info"で読み筋を出力するときは"pv"サブコマンドはサブコマンドの一番最後にしなければならない。
-
-			auto out_array_pv = [&]()
-			{
-				for (Move m : rootMoves[i].pv)
-					ss << " " << m;
-			};
-
-			// 置換表からPVをかき集めてきてPVを出力する。
-			auto out_tt_pv = [&]()
-			{
-				auto pos_ = const_cast<Position*>(&pos);
-				Move moves[MAX_PLY + 1];
-				StateInfo si[MAX_PLY];
-				int ply = 0;
-
-				while ( ply < MAX_PLY )
-				{
-					// 千日手はそこで終了。ただし初手はPVを出力。
-					// 千日手がベストのとき、置換表を更新していないので
-					// 置換表上はMOVE_NONEがベストの指し手になっている可能性があるので早めに検出する。
-					auto rep = pos.is_repetition(ply);
-					if (rep != REPETITION_NONE && ply >= 1)
-					{
-						// 千日手でPVを打ち切るときはその旨を表示
-						ss << " " << rep;
-						break;
-					}
-
-					Move m;
-
-					// まず、rootMoves.pvを辿れるところまで辿る。
-					// rootMoves[i].pv[0]は宣言勝ちの指し手(MOVE_WIN)の可能性があるので注意。
-					if (ply < int(rootMoves[i].pv.size()))
-						m = rootMoves[i].pv[ply];
-					else
-					{
-						// 次の手を置換表から拾う。
-						// ただし置換表を破壊されるとbenchコマンドの時にシングルスレッドなのに探索内容の同一性が保証されなくて
-						// 困るのでread_probe()を用いる。
-						bool found;
-						auto* tte = TT.read_probe(pos.state()->hash_key(), found);
-
-						// 置換表になかった
-						if (!found)
-							break;
-
-						m = pos.to_move(tte->move());
-
-						// leaf nodeはわりと高い確率でMOVE_NONE
-						if (m == MOVE_NONE)
-							break;
-
-						// 置換表にはpsudo_legalではない指し手が含まれるのでそれを弾く。
-						// 宣言勝ちでないならこれが合法手であるかのチェックが必要。
-						if (m != MOVE_WIN)
-						{
-							// 歩の不成が読み筋に含まれていようともそれは表示できなくてはならないので
-							// pseudo_legal_s<true>()を用いて判定。
-							if (!(pos.pseudo_legal_s<true>(m) && pos.legal(m)))
-								break;
-						}
-					}
-
-#if defined (USE_ENTERING_KING_WIN)
-					// 宣言勝ちである
-					if (m == MOVE_WIN)
-					{
-						// これが合法手であるなら宣言勝ちであると出力。
-						if (pos.DeclarationWin() != MOVE_NONE)
-							ss << " " << MOVE_WIN;
-
-						break;
-					}
-#endif
-
-					moves[ply] = m;
-					ss << " " << m;
-
-					// 注)
-					// このdo_moveで Position::nodesが加算されるので探索ノード数に影響が出る。
-					// benchコマンドで探索ノード数が一致しない場合、これが原因。
-					// → benchコマンドでは、ConsiderationMode = falseにすることで
-					// 　PV表示のためにdo_move()を呼び出さないようにした。
-
-					pos_->do_move(m, si[ply]);
-					++ply;
-				}
-				while (ply > 0)
-					pos_->undo_move(moves[--ply]);
-			};
-
-			// 検討用のPVを出力するモードなら、置換表からPVをかき集める。
-			// (そうしないとMultiPV時にPVが欠損することがあるようだ)
-			// fail-highのときにもPVを更新しているのが問題ではなさそう。
-			// Stockfish側の何らかのバグかも。
-			if (Search::Limits.consideration_mode)
-				out_tt_pv();
-			else
-				out_array_pv();
-		}
-
-		return ss.str();
-#endif // defined(YANEURAOU_ENGINE_DEEP)
-	}
-}
 
 // --------------------
 // USI関係のコマンド処理
@@ -525,11 +338,11 @@ void position_cmd(Position& pos, istringstream& is , StateListPtr& states)
 	std::vector<Move> moves_from_game_root;
 
 	// 指し手のリストをパースする(あるなら)
-	while (is >> token && (m = USI::to_move(pos, token)) != MOVE_NONE)
+	while (is >> token && (m = USI::to_move(pos, token)) != Move::none())
 	{
 		// 1手進めるごとにStateInfoが積まれていく。これは千日手の検出のために必要。
 		states->emplace_back();
-		if (m == MOVE_NULL) // do_move に MOVE_NULL を与えると死ぬので
+		if (m == Move::null()) // do_move に MOVE_NULL を与えると死ぬので
 			pos.do_null_move(states->back());
 		else
 			pos.do_move(m, states->back());
@@ -748,7 +561,7 @@ void go_cmd(const Position& pos, istringstream& is , StateListPtr& states , bool
 			string token="";
 			Move16 m;
 			limits.pv_check.clear();
-			while (is >> token && (m = USI::to_move16(token)) != MOVE_NONE){
+			while (is >> token && (m = USI::to_move16(token)).to_u16() != MOVE_NONE){
 				limits.pv_check.push_back(m);
 			}
 		}
@@ -865,10 +678,12 @@ void usi_cmdexec(Position& pos, StateListPtr& states, string& cmd)
 			// gameoverに対してbestmoveは返すべきではないのかも知れないが、
 			// それを言えばstopにだって…。
 
-#if defined(USE_GAMEOVER_HANDLER)
-			// "gameover"コマンドに対するハンドラを呼び出したいのか？
+#if defined(USE_GAMEOVER_HANDLER) || defined(YANEURAOU_ENGINE_DEEP)
+
 			if (token == "gameover")
+				// "gameover"コマンドに対するハンドラを呼び出したいのか？
 				gameover_handler(cmd);
+
 #endif
 
 			// "go infinite" , "go ponder"などで思考を終えて寝てるかも知れないが、
@@ -1009,7 +824,7 @@ void usi_cmdexec(Position& pos, StateListPtr& states, string& cmd)
 		else if (token == "moves") {
 			sync_cout;
 			for (auto m : MoveList<LEGAL_ALL>(pos))
-				usi::cmd << m.move << ' ';
+				usi::cmd << Move(m) << ' ';
 			usi::cmd << sync_endl;
 		}
 
@@ -1208,28 +1023,28 @@ std::string USI::square(Square s) {
 }
 
 // 指し手をUSI文字列に変換する。
-std::string USI::move(Move   m) { return move(Move16(m)); }
+std::string USI::move(Move   m) { return move(m.to_move16()); }
 std::string USI::move(Move16 m)
 {
 	std::stringstream ss;
-	if (!is_ok(m))
+	if (!m.is_ok())
 	{
-		ss << ((m == MOVE_RESIGN) ? "resign" :
-			   (m == MOVE_WIN)    ? "win" :
-			   (m == MOVE_NULL)   ? "null" :
-			   (m == MOVE_NONE)   ? "none" :
+		ss << ((m.to_u16() == MOVE_RESIGN) ? "resign" :
+			   (m.to_u16() == MOVE_WIN)    ? "win" :
+			   (m.to_u16() == MOVE_NULL)   ? "null" :
+			   (m.to_u16() == MOVE_NONE)   ? "none" :
 			    "");
 	}
-	else if (is_drop(m))
+	else if (m.is_drop())
 	{
-		ss << move_dropped_piece(m);
+		ss << m.move_dropped_piece();
 		ss << '*';
-		ss << to_sq(m);
+		ss << m.to_sq();
 	}
 	else {
-		ss << from_sq(m);
-		ss << to_sq(m);
-		if (is_promote(m))
+		ss << m.from_sq();
+		ss << m.to_sq();
+		if (m.is_promote())
 			ss << '+';
 	}
 	return ss.str();
@@ -1259,14 +1074,14 @@ Move USI::to_move(const Position& pos, const std::string& str)
 	// ↑のコードは大変美しいコードではあるが、棋譜を大量に読み込むときに時間がかかるうるのでもっと高速な実装をする。
 
 	if (str == "resign")
-		return MOVE_RESIGN;
+		return Move::resign();
 
 	if (str == "win")
-		return MOVE_WIN;
+		return Move::win();
 
 	// パス(null move)入力への対応 {UCI: "0000", GPSfish: "pass"}
 	if (str == "0000" || str == "null" || str == "pass")
-		return MOVE_NULL;
+		return Move::null();
 
 	// usi文字列を高速にmoveに変換するやつがいるがな..
 	Move move = pos.to_move(USI::to_move16(str));
@@ -1279,7 +1094,7 @@ Move USI::to_move(const Position& pos, const std::string& str)
 	// 入力に非合法手が含まれていた。エラーとして出力すべき。
 	sync_cout << "info string Error! : Illegal Input Move : " << str << sync_endl;
 
-	return MOVE_NONE;
+	return Move::none();
 }
 
 
@@ -1288,7 +1103,7 @@ Move USI::to_move(const Position& pos, const std::string& str)
 // やねうら王、独自追加。
 Move16 USI::to_move16(const string& str)
 {
-	Move16 move = MOVE_NONE;
+	Move16 move = Move16::none();
 
 	{
 		// さすがに3文字以下の指し手はおかしいだろ。
@@ -1363,7 +1178,7 @@ void USI::UnitTest(Test::UnitTester& tester)
 			while (is >> token)
 			{
 				Move m = USI::to_move(pos,token);
-				if (m == MOVE_NONE)
+				if (m == Move::none())
 					fail = true;
 
 				pos.do_move(m, si[pos.game_ply()]);

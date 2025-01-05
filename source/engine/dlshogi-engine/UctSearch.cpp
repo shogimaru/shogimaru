@@ -246,7 +246,11 @@ namespace dlshogi
 		make_input_features(*pos, current_policy_value_batch_index, packed_features1, packed_features2);
 
 		// 現在のNodeと手番を保存しておく。
-		policy_value_batch[current_policy_value_batch_index] = { node, pos->side_to_move() /* , pos->key() */ , value_win};
+		policy_value_batch[current_policy_value_batch_index] = { node, pos->side_to_move() ,
+#if defined(USE_POLICY_BOOK)
+			pos->hash_key() ,
+#endif
+			value_win};
 
 	#ifdef MAKE_BOOK
 		policy_value_book_key[current_policy_value_batch_index] = Book::bookKey(*pos);
@@ -520,6 +524,13 @@ namespace dlshogi
 	//
 	float UctSearcher::UctSearch(Position* pos, ChildNode* parent , Node* current, NodeVisitor& visitor)
 	{
+#if defined(USE_POLICY_BOOK)
+		// PolicyBookからvalueを与えられていたら、それをそのまま返す。
+		// ただし、root局面では、いまから探索しないといけないので、それはしない。
+		if (parent!=nullptr && current->policy_book_value != FLT_MAX)
+			return 1.0f - current->policy_book_value;
+#endif
+
 		auto ds = grp->get_dlsearcher();
 		auto& options = ds->search_options;
 
@@ -635,25 +646,25 @@ namespace dlshogi
 						// Mate::mate_odd_ply()は自分に王手がかかっていても詰みを読めるが遅い。
 						// leaf nodeでもdf-pn mate solverを用いることにする。
 
-						// MOVE_NONE(詰み不明) , MOVE_NULL(不詰)ではない 。これらはis_ok(m) == false
+						// Move::none()(詰み不明) , Move::null()(不詰)ではない 。これらはis_ok(m) == false
 						Move mate_move = mate_solver.mate_dfpn(*pos, options.leaf_dfpn_nodes_limit);
-						if (mate_move == MOVE_NULL)
+						if (mate_move == Move::null())
 						{
 							// 不詰を証明したので、このnodeでは詰み探索をしたことを記録しておく。
 							// (そうするとPvMateでmate探索が端折れる)
 							child_node->dfpn_proven_unsolvable = true;
 						}
 						else {
-							isMate = is_ok(mate_move);
+							isMate = mate_move.is_ok();
 						}
 					}
 					if (!isMate)
 						// 宣言勝ち
-						isMate = pos->DeclarationWin() != MOVE_NONE;
+						isMate = pos->DeclarationWin() != Move::none();
 
 #else
 					// mateが絡むとdlshogiと異なるノードを探索してしまうのでログ調査する時はオフにする。
-					bool isMate = (pos->DeclarationWin() != MOVE_NONE);            // 宣言勝ち
+					bool isMate = (pos->DeclarationWin() != Move::none());            // 宣言勝ち
 #endif
 
 					// 詰みの場合、ValueNetの値を上書き
@@ -820,7 +831,7 @@ namespace dlshogi
 			// 引き分け とは、 2. or (3. and (not 1.))である。
 			// 上の2つのifより↓を先に書くと、3.の条件が抜けてしまい、2. になってしまうので誤り。
 
-			and_move &= (u32)move;
+			and_move &= move.to_u32();
 
 			// 引き分けに関しては特にスキップしない。普通に計算する。
 
@@ -925,6 +936,11 @@ namespace dlshogi
 			const ChildNumType child_num = node->child_num;
 			      ChildNode *  uct_child = node->child.get();
 
+#if defined(USE_POLICY_BOOK)
+				  HASH_KEY     key       = policy_value_batch[i].key;
+			auto* policy_book_entry      = grp->get_dlsearcher()->policy_book.probe_policy_book(key);
+#endif
+
 			// 合法手それぞれに対する遷移確率
 			std::vector<float> legal_move_probabilities;
 			// いまからemplace_backしていく回数がchild_numであることはわかっているので事前に要素を確保しておく。
@@ -961,9 +977,65 @@ namespace dlshogi
 			// Boltzmann distribution
 			softmax_temperature_with_normalize(legal_move_probabilities);
 
+#if !defined(USE_POLICY_BOOK)
 			for (ChildNumType j = 0; j < child_num; j++) {
 				uct_child[j].nnrate = legal_move_probabilities[j];
 			}
+#else
+			if (policy_book_entry == nullptr)
+			{
+				for (ChildNumType j = 0; j < child_num; j++) {
+					uct_child[j].nnrate = legal_move_probabilities[j];
+				}
+			} else {
+				// Policy Bookに従う。
+
+				// 評価値の書かれている局面であるか？
+				float v = policy_book_entry->value;
+				if (v != FLT_MAX)
+					node->policy_book_value = v;
+
+				u32 total = 0;
+				size_t k1;
+				for (k1 = 0; k1 < POLICY_BOOK_NUM; ++k1)
+				{
+					if (policy_book_entry->move_freq[k1].move16 == Move16::none())
+						break;
+					total += policy_book_entry->move_freq[k1].freq;
+				}
+				// ⇨ k1個だけ有効なmoveがあることがわかった。
+
+				// 元のPolicyの按分率
+				// 
+				// 定跡の質により変化させる。
+				// totalが1000回    ⇨ さすがに信用していいのでは。100%
+				// totalが 100回    ⇨ 90%ぐらい信用できるか
+				// totalが  10回    ⇨ 80%
+				// totalが それ以下 ⇨ 70%
+				// みたいな感じにする。
+				// 0 < total <= u32_maxであることは保証されている。
+				//
+				// 注意 : 電竜戦の開始4手の玉の屈伸の棋譜を利用したときに、あれをPolicyとされてしまうと困る。
+				//  (PolicyBookを作るときに除外する必要がある)
+
+				float book_policy_ratio = 0.7f + 0.1f * std::clamp(log10f(float(total)), 0.0f, 3.0f);
+
+				for (ChildNumType j = 0; j < child_num; j++) {
+
+					uct_child[j].nnrate = (1.0f - book_policy_ratio) * legal_move_probabilities[j];
+
+					// PolicyBookに出現していた指し手であれば、それで按分する。
+					for (size_t k2 = 0 ; k2 < k1; ++k2)
+					{
+						if (uct_child[j].move.to_move16() == policy_book_entry->move_freq[k2].move16)
+						{
+							uct_child[j].nnrate += book_policy_ratio * policy_book_entry->move_freq[k2].freq / total;
+							break;
+						}
+					}
+				}
+			}
+#endif
 
 			// valueの値はここに返すことになっている。
 			*policy_value_batch[i].value_win = *value;
@@ -1049,6 +1121,29 @@ namespace dlshogi
 		}
 
 		return select_index;
+	}
+
+	// 訪問回数が上からN個の子ノードを返す。
+	// N個ない時は、残りが-1で埋まる。
+	void select_nth_child_node(const Node* uct_node, int n, int(&indices)[MAX_MOVES])
+	{
+		const ChildNode* uct_child = uct_node->child.get();
+		const int child_num = uct_node->child_num;
+
+		int index = 0;
+		for (int i = 0; i < child_num; i++) {
+			// 勝ち負けが確定していない子に対して。
+			// あと、訪問回数が10回以上であること。
+			if (!(uct_child[i].IsWin() || uct_child[i].IsLose() || uct_child[i].move_count < 10))
+				indices[index++] = i;
+		}
+		std::partial_sort(indices, indices + std::min(n, index) , indices + index, [&uct_child](int a, int b) {
+			return uct_child[a].move_count > uct_child[b].move_count;
+			});
+
+		// 残りをn個まで-1でpaddingする。
+		for (int i = index; i < n; ++i)
+			indices[i] = -1;
 	}
 
 }

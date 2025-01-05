@@ -151,7 +151,7 @@ void Bitboards::init()
 			// dirの方角に壁にぶつかる(盤外)まで延長していく。このとき、sq1から見てsq2のDirectionsは (1 << dir)である。
 			auto delta = Effect8::DirectToDeltaWW(dir);
 			for (auto sq2 = to_sqww(sq1) + delta; is_ok(sq2); sq2 += delta)
-			Effect8::direc_table[sq1][sqww_to_sq(sq2)] = Effect8::to_directions(dir);
+				Effect8::direc_table[sq1][sqww_to_sq(sq2)] = Effect8::to_directions(dir);
 		}
 
 
@@ -1023,11 +1023,11 @@ void Bitboard::UnitTest(Test::UnitTester& tester)
 		bool all_ok = true;
 		Bitboard occ(SQ_77);
 		Bitboard zero(ZERO);
-		all_ok = rayEffect<Effect8::DIRECT_LD>(SQ_55, occ) == between_bb(SQ_55, SQ_88);
-		all_ok = rayEffect<Effect8::DIRECT_LD>(SQ_55, zero) == QUGIY_STEP_EFFECT[Effect8::DIRECT_LD - 2][SQ_55];
+		all_ok &= rayEffect<Effect8::DIRECT_LD>(SQ_55, occ) == between_bb(SQ_55, SQ_88);
+		all_ok &= rayEffect<Effect8::DIRECT_LD>(SQ_55, zero) == QUGIY_STEP_EFFECT[Effect8::DIRECT_LD - 2][SQ_55];
 
 		Bitboard occ2(SQ_33);
-		all_ok = rayEffect<Effect8::DIRECT_RU>(SQ_55, occ2) == between_bb(SQ_55, SQ_22);
+		all_ok &= rayEffect<Effect8::DIRECT_RU>(SQ_55, occ2) == between_bb(SQ_55, SQ_22);
 
 		tester.test("rayEffect", all_ok);
 	}

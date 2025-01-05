@@ -95,6 +95,14 @@ struct alignas(16) Key128
 
 	Key128 operator + (const Key128& rhs) const { return Key128(*this) += rhs; }
 	Key128 operator ^ (const Key128& rhs) const { return Key128(*this) ^= rhs; }
+
+	// sortなどで使うために比較演算子を定義しておく。
+    bool operator < (const Key128& rhs) const {
+        if (this->p[0] != rhs.p[0]) {
+            return this->p[0] < rhs.p[0];
+        }
+        return this->p[1] < rhs.p[1];
+    }
 };
 
 // std::unorded_map<Key128,string>みたいなのを使うときにoperator==とhash化が必要。
@@ -149,8 +157,10 @@ struct alignas(32) Key256
 	u64 extract64() const
 	{
 		static_assert(n == 0 || n == 1 || n == 2 || n == 3 , "");
-	#if defined(USE_AVX2)
+	#if defined(USE_AVX2) && defined(IS_64BIT)
 		return (u64)(_mm256_extract_epi64(m, n));
+		// ⇨ gcc/clangだと32bit環境で、この命令が定義されていなくてコンパイルエラーになる。
+		//		コンパイラ側のバグっぽい。仕方ないので、この命令を使うのは64bit環境の時のみにする。
 	#else
 		return p[n];
 	#endif

@@ -99,7 +99,7 @@ namespace Mate::Dfpn64
 		template <bool or_node>
 		void init(ExtMove m)
 		{
-			lastMove = m.move;
+			lastMove = m;
 
 			if (MoveOrdering)
 			{
@@ -229,7 +229,7 @@ namespace Mate::Dfpn32
 		template <bool or_node>
 		void init(ExtMove m)
 		{
-			lastMove = m.move;
+			lastMove = m.to_u32();
 
 			if (MoveOrdering)
 			{
@@ -251,7 +251,7 @@ namespace Mate::Dfpn32
 		template <bool or_node>
 		void init_mate_move(Move move ,int ply = 0)
 		{
-			this->lastMove = move;
+			this->lastMove = move.to_u32();
 			this->template set_mate<true>(ply);
 
 			// これはnullptrを意味する。
@@ -480,7 +480,7 @@ namespace Mate::Dfpn32
 
 			nodes_searched = 0;
 			this->nodes_limit = (NodeCountType)nodes_limit;
-			bestmove = MOVE_NONE;
+			bestmove = Move::none();
 
 			// カウンターのリセットをしておかないと新しいメモリが使えない。
 			node_manager.reset_counter();
@@ -507,11 +507,11 @@ namespace Mate::Dfpn32
 
 			// 不詰が証明された
 			if (current_root->pn >= NodeType::DNPN_MATE && current_root->dn == 0)
-				return MOVE_NULL;
+				return Move::null();
 
 			// 制限ノード数では解けなかった。
 			// もしくはout of memory
-			return MOVE_NONE;
+			return Move::none();
 		}
 
 		// mate_dfpn()がMOVE_NULL,MOVE_NONE以外を返した場合にその手順を取得する。
@@ -561,7 +561,7 @@ namespace Mate::Dfpn32
 				// ただしorノードではdnは最小であってほしい。(これが詰みまでの距離を表現しているので)
 				// andノードではdnは最大であってほしい。
 				Move move = or_node ? pick_the_best<true,proof,current>(node) : pick_the_best<false,proof,current>(node);
-				if (move == MOVE_NONE)
+				if (move == Move::none())
 					break;
 
 				pv.push_back(move);
@@ -570,7 +570,7 @@ namespace Mate::Dfpn32
 			return pv;
 		}
 
-		// 解図できたとき(mate_dfpn()を呼び出してMOVE_NONE以外が返ってきた時に)
+		// 解図できたとき(mate_dfpn()を呼び出してMove::none()以外が返ってきた時に)
 		// あるノードでベストな指し手を得る。
 		//  or_node : nodeは、開始局面とその2手先、4手先、…の局面であるか。
 		//  proof   : 詰みの時のPVがほしい時。これをfalseにすると、不詰が証明されている時に、そのなかの長そうなpvが得られる。
@@ -583,7 +583,7 @@ namespace Mate::Dfpn32
 			if ( children == nullptr || node->child_num == 0)
 			{
 				node = nullptr;
-				return MOVE_NONE; // これ以上辿れない
+				return Move::none(); // これ以上辿れない
 			}
 
 			// 子ノードの数
@@ -731,7 +731,9 @@ namespace Mate::Dfpn32
 
 				// 一手進めて子ノードに行く
 				StateInfo si;
-				Move m = pos.to_move(best_child->lastMove);
+				Move m = pos.to_move(Move16(u16(u32(best_child->lastMove))));
+				// ⇨ ここ、lastMoveがu32かMove型なので、Move16にしたいのだが、この変換が一発で書けない。
+
 				pos.do_move(m, si);
 
 				// 再帰的に呼び出す。
@@ -1139,7 +1141,7 @@ namespace Mate::Dfpn32
 			if (or_node && !pos.in_check())
 			{
 				Move mate_move = Mate::mate_1ply(pos);
-				if (mate_move != MOVE_NONE)
+				if (mate_move != Move::none())
 				{
 					// 詰んだ
 					NodeType* child = new_node(1);

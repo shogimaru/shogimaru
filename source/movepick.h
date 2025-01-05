@@ -25,6 +25,7 @@
 constexpr int PAWN_HISTORY_SIZE = 512;
 inline int pawn_structure(const Position& pos) { return pos.pawn_key() & (PAWN_HISTORY_SIZE - 1); }
 #endif
+constexpr int LOW_PLY_HISTORY_SIZE     = 4;
 
 // StatsEntryはstat tableの値を格納する。これは、大抵数値であるが、指し手やnestされたhistoryでさえありうる。
 // 多次元配列であるかのように呼び出し側でstats tablesを用いるために、
@@ -47,14 +48,17 @@ public:
 	// 値が範囲外にならないように制限してある。
 	void operator<<(int bonus) {
 
-		ASSERT_LV3(std::abs(bonus) <= D); // 範囲が[-D,D]であるようにする。
 		// オーバーフローしないことを保証する。
 		static_assert(D <= std::numeric_limits<T>::max(), "D overflows T");
 
 		// この式は、Stockfishのコードそのまま。
 		// 試行錯誤の結果っぽくて、数学的な根拠はおそらくない。
 
-		entry += bonus - entry * std::abs(bonus) / D;
+		// Make sure that bonus is in range [-D, D]
+		// bonusが[-D,D]の範囲に収まるようにする
+
+		int clampedBonus = std::clamp(bonus, -D, D);
+		entry += clampedBonus - entry * std::abs(clampedBonus) / D;
 
 		// 解説)
 		// 
@@ -128,6 +132,12 @@ enum StatsType { NoCaptures, Captures };
 // 
 // そこで、以下⇓のようなwrapper classを書いて、このopeator()を通じてアクセスを行うことにする。
 // これにより、添字の順番はStockfishと同じ形になり、かつ、コンパイル時に引数の型チェックがなされる。
+//
+// ■ 備考
+//
+// move.from_to()を呼び出した時、Stockfishでは 0～SQUARE_NB*SQUARE_NB-1までの値だが、
+// やねうら王では、0 ～ ((SQUARE_NB+7) * SQUARE_NB - 1)であることに注意。
+// ⇨ 後者のサイズとして、Move::FROM_TO_SIZEを用いると良い。
 
 struct ButterflyHistory
 {
@@ -158,45 +168,36 @@ private:
 	// 注) 打ち駒に関して、先手と後手の歩打ちを区別する必要はない。
 	// 　　なぜなら、このButterflyHistoryではその指し手の手番(Color)の区別をしているから。
 	// 
-	Stats<T, D , int(SQUARE_NB + 7) * int(SQUARE_NB) , COLOR_NB> stats;
+	Stats<T, D , Move::FROM_TO_SIZE, COLOR_NB> stats;
 };
 
 
-// CounterMoveHistory stores counter moves indexed by [piece][to] of the previous
-// move, see www.chessprogramming.org/Countermove_Heuristic
-// CounterMoveHistoryは、直前の指し手の[piece][to]によってindexされるcounter moves(応手)を格納する。
-// cf. http://chessprogramming.wikispaces.com/Countermove+Heuristic
+// LowPlyHistory is adressed by play and move's from and to squares, used
+// to improve move ordering near the root
 
-//using CounterMoveHistory = Stats<Move, NOT_USED, PIECE_NB, SQUARE_NB>;
+// LowPlyHistoryはプレイおよび手の「from」と「to」のマスで管理され、
+// ルート付近での手順の順序を改善するために使用されます。
 
-struct CounterMoveHistory
+struct LowPlyHistory
 {
-	using T = Move;                    // StatsEntryの型
-	static constexpr int D = NOT_USED; // StatsEntryの範囲
-
-	//
-	// メモ)
-	// StockfishのMove、移動させる駒の情報は持っていないのだが、
-	// 将棋でもMove16で十分である可能性はある。
-	//
+	using T = int16_t;             // StatsEntryの型
+	static constexpr int D = 7183; // StatsEntryの範囲
 
 	// 必ず以下のアクセッサを通してアクセスすること。
 	// ※ 引数の順番は、Stockfishの配列の添字の順番と合わせてある。
 
-	const StatsEntry<T, D>& operator() (Piece pc, Square sq) const {
-        return stats[sq][pc];
-    }
+	const StatsEntry<T, D>& operator() (int ply, int from_to) const {
+		return stats[from_to][ply];
+	}
 
-	StatsEntry<T, D>& operator() (Piece pc, Square sq) {
-        return stats[sq][pc];
-    }
-
+	StatsEntry<T, D>& operator() (int ply, int from_to) {
+		return stats[from_to][ply];
+	}
 	void fill(T t) { stats.fill(t); }
 
-private:
-	// ※　Stockfishとは、添字の順番を入れ替えてあるので注意。
-	//    やねうら王の実際の格納配列(stats)では、[to][piece]の順。
-	Stats<T, D , SQUARE_NB, PIECE_NB> stats;
+	//using LowPlyHistory = Stats<int16_t, 7183, LOW_PLY_HISTORY_SIZE, int(SQUARE_NB)* int(SQUARE_NB)>;
+	// ⇨ Stockfishのコードだと、末尾が2の冪にならないので並び順を変更する。
+	Stats<int16_t, D, Move::FROM_TO_SIZE, LOW_PLY_HISTORY_SIZE> stats;
 };
 
 // CapturePieceToHistory is addressed by a move's [piece][to][captured piece type]
@@ -342,13 +343,13 @@ private:
 // MovePicker class is used to pick one pseudo-legal move at a time from the
 // current position. The most important method is next_move(), which returns a
 // new pseudo-legal move each time it is called, until there are no moves left,
-// when MOVE_NONE is returned. In order to improve the efficiency of the
+// when Move::none() is returned. In order to improve the efficiency of the
 // alpha-beta algorithm, MovePicker attempts to return the moves which are most
 // likely to get a cut-off first.
 //
 // MovePickerクラスは、現在の局面から、(呼び出し)一回につきpseudo legalな指し手を一つ取り出すのに用いる。
 // 最も重要なメソッドはnext_move()であり、これは、新しいpseudo legalな指し手を呼ばれるごとに返し、
-// (返すべき)指し手が無くなった場合には、MOVE_NONEを返す。
+// (返すべき)指し手が無くなった場合には、Move::none()を返す。
 // alpha beta探索の効率を改善するために、MovePickerは最初に(早い段階のnext_move()で)カットオフ(beta cut)が
 // 最も出来そうな指し手を返そうとする。
 //
@@ -356,45 +357,44 @@ class MovePicker
 {
 	// 生成順に次の1手を取得するのか、オーダリング上、ベストな指し手を取得するのかの定数
 	// (このクラスの内部で用いる。)
-	enum PickType { Next, Best };
+	enum PickType {
+		Next,
+		Best
+	};
 
 public:
+
 	// このクラスは指し手生成バッファが大きいので、コピーして使うような使い方は禁止。
 	MovePicker(const MovePicker&)            = delete;
 	MovePicker& operator=(const MovePicker&) = delete;
 
-	// 通常探索(main search)から呼び出されるとき用のコンストラクタ。
-	// cm = counter move , killers_p = killerの指し手へのポインタ
-	MovePicker(const Position& pos_, Move ttMove_, Depth depth_, const ButterflyHistory* mh,
+	// 通常探索(main search)と静止探索から呼び出されるとき用のコンストラクタ。
+	MovePicker(const Position& pos_,
+		Move ttMove_,
+		Depth depth_,
+		const ButterflyHistory* mh,
+		const LowPlyHistory*,
 		const CapturePieceToHistory* cph,
 		const PieceToHistory** ch,
 #if defined(ENABLE_PAWN_HISTORY)
-		const PawnHistory*,
+		const PawnHistory* ph,
 #endif
-		Move cm,
-		const Move* killers_p);
-
-	// 静止探索(qsearch)から呼び出される時用。
-	// recapSq = 直前に動かした駒の行き先の升(取り返される升)
-	MovePicker(const Position& pos_, Move ttMove_, Depth depth_, const ButterflyHistory* mh ,
-		const CapturePieceToHistory* cph , 
-		const PieceToHistory** ch,
-#if defined(ENABLE_PAWN_HISTORY)
-		const PawnHistory*,
-#endif
-		Square recapSq);
+		int ply_
+	);
 
 	// 通常探索時にProbCutの処理から呼び出されるのコンストラクタ。
 	// SEEの値がth以上となるcaptureの指してだけを生成する。
 	// threshold_ = 直前に取られた駒の価値。これ以下の捕獲の指し手は生成しない。
 	// capture_or_pawn_promotion()に該当する指し手しか返さない。
-	MovePicker(const Position& pos_, Move ttMove_, Value threshold_,
-		const CapturePieceToHistory* cph);
+	MovePicker(const Position&, Move ttMove_, int threshold_, const CapturePieceToHistory*);
 
 	// 呼び出されるごとに新しいpseudo legalな指し手をひとつ返す。
-	// 指し手が尽きればMOVE_NONEが返る。
+	// 指し手が尽きればMove::none()が返る。
 	// 置換表の指し手(ttMove)を返したあとは、それを取り除いた指し手を返す。
-	Move next_move(bool skipQuiets = false);
+	Move next_move();
+
+	// next_move()で、quietな指し手をskipするためのフラグをセットする。
+	void skip_quiet_moves();
 
 private:
 	template <PickType T, typename Pred> Move select(Pred);
@@ -414,6 +414,7 @@ private:
 
 	// コンストラクタで渡されたhistroyのポインタを保存しておく変数。
 	const ButterflyHistory*      mainHistory;
+	const LowPlyHistory*         lowPlyHistory;
 	const CapturePieceToHistory* captureHistory;
 	const PieceToHistory**       continuationHistory;
 #if defined(ENABLE_PAWN_HISTORY)
@@ -423,26 +424,27 @@ private:
 	// 置換表の指し手(コンストラクタで渡される)
 	Move ttMove;
 
-	// refutations[0] : killer[0]
-	// refutations[1] : killer[1]
-	// refutations[2] : counter move(コンストラクタで渡された、前の局面の指し手に対する応手)
-	// cur           : 次に返す指し手
-	// endMoves      : 生成された指し手の末尾
-	// endBadCapture : BadCaptureの終端(captureの指し手を試すフェイズでのendMovesから後方に向かって悪い捕獲の指し手を移動させていく時に用いる)
-	ExtMove refutations[3] , *cur, *endMoves, *endBadCaptures;
+	// cur            : 次に返す指し手
+	// endMoves       : 生成された指し手の末尾
+	// endBadCapture  : BadCaptureの終端(captureの指し手を試すフェイズでのendMovesから後方に向かって悪い捕獲の指し手を移動させていく時に用いる)
+	// beginBadQuiets : あとで
+	// endBadQuiets   : あとで
+	ExtMove *cur, *endMoves, *endBadCaptures, *beginBadQuiets, *endBadQuiets;
 
 	// 指し手生成の段階
 	int stage;
-
-
-	// RECAPUTREの指し手で移動させる先の升
-	Square recaptureSquare;
 
 	// ProbCut用の指し手生成に用いる、直前の指し手で捕獲された駒の価値
 	Value threshold;
 
 	// コンストラクタで渡された探索深さ
 	Depth depth;
+
+	// コンストラクタで渡されたrootからの手数
+	int   ply;
+
+	// next_move()で、quietな指し手をskipするかのフラグ
+	bool  skipQuiets = false;
 
 	// 指し手生成バッファ
 	// 最大合法手の数 = 593 , これを要素数が32の倍数になるようにpaddingすると608。

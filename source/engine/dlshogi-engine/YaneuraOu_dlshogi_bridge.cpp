@@ -127,7 +127,7 @@ void USI::extra_option(USI::OptionsMap& o)
 	// →　Playout数固定。これはNodesLimitでできるので不要。
 
 	// PV lineの即詰みを調べるスレッドの数と1局面当たりの最大探索ノード数。
-	o["PV_Mate_Search_Threads"]     << USI::Option(0, 0, 256);
+	o["PV_Mate_Search_Threads"]     << USI::Option(1, 0, 256);
 	o["PV_Mate_Search_Nodes"]       << USI::Option(500000, 0, UINT32_MAX);
 
 	// → leaf nodeではdf-pnに変更。
@@ -157,8 +157,6 @@ void Search::clear()
 #endif
 
 	searcher.SetPvInterval((TimePoint)Options["PV_Interval"]);
-
-	searcher.SetGetnerateAllLegalMoves(Options["GenerateAllLegalMoves"]);
 
 	// ノードを再利用するかの設定。
 	searcher.SetReuseSubtree(Options["ReuseSubtree"]);
@@ -520,7 +518,13 @@ namespace dlshogi
 	{
 		return (u64)searcher.search_limits.nodes_searched;
 	}
+}
 
+// USIの"gameover"に対して呼び出されるハンドラ。
+void gameover_handler(const std::string& cmd)
+{
+	// dlshogiのゲームオーバーのハンドラを呼び出す。
+	searcher.GameOver();
 }
 
 #endif // defined(YANEURAOU_ENGINE_DEEP)

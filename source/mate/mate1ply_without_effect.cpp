@@ -877,6 +877,27 @@ namespace Mate {
 			}
 		}
 
+#if 0
+		// 打ち歩による詰み(反則)
+		if (    hand_count(ourHand, PAWN)
+			&& !(pos.pieces<Us, PAWN>() & FILE_BB[file_of(sq_king)])   // can_pawn_drop<Us>(pos, sq_king)
+			&& !Search::LimitsType::encountered_drop_checkmate
+			)
+		{
+			// 歩の打つ升
+			to = sq_king + ((Them == BLACK) ? SQ_U : SQ_D);
+			if (bb_drop & to)
+			{
+				if (   !can_king_escape  <Them>(pos, to, Bitboard(ZERO), pos.pieces())
+					&& !can_piece_capture<Them>(pos, to, pinned        , pos.pieces()))
+				{
+					// 打ち歩詰めであることが確定した。
+					Search::LimitsType::encountered_drop_checkmate = true;
+				}
+			}
+		}
+#endif
+
 		// -- 移動による1手詰め
 
 		// 駒の移動可能な場所
@@ -2133,7 +2154,7 @@ namespace Mate {
 		//  return pos.SengenGachi();
 		// ↑この関数は、勝ちならばMOVE_NONE以外が返る。勝ちならMOVE_WINもしくは、勝ちになる指し手が返る。
 
-		return MOVE_NONE;
+		return Move::none();
 	}
 
 	// 現局面で1手詰めであるかを判定する。1手詰めであればその指し手を返す。
