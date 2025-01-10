@@ -5,7 +5,7 @@ rem
 rem Edit this line to run the batch file for Qt environment.
 rem
 
-set SHOGIMARU_VERSION=1.5.1
+set SHOGIMARU_VERSION=1.5.2
 set BASEDIR=%~dp0
 set TARGET=shogimaru-%SHOGIMARU_VERSION%
 
@@ -37,14 +37,12 @@ if exist %VCVARSBAT% (
 )
 
 cd /D %BASEDIR%
+rd /s /q dist
 qmake -r
 nmake distclean
 qmake -r CONFIG+=release
 nmake
 
-rd /s /q dist
-md dist
-copy /b /y shogimaru.exe dist\
 xcopy /y /i /s /r assets dist\assets
 rd /s /q dist\assets\YaneuraOu
 copy /a /y docs\index.md dist\README.md
