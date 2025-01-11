@@ -352,6 +352,28 @@ bool Engine::ponder(int senteTime, int goteTime, int byoyomi, int incTime)
 
 bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int goteTime, int byoyomi, int incTime)
 {
+    auto substrTime = [&] {
+        QByteArray substr;
+        if (senteTime > 0) {
+            substr += " btime ";
+            substr += QByteArray::number(senteTime - incTime);
+        }
+        if (goteTime > 0) {
+            substr += " wtime ";
+            substr += QByteArray::number(goteTime - incTime);
+        }
+        if (byoyomi > 0) {
+            substr += " byoyomi ";
+            substr += QByteArray::number(byoyomi);
+        } else if (incTime > 0) {
+            substr += " binc ";
+            substr += QByteArray::number(incTime);
+            substr += " winc ";
+            substr += QByteArray::number(incTime);
+        }
+        return substr;
+    };
+
     if (_state == Pondering) {
         if (ponder) {
             qDebug() << "go() Error status" << _state << "line:" << __LINE__;
@@ -359,9 +381,9 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         }
 
         if (moves == _ponderingMoves) {
-            // qDebug() << "ponderhit: " <<  _ponderingMoves;
             Command::instance().clearResponse(1);
-            Command::instance().request("ponderhit");
+            QByteArray cmd = "ponderhit" + substrTime();
+            Command::instance().request(cmd.toStdString());
             _ponderingMoves.clear();
             _state = Going;
             return true;
@@ -396,24 +418,7 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         cmd = "go";
     }
 
-    if (senteTime > 0) {
-        cmd += " btime ";
-        cmd += QByteArray::number(senteTime - incTime);
-    }
-    if (goteTime > 0) {
-        cmd += " wtime ";
-        cmd += QByteArray::number(goteTime - incTime);
-    }
-    if (byoyomi > 0) {
-        cmd += " byoyomi ";
-        cmd += QByteArray::number(byoyomi);
-    } else if (incTime > 0) {
-        cmd += " binc ";
-        cmd += QByteArray::number(incTime);
-        cmd += " winc ";
-        cmd += QByteArray::number(incTime);
-    }
-
+    cmd += substrTime();
     //qDebug() << "cmd: " << cmd;
     Command::instance().clearResponse(1);
     Command::instance().request(cmd.toStdString());

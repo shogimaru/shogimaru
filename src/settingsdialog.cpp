@@ -50,6 +50,12 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             EngineSettings::instance().save();
         }
     });
+    connect(_ui->tableEngineOptions, &QTableWidget::itemChanged, [](QTableWidgetItem *item) {
+        if (item) {
+            // ツールチップを更新
+            item->setToolTip(item->text());
+        }
+    });
 
 #ifdef Q_OS_WASM
     _ui->newEngineButton->hide();
@@ -238,6 +244,11 @@ void SettingsDialog::showEngineOptions(int index)
             };
 
             auto *combo = new ComboBox;
+            connect(combo, &QComboBox::currentIndexChanged, [combo]() {
+                // ツールチップ更新
+                QString text = combo->currentText();
+                combo->setToolTip(text);
+            });
             for (auto &var : variables) {
                 combo->addItem(var);
             }
@@ -494,7 +505,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
             QString defpath = (fi.isDir() && fi.exists()) ? fi.absoluteFilePath() : engineDir;
 
             if (optItem->text().toLower() == "bookdir") {  // 定跡ファイル
-                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Book File"), defpath, "*.db book.bin");
+                QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Book file to set the BookDir"), defpath, "*.db book.bin");
                 if (!fileName.isEmpty()) {
                     QFileInfo bookdb(fileName);
                     if (bookdb.exists()) {
@@ -505,7 +516,7 @@ void SettingsDialog::slotItemClicked(QTableWidgetItem *item)
                     }
                 }
             } else if (optItem->text().toLower() == "evaldir") {  // 評価関数ファイル
-                QString fileName = QFileDialog::getOpenFileName(this, tr("Select Eval File"), defpath, "*.bin *.onnx");
+                QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Eval file to set the EvalDir."), defpath, "*");
                 if (!fileName.isEmpty()) {
                     QFileInfo evalbin(fileName);
                     if (evalbin.exists()) {

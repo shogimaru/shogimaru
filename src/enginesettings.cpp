@@ -76,8 +76,10 @@ EngineSettings EngineSettings::load()
     EngineSettings settings = loadJsonFile(settingsJsonPath());
 
 #ifdef Q_OS_WASM
+    EngineSettings defaultSettings = loadJsonFile(maru::appResourcePath(DEFAULT_SETTINGS_JSON_FILE_NAME));
+
     if (settings._availableEngines.isEmpty()) {  // 初回のみ
-        settings = loadJsonFile(maru::appResourcePath(DEFAULT_SETTINGS_JSON_FILE_NAME));
+        settings = std::move(defaultSettings);
         if (settings.availableEngines().isEmpty()) {
             qCritical() << "Error load settings:" << maru::appResourcePath(DEFAULT_SETTINGS_JSON_FILE_NAME);
             return settings;
@@ -92,6 +94,8 @@ EngineSettings EngineSettings::load()
         settings._availableEngines[0].options = options;
         qDebug() << "Loaded default json:" << DEFAULT_SETTINGS_JSON_FILE_NAME;
         settings.save();
+    } else {
+        settings._availableEngines[0].name = defaultSettings._availableEngines[0].name;  // 名前は常に更新
     }
 
     QVariantMap types;

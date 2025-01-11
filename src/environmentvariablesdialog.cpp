@@ -10,6 +10,13 @@ EnvironmentVariablesDialog::EnvironmentVariablesDialog(QWidget *parent) :
 {
     _ui->setupUi(this);
 
+    connect(_ui->tableWidget, &QTableWidget::itemChanged, [](QTableWidgetItem *item) {
+        if (item) {
+            // ツールチップを更新
+            item->setToolTip(item->text());
+        }
+    });
+
     // 新規ボタン
     connect(_ui->newButton, &QPushButton::clicked, [this]() {
         UserEnvironmentVariableDialog dialog(this);
