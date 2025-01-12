@@ -2,7 +2,6 @@
 #include "global.h"
 #include <QObject>
 #include <QElapsedTimer>
-//#include <QBasicTimer>
 
 
 class ChessClock : public QObject {
@@ -31,9 +30,7 @@ signals:
 
 protected:
     int remaining(maru::Turn player);  // 残り時間（考慮時間 + 秒読み分）
-    //void startTimer();
     void stopTimer();
-    //void setBleepTimer(int remaining);
     void timerEvent(QTimerEvent *event) override;
 
 private:
@@ -42,10 +39,10 @@ private:
     int _goteTime {0};
     int _byoyomi {0};
     int _incTime {0};
-    QElapsedTimer _elapsedTimer;
+    QElapsedTimer _elapsedTime;
     maru::Turn _currentTurn {maru::Sente};
     bool _bleepEnable {true};
-    int _time {0};
-    int _elapsedTemp {0};
-    int _timerId {0};
+    int64_t _nextSecTime {0};
+    int _secTimerId {0};  // 秒タイマー
+    int _timeupTimerId {0};  // 時間切れタイマー
 };

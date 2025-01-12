@@ -665,8 +665,8 @@ void MainController::startGo()
         Engine::instance().analysis(sfen);
         setCurrentRecordRow(_analysisMoves);
         _analysisTimerId = startTimer(1000);
-        _analysisTimer.start();
-        _elapsedTimer.start();
+        _analysisTotalTime.start();
+        _analysisTime.start();
     } else {
         qCritical() << "Invalid mode:" << _mode << "line:" << __LINE__;
     }
@@ -1191,7 +1191,7 @@ void MainController::pondered(const PonderInfo &info)
 
         User &user = User::load();
         if (pi.pv.value(0) == "resign"
-            || (_elapsedTimer.elapsed() >= user.analysisTimeSeconds() * 1000 && user.analysisTimeSeconds() > 0)
+            || (_analysisTime.elapsed() >= user.analysisTimeSeconds() * 1000 && user.analysisTimeSeconds() > 0)
             || (pi.nodes >= user.analysisNodes() && user.analysisNodes() > 0)
             || (pi.depth >= user.analysisDepth() && user.analysisDepth() > 0)) {
 
@@ -1244,7 +1244,7 @@ void MainController::nextAnalysis()
         auto sfen = _recorder->sfenMoves(_analysisMoves);
         Engine::instance().analysis(sfen);
         setCurrentRecordRow(_analysisMoves);
-        _elapsedTimer.start();
+        _analysisTime.start();
         _ui->messageTableWidget->clear();  // クリア
 
     } else {
@@ -1609,12 +1609,13 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
 
 void MainController::showRemainingTime(maru::Turn turn, int time, int byoyomi)
 {
+    constexpr int correctMsecs = 150;
     const auto &user = User::load();
-    QString str = QTime(0, 0, 0, 999).addMSecs(time).toString("h:mm:ss");
+    QString str = QTime(0, 0, 0, correctMsecs).addMSecs(time).toString("h:mm:ss");
 
     if (user.method() == maru::Byoyomi) {
         // 秒読み表示
-        int byo = (byoyomi > 0) ? (byoyomi - 1) / 1000 + 1 : 0;
+        int byo = (byoyomi > 0) ? (byoyomi + correctMsecs) / 1000 : 0;
         str += QString("  %1").arg(byo, 2);
     }
 
@@ -1638,6 +1639,7 @@ void MainController::gameoverTimeout()
     if (_mode == Rating || _mode == Game) {
         stopGame(_clock->currentTurn(), maru::Illegal, maru::Illegal_OutOfTime);
         showGameoverBox(tr("Out of time."));  // 時間切れです。
+        updateRemainingTime();
     }
 }
 
@@ -1744,11 +1746,11 @@ void MainController::showAnalysisInfo()
 
     str += tr("Elapsed");
     str += ' ';
-    str += timeFormat(_analysisTimer.elapsed());
+    str += timeFormat(_analysisTotalTime.elapsed());
     str += "    ";
     str += tr("Analysis Time");
     str += ' ';
-    str += timeFormat(_elapsedTimer.elapsed());
+    str += timeFormat(_analysisTime.elapsed());
     str += "    ";
     str += tr("Depth");
     str += ' ';

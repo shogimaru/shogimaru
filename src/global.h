@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include <vector>
+#include <chrono>
 
 class QWidget;
 class QLabel;
@@ -112,5 +113,9 @@ bool isLocaleLangJapanese();
 QString appLocalDataLocation();
 QString appResourcePath(const QString &relativePath);
 bool isDarkMode();
+inline int64_t currentMSecsSinceStart()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
 
 }

@@ -156,8 +156,8 @@ private:
     int _boardScale {0};
     int _analysisMoves {0};
     int _analysisTimerId {0};
-    QElapsedTimer _analysisTimer;
-    QElapsedTimer _elapsedTimer;
+    QElapsedTimer _analysisTotalTime;
+    QElapsedTimer _analysisTime;
     QTimer _ponderTimer;
     PonderInfo _lastPonder;
     qint64 _lastPvShownTime {0};
