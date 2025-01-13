@@ -113,7 +113,7 @@ bool isLocaleLangJapanese();
 QString appLocalDataLocation();
 QString appResourcePath(const QString &relativePath);
 bool isDarkMode();
-inline int64_t currentMSecsSinceStart()
+inline int64_t currentMSecsSinceStart()  // OS起動から経過時間（ミリ秒、逆行しないクロック）
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 }

@@ -125,7 +125,7 @@ void ChessClock::timerEvent(QTimerEvent *event)
 
     if (event->timerId() == _secTimerId) {
         // 秒タイマー
-        emit secondElapsed();  // per 1 sec
+        emit secondElapsed();  // per 1sec
 
         if (_bleepEnable) {
             // ビープ音
