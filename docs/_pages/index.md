@@ -36,7 +36,7 @@ toc: true
 
 ### <i class="fab fa-mixcloud"></i> ブラウザ版（WebAssembly）
 
-ネットで手軽に遊べるブラウザ将棋です。どんな OS でもブラウザさえあれば遊べます。
+ネットで手軽に遊べるブラウザ将棋です。アプリのインストールが不要で、ブラウザさえあれば遊べます。
 
 1. [将棋丸ブラウザ版](https://shogimaru.com) へアクセスし、将棋丸を起動します。
 2. 将棋思考エンジンは組み込まれているので（新たにエンジンを追加できません）、`対局`ボタンをクリックしてすぐに対局を開始することができます。
@@ -124,7 +124,7 @@ Windows 向け将棋丸は次の手順を参考にセットアップしてくだ
 | GUI                                                              | 備考                                                                                                                     |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | [将棋所](http://shogidokoro.starfree.jp/)                        | 広く使われている GUI                                                                                                     |
-| [ShogiGUI](http://shogigui.siganus.com/)                         | 棋譜解析にとても便利                                                                                                     |
+| [ShogiGUI](http://shogigui.siganus.com/)                         | 棋譜解析に便利                                                                                                     |
 | [ShogiHome](https://sunfish-shogi.github.io/shogihome/) | [Electron](https://www.electronjs.org/) で作られたオープンソース将棋アプリ。ブラウザ版もある。 |
 | [WhaleWatcher](http://garnet-alice.net/programs/whalewatcher/)   | クジラちゃんに癒やされながら指せます                                                                                     |
 | [ShogiDroid](http://shogidroid.siganus.com/)                     | Android 用                                                                                                               |
