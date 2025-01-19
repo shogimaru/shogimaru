@@ -39,6 +39,8 @@ public:
     void setStartPosition(int startPosition) { _startPosition = startPosition; }
     int method() const { return _method; }
     void setMethod(int method) { _method = method; }
+    bool percentageScore() const { return _percentageScore; }
+    void setPercentageScore(bool enable) { _percentageScore = enable; }
     int version() const { return _version; }
     void setVersion(int version) { _version = version; }
 
@@ -67,5 +69,6 @@ private:
     int _pieceType {1};  // 駒種類
     int _startPosition {0};  // 開始局面
     int _method {1};  // 持ち時間方式
+    bool _percentageScore {false};  // パーセントスコア
     int _version {0};
 };

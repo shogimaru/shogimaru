@@ -1544,7 +1544,15 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
     Sfen sf(sfen);
 
     // 読み筋・解析手順の表示
-    auto showMessageItem = [sf](QTableWidget *messageTableWidget, int row, const QString &head, const ScoreItem &item) {
+    auto showMessageItem = [sf](QTableWidget *messageTableWidget, int row, const QString &head, const ScoreItem &item)
+    {
+        // パーセントに変換
+        auto percent = [](int score, float coefficient = 1080.0)
+        {
+            double sigmoid = 100.0 / (1.0 + std::exp(-score / coefficient));
+            return qBound(-99, (int)std::round(sigmoid), 99);
+        };
+
         if (item.isEmpty()) {
             return;
         }
@@ -1553,17 +1561,34 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
         messageTableWidget->setItem(row, col++, new QTableWidgetItem(head));
         // 手番&スコア
         QString str;
+        const auto &user = User::load();
         int score = std::abs(item.score);
-        if (score > 20) {  // 一旦20以下は互角とする
-            if (item.score > 0) {
-                str = QString::fromUtf8(u8"▲+");
-                str += QString::number(score);
+
+        if (user.percentageScore()) {
+            // パーセント表示
+            int perc = percent(score);
+            if (perc == 50) {
+                str = tr("Even");  // 互角
             } else {
-                str = QString::fromUtf8(u8"△+");
-                str += QString::number(score);
+                if (item.score > 0) {
+                    str = QString::fromUtf8(u8"▲");
+                } else {
+                    str = QString::fromUtf8(u8"△");
+                }
+                str += QString::number(perc);
+                str += "%";
             }
         } else {
-            str = tr("Even");
+            if (score > 21) {  // 22以上は優勢表示
+                if (item.score > 0) {
+                    str = QString::fromUtf8(u8"▲+");
+                } else {
+                    str = QString::fromUtf8(u8"△+");
+                }
+                str += QString::number(score);
+            } else {
+                str = tr("Even");  // 互角
+            }
         }
         messageTableWidget->setItem(row, col++, new QTableWidgetItem(str));
 

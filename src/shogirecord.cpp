@@ -98,7 +98,7 @@ QString ShogiRecord::kifString(maru::Turn turn, const QByteArray &usi, const QBy
 
     QString rep = RepetitionMap.value(usi);
     if (!rep.isEmpty()) {
-        return rep.arg(bw);
+        return (rep.contains("%1")) ? rep.arg(bw) : rep;
     }
 
     // マス

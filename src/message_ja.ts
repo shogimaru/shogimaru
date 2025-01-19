@@ -76,28 +76,24 @@
     <name>BrowseEngineDialog</name>
     <message>
         <location filename="../forms/browseenginedialog.ui" line="14"/>
-        <location filename="ui_BrowseEngineDialog.h" line="65"/>
         <location filename="ui_browseenginedialog.h" line="65"/>
         <source>Dialog</source>
         <translation type="unfinished">確認</translation>
     </message>
     <message>
         <location filename="../forms/browseenginedialog.ui" line="42"/>
-        <location filename="ui_BrowseEngineDialog.h" line="66"/>
         <location filename="ui_browseenginedialog.h" line="66"/>
         <source>Engine path:</source>
         <translation type="unfinished">エンジン：</translation>
     </message>
     <message>
         <location filename="../forms/browseenginedialog.ui" line="55"/>
-        <location filename="ui_BrowseEngineDialog.h" line="67"/>
         <location filename="ui_browseenginedialog.h" line="67"/>
         <source>Browse File...</source>
         <translation type="unfinished">ファイル参照...</translation>
     </message>
     <message>
         <location filename="../forms/browseenginedialog.ui" line="68"/>
-        <location filename="ui_BrowseEngineDialog.h" line="68"/>
         <location filename="ui_browseenginedialog.h" line="68"/>
         <source>Env...</source>
         <translation type="unfinished">環境変数...</translation>
@@ -414,7 +410,7 @@ Are you sure?</source>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="638"/>
-        <location filename="maincontroller.cpp" line="1673"/>
+        <location filename="maincontroller.cpp" line="1700"/>
         <source>Engine error</source>
         <translation type="unfinished">エンジンエラー</translation>
     </message>
@@ -478,7 +474,7 @@ Are you sure?</source>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="1283"/>
-        <location filename="maincontroller.cpp" line="1715"/>
+        <location filename="maincontroller.cpp" line="1742"/>
         <source>Information</source>
         <translation type="unfinished">情報</translation>
     </message>
@@ -548,12 +544,13 @@ Please wait a moment.</source>
         <translation type="unfinished">コンピュータの勝利</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1566"/>
+        <location filename="maincontroller.cpp" line="1571"/>
+        <location filename="maincontroller.cpp" line="1590"/>
         <source>Even</source>
         <translation type="unfinished">互角</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1604"/>
+        <location filename="maincontroller.cpp" line="1629"/>
         <source>Pnd</source>
         <oldsource>Ponder</oldsource>
         <translation type="unfinished">読み筋</translation>
@@ -564,42 +561,42 @@ Please wait a moment.</source>
         <translation type="obsolete">  秒読み</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1640"/>
+        <location filename="maincontroller.cpp" line="1666"/>
         <source>Out of time.</source>
         <translation type="unfinished">時間切れです。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1661"/>
+        <location filename="maincontroller.cpp" line="1688"/>
         <source>Warning</source>
         <translation type="unfinished">警告</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1661"/>
+        <location filename="maincontroller.cpp" line="1688"/>
         <source>Enter at least one condition.</source>
         <translation type="unfinished">１つ以上の条件にチェックを入れてください</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1715"/>
+        <location filename="maincontroller.cpp" line="1742"/>
         <source>Analysis aborted</source>
         <translation type="unfinished">解析を停止しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1745"/>
+        <location filename="maincontroller.cpp" line="1772"/>
         <source>Elapsed</source>
         <translation type="unfinished">経過時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1749"/>
+        <location filename="maincontroller.cpp" line="1776"/>
         <source>Analysis Time</source>
         <translation type="unfinished">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1761"/>
+        <location filename="maincontroller.cpp" line="1788"/>
         <source>NPS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1840"/>
+        <location filename="maincontroller.cpp" line="1867"/>
         <source>Start</source>
         <translation type="unfinished">開始</translation>
     </message>
@@ -608,12 +605,12 @@ Please wait a moment.</source>
         <translation type="obsolete">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1753"/>
+        <location filename="maincontroller.cpp" line="1780"/>
         <source>Depth</source>
         <translation type="unfinished">深さ</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1757"/>
+        <location filename="maincontroller.cpp" line="1784"/>
         <source>Nodes</source>
         <translation type="unfinished">ノード</translation>
     </message>
@@ -626,7 +623,7 @@ Please wait a moment.</source>
         <translation type="obsolete">後手勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1597"/>
+        <location filename="maincontroller.cpp" line="1622"/>
         <source>Best</source>
         <translation type="unfinished">最善</translation>
     </message>
