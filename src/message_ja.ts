@@ -410,7 +410,7 @@ Are you sure?</source>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="638"/>
-        <location filename="maincontroller.cpp" line="1700"/>
+        <location filename="maincontroller.cpp" line="1714"/>
         <source>Engine error</source>
         <translation type="unfinished">エンジンエラー</translation>
     </message>
@@ -474,7 +474,7 @@ Are you sure?</source>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="1283"/>
-        <location filename="maincontroller.cpp" line="1742"/>
+        <location filename="maincontroller.cpp" line="1756"/>
         <source>Information</source>
         <translation type="unfinished">情報</translation>
     </message>
@@ -494,18 +494,18 @@ Are you sure?</source>
         <location filename="maincontroller.cpp" line="355"/>
         <location filename="maincontroller.cpp" line="373"/>
         <location filename="maincontroller.cpp" line="393"/>
-        <location filename="maincontroller.cpp" line="1410"/>
+        <location filename="maincontroller.cpp" line="1431"/>
         <source>Resign</source>
         <translation type="unfinished">投了</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1410"/>
+        <location filename="maincontroller.cpp" line="1431"/>
         <source>Resign?</source>
         <translation type="unfinished">投了しますか</translation>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="337"/>
-        <location filename="maincontroller.cpp" line="1412"/>
+        <location filename="maincontroller.cpp" line="1433"/>
         <source>Abort</source>
         <translation type="unfinished">中断</translation>
     </message>
@@ -517,40 +517,40 @@ Please wait a moment.</source>
 しばらくお待ちください。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1412"/>
+        <location filename="maincontroller.cpp" line="1433"/>
         <source>Abort?</source>
         <translation type="unfinished">中断しますか</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1427"/>
+        <location filename="maincontroller.cpp" line="1448"/>
         <source>You resigned.</source>
         <translation type="unfinished">あなたは投了しました。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1452"/>
-        <location filename="maincontroller.cpp" line="1457"/>
+        <location filename="maincontroller.cpp" line="1473"/>
+        <location filename="maincontroller.cpp" line="1478"/>
         <source>The computer declared victory by entering the king, according to CSA rules.</source>
         <translation type="unfinished">コンピュータが入玉勝ちを宣言しました。勝ち宣言はCSAルールに基づいています。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1485"/>
-        <location filename="maincontroller.cpp" line="1493"/>
+        <location filename="maincontroller.cpp" line="1506"/>
+        <location filename="maincontroller.cpp" line="1514"/>
         <source>You win!</source>
         <translation type="unfinished">参りました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1487"/>
+        <location filename="maincontroller.cpp" line="1508"/>
         <source>COM win!</source>
         <translation type="unfinished">コンピュータの勝利</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1571"/>
-        <location filename="maincontroller.cpp" line="1590"/>
+        <location filename="maincontroller.cpp" line="1585"/>
+        <location filename="maincontroller.cpp" line="1604"/>
         <source>Even</source>
         <translation type="unfinished">互角</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1629"/>
+        <location filename="maincontroller.cpp" line="1643"/>
         <source>Pnd</source>
         <oldsource>Ponder</oldsource>
         <translation type="unfinished">読み筋</translation>
@@ -561,42 +561,42 @@ Please wait a moment.</source>
         <translation type="obsolete">  秒読み</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1666"/>
+        <location filename="maincontroller.cpp" line="1680"/>
         <source>Out of time.</source>
         <translation type="unfinished">時間切れです。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1688"/>
+        <location filename="maincontroller.cpp" line="1702"/>
         <source>Warning</source>
         <translation type="unfinished">警告</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1688"/>
+        <location filename="maincontroller.cpp" line="1702"/>
         <source>Enter at least one condition.</source>
         <translation type="unfinished">１つ以上の条件にチェックを入れてください</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1742"/>
+        <location filename="maincontroller.cpp" line="1756"/>
         <source>Analysis aborted</source>
         <translation type="unfinished">解析を停止しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1772"/>
+        <location filename="maincontroller.cpp" line="1786"/>
         <source>Elapsed</source>
         <translation type="unfinished">経過時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1776"/>
+        <location filename="maincontroller.cpp" line="1790"/>
         <source>Analysis Time</source>
         <translation type="unfinished">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1788"/>
+        <location filename="maincontroller.cpp" line="1802"/>
         <source>NPS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1867"/>
+        <location filename="maincontroller.cpp" line="1881"/>
         <source>Start</source>
         <translation type="unfinished">開始</translation>
     </message>
@@ -605,12 +605,12 @@ Please wait a moment.</source>
         <translation type="obsolete">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1780"/>
+        <location filename="maincontroller.cpp" line="1794"/>
         <source>Depth</source>
         <translation type="unfinished">深さ</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1784"/>
+        <location filename="maincontroller.cpp" line="1798"/>
         <source>Nodes</source>
         <translation type="unfinished">ノード</translation>
     </message>
@@ -623,7 +623,7 @@ Please wait a moment.</source>
         <translation type="obsolete">後手勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1622"/>
+        <location filename="maincontroller.cpp" line="1636"/>
         <source>Best</source>
         <translation type="unfinished">最善</translation>
     </message>
@@ -1231,7 +1231,7 @@ Please wait a moment.</source>
         <translation type="unfinished">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="531"/>
+        <location filename="settingsdialog.cpp" line="541"/>
         <source>Select Directory</source>
         <translation type="unfinished">ディレクトリ選択</translation>
     </message>
@@ -1398,44 +1398,44 @@ Please wait a moment.</source>
     <name>SettingsDialog</name>
     <message>
         <location filename="../forms/settingsdialog.ui" line="14"/>
-        <location filename="ui_settingsdialog.h" line="153"/>
+        <location filename="ui_settingsdialog.h" line="170"/>
         <source>Settings</source>
         <translation type="unfinished">設定</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="36"/>
-        <location filename="ui_settingsdialog.h" line="162"/>
+        <location filename="ui_settingsdialog.h" line="179"/>
         <source>Engine</source>
         <translation type="unfinished">エンジン</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="51"/>
-        <location filename="ui_settingsdialog.h" line="154"/>
+        <location filename="ui_settingsdialog.h" line="171"/>
         <source>New</source>
         <translation type="unfinished">追加</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="67"/>
-        <location filename="ui_settingsdialog.h" line="155"/>
+        <location filename="ui_settingsdialog.h" line="172"/>
         <source>Delete</source>
         <translation type="unfinished">削除</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="145"/>
-        <location filename="ui_settingsdialog.h" line="158"/>
+        <location filename="ui_settingsdialog.h" line="175"/>
         <source>The selected engine is used for the game or analysis</source>
         <translation type="unfinished">ここで選択されているエンジンが対局や解析で使用されます</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="189"/>
-        <location filename="ui_settingsdialog.h" line="161"/>
+        <location filename="ui_settingsdialog.h" line="178"/>
         <source>Set environment variables for the engine :</source>
         <translation type="unfinished">エンジン向けの環境変数を設定：</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="233"/>
         <location filename="settingsdialog.cpp" line="37"/>
-        <location filename="ui_settingsdialog.h" line="165"/>
+        <location filename="ui_settingsdialog.h" line="182"/>
         <source>OFF</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1445,7 +1445,7 @@ Please wait a moment.</source>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="132"/>
-        <location filename="ui_settingsdialog.h" line="157"/>
+        <location filename="ui_settingsdialog.h" line="174"/>
         <source>Reset</source>
         <translation type="unfinished">リセット</translation>
     </message>
@@ -1459,31 +1459,31 @@ Please wait a moment.</source>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="116"/>
-        <location filename="ui_settingsdialog.h" line="156"/>
+        <location filename="ui_settingsdialog.h" line="173"/>
         <source>Engine options</source>
         <translation type="unfinished">エンジンオプション</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="176"/>
-        <location filename="ui_settingsdialog.h" line="160"/>
+        <location filename="ui_settingsdialog.h" line="177"/>
         <source>Env...</source>
         <translation type="unfinished">環境変数...</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="195"/>
-        <location filename="ui_settingsdialog.h" line="168"/>
+        <location filename="ui_settingsdialog.h" line="188"/>
         <source>Preference</source>
         <translation type="unfinished">設定</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="207"/>
-        <location filename="ui_settingsdialog.h" line="163"/>
+        <location filename="ui_settingsdialog.h" line="180"/>
         <source>Sound</source>
         <translation type="unfinished">サウンド</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="220"/>
-        <location filename="ui_settingsdialog.h" line="164"/>
+        <location filename="ui_settingsdialog.h" line="181"/>
         <source>Piece Type</source>
         <translation type="unfinished">駒の種類</translation>
     </message>
@@ -1494,19 +1494,37 @@ Please wait a moment.</source>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="249"/>
-        <location filename="ui_settingsdialog.h" line="166"/>
+        <location filename="ui_settingsdialog.h" line="183"/>
         <source>Piece1</source>
         <translation type="unfinished">駒１</translation>
     </message>
     <message>
         <location filename="../forms/settingsdialog.ui" line="265"/>
-        <location filename="ui_settingsdialog.h" line="167"/>
+        <location filename="ui_settingsdialog.h" line="184"/>
         <source>Piece2</source>
         <translation type="unfinished">駒２</translation>
     </message>
     <message>
-        <location filename="../forms/settingsdialog.ui" line="286"/>
-        <location filename="ui_settingsdialog.h" line="169"/>
+        <location filename="../forms/settingsdialog.ui" line="281"/>
+        <location filename="ui_settingsdialog.h" line="185"/>
+        <source>Evaluation Value</source>
+        <translation type="unfinished">評価値表示</translation>
+    </message>
+    <message>
+        <location filename="../forms/settingsdialog.ui" line="294"/>
+        <location filename="ui_settingsdialog.h" line="186"/>
+        <source>Score</source>
+        <translation type="unfinished">スコア</translation>
+    </message>
+    <message>
+        <location filename="../forms/settingsdialog.ui" line="310"/>
+        <location filename="ui_settingsdialog.h" line="187"/>
+        <source>Percentage</source>
+        <translation type="unfinished">パーセンテージ</translation>
+    </message>
+    <message>
+        <location filename="../forms/settingsdialog.ui" line="331"/>
+        <location filename="ui_settingsdialog.h" line="189"/>
         <source>Close</source>
         <translation type="unfinished">閉じる</translation>
     </message>
@@ -1523,70 +1541,70 @@ Please wait a moment.</source>
         <translation type="obsolete">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="288"/>
+        <location filename="settingsdialog.cpp" line="298"/>
         <source>Invalid file</source>
         <translation type="unfinished">ファイル不正</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="288"/>
+        <location filename="settingsdialog.cpp" line="298"/>
         <source>File not executable</source>
         <translation type="unfinished">実行可能なファイルではありません</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="324"/>
+        <location filename="settingsdialog.cpp" line="334"/>
         <source>Delete %1.
 Are you sure?</source>
         <translation type="unfinished">%1 を削除します。
 よろしいですか。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="325"/>
+        <location filename="settingsdialog.cpp" line="335"/>
         <source>Delete engine</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="508"/>
+        <location filename="settingsdialog.cpp" line="518"/>
         <source>Select the Book file to set the BookDir</source>
         <oldsource>Select Book File</oldsource>
         <translation type="unfinished">BookDirを設定するために定跡ファイルを選択してください</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="519"/>
+        <location filename="settingsdialog.cpp" line="529"/>
         <source>Select the Eval file to set the EvalDir.</source>
         <oldsource>Select Eval File</oldsource>
         <translation type="unfinished">EvelDirを設定するために評価関数ファイルを選択してください</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="547"/>
+        <location filename="settingsdialog.cpp" line="557"/>
         <source>Select File</source>
         <translation type="unfinished">ファイル選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="574"/>
+        <location filename="settingsdialog.cpp" line="584"/>
         <source>Default</source>
         <translation type="unfinished">初期値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="586"/>
+        <location filename="settingsdialog.cpp" line="596"/>
         <source>Max</source>
         <translation type="unfinished">最大</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="590"/>
+        <location filename="settingsdialog.cpp" line="600"/>
         <source>Min</source>
         <translation type="unfinished">最小</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="227"/>
-        <location filename="settingsdialog.cpp" line="558"/>
-        <location filename="settingsdialog.cpp" line="577"/>
+        <location filename="settingsdialog.cpp" line="237"/>
+        <location filename="settingsdialog.cpp" line="568"/>
+        <location filename="settingsdialog.cpp" line="587"/>
         <source>true</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="227"/>
-        <location filename="settingsdialog.cpp" line="558"/>
-        <location filename="settingsdialog.cpp" line="577"/>
+        <location filename="settingsdialog.cpp" line="237"/>
+        <location filename="settingsdialog.cpp" line="568"/>
+        <location filename="settingsdialog.cpp" line="587"/>
         <source>false</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1595,12 +1613,12 @@ Are you sure?</source>
         <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="601"/>
+        <location filename="settingsdialog.cpp" line="611"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="601"/>
+        <location filename="settingsdialog.cpp" line="611"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。

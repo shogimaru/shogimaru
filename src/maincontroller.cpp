@@ -148,7 +148,7 @@ MainController::MainController(QWidget *parent) :
     connect(_nicknameDialog, &QDialog::accepted, this, &MainController::newRatingGame);
     connect(_ui->resignAction, &QAction::triggered, this, &MainController::resign);  // 投了ボタンクリック
     connect(_ui->settingsAction, &QAction::triggered, this, &MainController::slotSettingsAction);  // 設定ボタンクリック
-    connect(_settingsDialog, &SettingsDialog::finished, this, &MainController::updateMainWindow);  // 設定ダイアログ閉じる
+    connect(_settingsDialog, &SettingsDialog::finished, this, &MainController::refreshMainWindow);  // 設定ダイアログ閉じる
     connect(_ui->analysisAction, &QAction::triggered, this, &MainController::slotAnalysisAction);  // 解析ボタンクリック
     connect(_analysisDialog, &QDialog::accepted, this, &MainController::startAnalysis);  // 解析ダイアログOKボタンクリック
     connect(_ui->recordAction, &QAction::triggered, _recordDialog, &RecordDialog::open);  // 棋譜ボタンクリック
@@ -207,7 +207,7 @@ MainController::MainController(QWidget *parent) :
         }
     }
 
-    updateMainWindow();
+    refreshMainWindow();
 }
 
 
@@ -1382,6 +1382,27 @@ void MainController::updateResize(int resizeMainWindow)
     }
 }
 
+void MainController::refreshMainWindow()
+{
+    auto &user = User::load();
+
+    // グラフリフレッシュ
+    _graph->setPercentageDisplayEnabled(user.percentageEvaluation());
+    _graph->update();
+
+    // メッセージテーブルのリフレッシュ
+    if (_ui->recordWidget->currentRow() >= 0) {
+        int row = _ui->messageTableWidget->currentRow();
+        int col = _ui->messageTableWidget->currentColumn();
+        if (row >= 0 && col >= 0) {
+            slotPonderedItemSelected(row, col);
+        } else {
+            slotRecordItemSelected();
+        }
+    }
+
+    updateMainWindow();
+}
 
 void MainController::updateMainWindow()
 {
@@ -1546,13 +1567,6 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
     // 読み筋・解析手順の表示
     auto showMessageItem = [sf](QTableWidget *messageTableWidget, int row, const QString &head, const ScoreItem &item)
     {
-        // パーセントに変換
-        auto percent = [](int score, float coefficient = 1080.0)
-        {
-            double sigmoid = 100.0 / (1.0 + std::exp(-score / coefficient));
-            return qBound(-99, (int)std::round(sigmoid), 99);
-        };
-
         if (item.isEmpty()) {
             return;
         }
@@ -1564,9 +1578,9 @@ void MainController::showAnalyzingMoves(const QVector<ScoreItem> &scores, const 
         const auto &user = User::load();
         int score = std::abs(item.score);
 
-        if (user.percentageScore()) {
+        if (user.percentageEvaluation()) {
             // パーセント表示
-            int perc = percent(score);
+            int perc = maru::percentage(score);
             if (perc == 50) {
                 str = tr("Even");  // 互角
             } else {

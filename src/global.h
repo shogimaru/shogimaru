@@ -113,9 +113,17 @@ bool isLocaleLangJapanese();
 QString appLocalDataLocation();
 QString appResourcePath(const QString &relativePath);
 bool isDarkMode();
+
 inline int64_t currentMSecsSinceStart()  // OS起動から経過時間（ミリ秒、逆行しないクロック）
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+// パーセントに変換
+inline int percentage(int score, float coefficient = 1080.0)
+{
+    double sigmoid = 100.0 / (1.0 + std::exp(-score / coefficient));
+    return qBound(-99, (int)std::round(sigmoid), 99);
 }
 
 }

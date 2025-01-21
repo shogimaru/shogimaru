@@ -24,7 +24,7 @@ const QLatin1String SoundEnable("soundEnable");
 const QLatin1String PieceType("pieceType");
 const QLatin1String StartPosition("startPosition");
 const QLatin1String Method("method");
-const QLatin1String PercentageScore("percentageScore");
+const QLatin1String PercentageEvaluation("percentageEvaluation");
 
 
 static QString jsonPath()
@@ -65,7 +65,7 @@ bool User::save()
     json[PieceType] = pieceType();
     json[StartPosition] = startPosition();
     json[Method] = method();
-    json[PercentageScore] = percentageScore();
+    json[PercentageEvaluation] = percentageEvaluation();
 
     File file(jsonPath());
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -171,8 +171,8 @@ User &User::load()
         user._method = json[Method].toInt();
     }
 
-    if (json.contains(PercentageScore)) {
-        user._percentageScore = json[PercentageScore].toBool();
+    if (json.contains(PercentageEvaluation)) {
+        user.setPercentageEvaluation(json[PercentageEvaluation].toInt());
     }
 
     return user;

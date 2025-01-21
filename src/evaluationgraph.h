@@ -11,6 +11,7 @@ public:
 
     void setScores(const QList<int> scores);
     void addScore(int score);
+    void setPercentageDisplayEnabled(bool enable) { _percentage = enable; }
     void clear();
 
 public slots:
@@ -27,4 +28,5 @@ private:
     QList<int> _scores;
     QList<QPoint> _points;
     int _current {-1};
+    int _percentage {false};  // パーセント表示
 };

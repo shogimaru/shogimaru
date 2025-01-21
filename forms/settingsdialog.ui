@@ -213,7 +213,7 @@
        <x>30</x>
        <y>90</y>
        <width>101</width>
-       <height>31</height>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
@@ -223,7 +223,7 @@
     <widget class="QToolButton" name="soundOnOffButton">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>160</x>
        <y>40</y>
        <width>101</width>
        <height>21</height>
@@ -239,33 +239,78 @@
     <widget class="QRadioButton" name="radioPiece1">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>160</x>
        <y>90</y>
-       <width>99</width>
-       <height>31</height>
+       <width>101</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
       <string>Piece1</string>
      </property>
      <attribute name="buttonGroup">
-      <string notr="true">buttonGroup</string>
+      <string notr="true">bgPieceType</string>
      </attribute>
     </widget>
     <widget class="QRadioButton" name="radioPiece2">
      <property name="geometry">
       <rect>
-       <x>270</x>
+       <x>280</x>
        <y>90</y>
-       <width>99</width>
-       <height>31</height>
+       <width>101</width>
+       <height>21</height>
       </rect>
      </property>
      <property name="text">
       <string>Piece2</string>
      </property>
      <attribute name="buttonGroup">
-      <string notr="true">buttonGroup</string>
+      <string notr="true">bgPieceType</string>
+     </attribute>
+    </widget>
+    <widget class="QLabel" name="labelEvalValue">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>140</y>
+       <width>131</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Evaluation Value</string>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioEvalScore">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>140</y>
+       <width>121</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Score</string>
+     </property>
+     <attribute name="buttonGroup">
+      <string notr="true">bgEvalValue</string>
+     </attribute>
+    </widget>
+    <widget class="QRadioButton" name="radioEvalPercent">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>140</y>
+       <width>141</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Percentage</string>
+     </property>
+     <attribute name="buttonGroup">
+      <string notr="true">bgEvalValue</string>
      </attribute>
     </widget>
    </widget>
@@ -299,6 +344,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup"/>
+  <buttongroup name="bgPieceType"/>
+  <buttongroup name="bgEvalValue"/>
  </buttongroups>
 </ui>

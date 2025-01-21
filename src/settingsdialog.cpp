@@ -73,8 +73,12 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     _ui->tableEngineOptions->horizontalHeader()->setStretchLastSection(true);
 
     // 駒種類選択ラジオボタン
-    _ui->buttonGroup->setId(_ui->radioPiece1, 1);
-    _ui->buttonGroup->setId(_ui->radioPiece2, 2);
+    _ui->bgPieceType->setId(_ui->radioPiece1, 1);
+    _ui->bgPieceType->setId(_ui->radioPiece2, 2);
+
+    // 評価値表示ラジオボタン
+    _ui->bgEvalValue->setId(_ui->radioEvalScore, 0);
+    _ui->bgEvalValue->setId(_ui->radioEvalPercent, 1);
 
     // コンボボックスイベントフィルター
     class ComboBoxEventFileter : public QWidget {
@@ -138,9 +142,15 @@ void SettingsDialog::loadSettings(int engineIndex)
 
     const auto &user = User::load();
     _ui->soundOnOffButton->setChecked(user.soundEnable());  // サウンド
-    auto *button = _ui->buttonGroup->button(user.pieceType());
+
+    auto *button = _ui->bgPieceType->button(user.pieceType());  // 駒種類
     if (button) {
-        button->setChecked(true);  // 駒種類
+        button->setChecked(true);
+    }
+
+    button = _ui->bgEvalValue->button(user.percentageEvaluation());  // 評価値表示
+    if (button) {
+        button->setChecked(true);
     }
 }
 
@@ -683,6 +693,7 @@ void SettingsDialog::save()
 
     auto &user = User::load();
     user.setSoundEnable(_ui->soundOnOffButton->isChecked());  // サウンド
-    user.setPieceType(_ui->buttonGroup->checkedId());  // 駒種類
+    user.setPieceType(_ui->bgPieceType->checkedId());  // 駒種類
+    user.setPercentageEvaluation(_ui->bgEvalValue->checkedId());  // 評価値表示
     user.save();
 }

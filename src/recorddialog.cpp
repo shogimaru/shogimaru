@@ -73,8 +73,8 @@ void RecordDialog::loadUrlRecord()
     }
 
 #ifdef Q_OS_WASM
-    url = QUrl::toPercentEncoding(url);
-    url.prepend("https://shogimaru.com/rd/?u=");
+    url.remove(QRegularExpression(R"(^https?://)"));
+    url.prepend("https://shogimaru.com/url/");
 #endif
 
     request(url, &RecordDialog::parseRecord);
@@ -193,8 +193,8 @@ void RecordDialog::open()
 
     auto url = ShogiDbUrl.arg(NUM_RECORDS);
 #ifdef Q_OS_WASM
-    url = QUrl::toPercentEncoding(url);
-    url.prepend("https://shogimaru.com/rd/?u=");
+    url.remove(QRegularExpression(R"(^https?://)"));
+    url.prepend("https://shogimaru.com/url/");
 #endif
 
     // HTTP request
@@ -259,8 +259,8 @@ void RecordDialog::readRecord(const QString &hash)
 
     auto url = Db2Url.arg(hash);
 #ifdef Q_OS_WASM
-    url = QUrl::toPercentEncoding(url);
-    url.prepend("https://shogimaru.com/rd/?u=");
+    url.remove(QRegularExpression(R"(^https?://)"));
+    url.prepend("https://shogimaru.com/url/");
 #endif
 
     if (!hash.isEmpty()) {

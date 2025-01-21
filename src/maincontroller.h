@@ -75,6 +75,7 @@ public slots:
     void resign();  // 投了確認
     void slotResign(QAbstractButton *button);  // 投了
     void retract();  // 待った
+    void refreshMainWindow();
     void updateMainWindow();
     void updateBoard();
     void updateResize(int resizeMainWindow = false);
