@@ -1392,15 +1392,14 @@ void MainController::refreshMainWindow()
 
     // メッセージテーブルのリフレッシュ
     if (_ui->recordWidget->currentRow() >= 0) {
+        slotRecordItemSelected();
+
         int row = _ui->messageTableWidget->currentRow();
         int col = _ui->messageTableWidget->currentColumn();
         if (row >= 0 && col >= 0) {
             slotPonderedItemSelected(row, col);
-        } else {
-            slotRecordItemSelected();
         }
     }
-
     updateMainWindow();
 }
 
