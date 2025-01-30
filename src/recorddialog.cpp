@@ -163,6 +163,11 @@ bool RecordDialog::validate(const QString &record)
         return ok;
     }
 
+    _sfen = Sfen::fromKif(record, &ok);  // KIF
+    if (ok) {
+        return ok;
+    }
+
     _sfen = Sfen::fromSfen(record.toLatin1(), &ok);  // SFEN
     return ok;
 }

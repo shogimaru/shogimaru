@@ -39,6 +39,7 @@ public:
 
     static QByteArray defaultPostion();
     static Sfen fromCsa(const QString &csa, bool *ok = nullptr);
+    static Sfen fromKif(const QString &csa, bool *ok = nullptr);
     static Sfen fromSfen(const QByteArray &sfen, bool *ok = nullptr);
 
 private:
