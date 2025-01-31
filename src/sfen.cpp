@@ -626,7 +626,7 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
         "(?<moveLine>" % moveNumPattern
         % "\\s+(?:" % movePattern
         % "|" % specialMovePattern
-        % ")\\s+" % timeConsumedPattern % "?)";
+        % ")\\s*" % timeConsumedPattern % "?)";
 
     static const QString keywordLinePattern = "(?<keywordLine>(?<keyword>.+)：(?<description>.*))";
     static const QString commentLinePattern = "(?<commentLine>\\*(?<comment>.*))";
