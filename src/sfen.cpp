@@ -607,42 +607,30 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
     const QString turnPattern = QString::fromUtf8("(?<turn>[▲△])");
     const QString colNum = QString::fromUtf8("[１２３４５６７８９]");
     const QString rowNum = QString::fromUtf8("[一二三四五六七八九]");
-    const QString targetPattern = QString("(?<target>") % colNum % rowNum % QString::fromUtf8("|同　?)");
+    const QString targetPattern = "(?<target>" + colNum + rowNum + QString::fromUtf8("|同　?)");
     const QString piecePattern = QString::fromUtf8("(?<piece>[歩香桂銀金角飛玉と馬龍]|成[香桂銀])");
     const QString promotePattern = QString::fromUtf8("(?<promote>成)");
     const QString sourcePattern = QString::fromUtf8("(?<source>\\(\\d\\d\\)|打)");
-    const QString movePattern =
-        QString("(?<move>") % turnPattern % "?"
-        % targetPattern
-        % piecePattern
-        % promotePattern % "?"
-        % sourcePattern % ")";
+    const QString movePattern = "(?<move>" + turnPattern + "?" + targetPattern
+        + piecePattern + promotePattern + "?" + sourcePattern + ")";
 
     const QString specialMovePattern =
         QString::fromUtf8("(?<special>中断|投了|持将棋|千日手|切れ負け|反則勝ち|反則負け|入玉勝ち|不戦勝|不戦敗|詰み|不詰)");
     const QString timeConsumedPattern = "(?<timeConsumed>\\(.*\\))";
 
-    const QString moveLinePattern =
-        "(?<moveLine>" % moveNumPattern
-        % "\\s+(?:" % movePattern
-        % "|" % specialMovePattern
-        % ")\\s*" % timeConsumedPattern % "?)";
+    const QString moveLinePattern = "(?<moveLine>" + moveNumPattern + "\\s+(?:" + movePattern
+        + "|" + specialMovePattern + ")\\s*" + timeConsumedPattern + "?)";
 
     const QString keywordLinePattern = QString::fromUtf8("(?<keywordLine>(?<keyword>.+)：(?<description>.*))");
     const QString commentLinePattern = "(?<commentLine>\\*(?<comment>.*))";
     const QString bookmarkLinePattern = "(?<bookmarkLine>&<(?<bookmarkName>)>)";
     const QString ignoreLinePattern = QString::fromUtf8("(?:#.*|手数----指手---------消費時間--)");
 
-    const QRegularExpression kifuLine(moveLinePattern % "|"
-                                             % keywordLinePattern % "|"
-                                             % commentLinePattern % "|"
-                                             % bookmarkLinePattern % "|"
-                                             % ignoreLinePattern);
+    const QRegularExpression kifuLine(moveLinePattern + "|" + keywordLinePattern + "|"
+        + commentLinePattern + "|" + bookmarkLinePattern + "|" + ignoreLinePattern);
 
     Sfen sfen(DefaultSfen);  // TODO 駒落ちに未対応
-    QString senteName;
-    QString goteName;
-    QString event;
+    QString senteName, goteName, event;
     int currentMoveNum = 1;
     QByteArray previousTarget;
 
