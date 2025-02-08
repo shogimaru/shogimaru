@@ -39,6 +39,8 @@ jobs:
     - name: test
       working-directory: src/test
       run: |
+        call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        set CL=/MP
         qmake
         nmake
         marutest
@@ -119,7 +121,7 @@ jobs:
       - name: test
         working-directory: src/test
         run: |
-          qmake
+          qmake6
           make
           ./marutest
 
@@ -140,7 +142,7 @@ jobs:
       - name: test
         working-directory: src/test
         run: |
-          qmake
+          qmake6
           make
           ./marutest
 
@@ -161,6 +163,6 @@ jobs:
       - name: test
         working-directory: src/test
         run: |
-          qmake
+          qmake6
           make
           ./marutest
