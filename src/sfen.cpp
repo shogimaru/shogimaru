@@ -587,6 +587,209 @@ Sfen Sfen::fromCsa(const QString &csa, bool *ok)
     return sfen;
 }
 
+Sfen Sfen::fromKif(const QString &kif, bool *ok)
+{
+    static const QMap<QString, QString> convert = {
+        {QString::fromUtf8("１"), "1"}, {QString::fromUtf8("２"), "2"}, {QString::fromUtf8("３"), "3"},
+        {QString::fromUtf8("４"), "4"}, {QString::fromUtf8("５"), "5"}, {QString::fromUtf8("６"), "6"},
+        {QString::fromUtf8("７"), "7"}, {QString::fromUtf8("８"), "8"}, {QString::fromUtf8("９"), "9"},
+        {QString::fromUtf8("一"), "1"}, {QString::fromUtf8("二"), "2"}, {QString::fromUtf8("三"), "3"},
+        {QString::fromUtf8("四"), "4"}, {QString::fromUtf8("五"), "5"}, {QString::fromUtf8("六"), "6"},
+        {QString::fromUtf8("七"), "7"}, {QString::fromUtf8("八"), "8"}, {QString::fromUtf8("九"), "9"},
+
+        {QString::fromUtf8("歩"), "p"}, {QString::fromUtf8("香"), "l"}, {QString::fromUtf8("桂"), "n"},
+        {QString::fromUtf8("銀"), "s"}, {QString::fromUtf8("金"), "g"}, {QString::fromUtf8("角"), "b"},
+        {QString::fromUtf8("飛"), "r"}, {QString::fromUtf8("玉"), "k"}, {QString::fromUtf8("と"), "+p"},
+        {QString::fromUtf8("成香"), "+l"}, {QString::fromUtf8("成桂"), "+n"}, {QString::fromUtf8("成銀"), "+s"},
+        {QString::fromUtf8("馬"), "+b"}, {QString::fromUtf8("龍"), "+r"}};
+
+    const QString moveNumPattern("(?<moveNum>\\d+)");
+    const QString turnPattern = QString::fromUtf8("(?<turn>[▲△])");
+    const QString colNum = QString::fromUtf8("[１２３４５６７８９]");
+    const QString rowNum = QString::fromUtf8("[一二三四五六七八九]");
+    const QString targetPattern = "(?<target>" % colNum % rowNum % QString::fromUtf8("|同　?)");
+    const QString piecePattern = QString::fromUtf8("(?<piece>[歩香桂銀金角飛玉と馬龍]|成[香桂銀])");
+    const QString promotePattern = QString::fromUtf8("(?<promote>成)");
+    const QString sourcePattern = QString::fromUtf8("(?<source>\\(\\d\\d\\)|打)");
+    const QString movePattern =
+        "(?<move>" % turnPattern % "?"
+        % targetPattern
+        % piecePattern
+        % promotePattern % "?"
+        % sourcePattern % ")";
+
+    const QString specialMovePattern =
+        QString::fromUtf8("(?<special>中断|投了|持将棋|千日手|切れ負け|反則勝ち|反則負け|入玉勝ち|不戦勝|不戦敗|詰み|不詰)");
+    const QString timeConsumedPattern = "(?<timeConsumed>\\(.*\\))";
+
+    const QString moveLinePattern =
+        "(?<moveLine>" % moveNumPattern
+        % "\\s+(?:" % movePattern
+        % "|" % specialMovePattern
+        % ")\\s*" % timeConsumedPattern % "?)";
+
+    const QString keywordLinePattern = QString::fromUtf8("(?<keywordLine>(?<keyword>.+)：(?<description>.*))");
+    const QString commentLinePattern = "(?<commentLine>\\*(?<comment>.*))";
+    const QString bookmarkLinePattern = "(?<bookmarkLine>&<(?<bookmarkName>)>)";
+    const QString ignoreLinePattern = QString::fromUtf8("(?:#.*|手数----指手---------消費時間--)");
+
+    const QRegularExpression kifuLine(moveLinePattern % "|"
+                                             % keywordLinePattern % "|"
+                                             % commentLinePattern % "|"
+                                             % bookmarkLinePattern % "|"
+                                             % ignoreLinePattern);
+
+    Sfen sfen(DefaultSfen);  // TODO 駒落ちに未対応
+    QString senteName;
+    QString goteName;
+    QString event;
+    int currentMoveNum = 1;
+    QByteArray previousTarget;
+
+    if (ok) {
+        *ok = false;
+    }
+
+    for (const auto &str : kif.split('\n')) {
+        auto line = str.trimmed();
+        if (line.isEmpty()) continue;
+
+        auto match = kifuLine.match(line);
+
+        if (match.hasMatch()) {
+            if (match.hasCaptured("moveLine")) {
+                auto moveNum = match.captured("moveNum");
+                if (moveNum.toInt() != currentMoveNum) {
+                    continue;
+                }
+
+                if (match.hasCaptured("move")) {
+                    QByteArray move;
+                    auto targetStr = match.captured("target");
+                    auto pieceStr = match.captured("piece");
+                    auto sourceStr = match.captured("source");
+                    if (sourceStr.startsWith(QString::fromUtf8("打"))) {
+                        // 打つ
+                        auto p = convert.value(pieceStr).toUpper();
+                        move += p.toLatin1();
+                        move += '*';
+                    } else {
+                        move += ShogiRecord::coordToUsi(sourceStr.mid(1,2).toInt());
+                    }
+
+                    if (targetStr.startsWith(QString::fromUtf8("同"))) {
+                        if (currentMoveNum == 1) {
+                            qCritical() << "Error notation: " << match.captured("moveLine");
+                            return sfen;
+                        } else {
+                            move += previousTarget;
+                        }
+                    } else {
+                        QString numericTarget;
+                        numericTarget += convert.value(targetStr.left(1));
+                        numericTarget += convert.value(targetStr.right(1));
+                        previousTarget = ShogiRecord::coordToUsi(numericTarget.toInt());
+                        move += previousTarget;
+                    }
+
+                    if (match.hasCaptured("promote")) {
+                        move += '+';
+                    }
+
+                    if (move.length() == 4 || move.length() == 5) {
+                        sfen.move(move);
+                        currentMoveNum++;
+                    } else {
+                        // Error
+                        qCritical() << "Error notation:" << match.captured("moveLine");
+                        return sfen;
+                    }
+                } else if (match.hasCaptured("special")) {
+                    auto specialStr = match.captured("special");
+
+                    maru::Turn turn = (currentMoveNum % 2 == 1) ? maru::Sente : maru::Gote;
+                    maru::GameResult result;
+                    maru::ResultDetail detail;
+
+                    if (specialStr == QString::fromUtf8("中断") || specialStr == QString::fromUtf8("不詰")) {
+                        result = maru::Abort;
+                        detail = maru::Abort_GameAborted;
+                    }
+                    else if (specialStr == QString::fromUtf8("投了") || specialStr == QString::fromUtf8("詰み")) {
+                        result = maru::Loss;
+                        detail = maru::Loss_Resign;
+                    }
+                    else if (specialStr == QString::fromUtf8("持将棋")) {
+                        result = maru::Draw;
+                        detail = maru::Draw_Impasse;
+                    }
+                    else if (specialStr == QString::fromUtf8("千日手")) {
+                        result = maru::Draw;
+                        detail = maru::Draw_Repetition;
+                    }
+                    else if (specialStr == QString::fromUtf8("切れ負け")) {
+                        result = maru::Illegal;
+                        detail = maru::Illegal_OutOfTime;
+                    }
+                    else if (specialStr == QString::fromUtf8("反則勝ち")) {
+                        turn = (turn == maru::Sente) ? maru::Gote : maru::Sente;
+                        result = maru::Illegal;
+                        detail = maru::Illegal_Other;
+                    }
+                    else if (specialStr == QString::fromUtf8("反則負け")) {
+                        result = maru::Illegal;
+                        detail = maru::Illegal_Other;
+                    }
+                    else if (specialStr == QString::fromUtf8("入玉勝ち")) {
+                        result = maru::Win;
+                        detail = maru::Win_Declare;
+                    }
+                    else if (specialStr == QString::fromUtf8("不戦勝")) {
+                        turn = maru::Sente;
+                        result = maru::Win;
+                        detail = maru::Win_Declare;
+                    }
+                    else if (specialStr == QString::fromUtf8("不戦敗")) {
+                        turn = maru::Gote;
+                        result = maru::Win;
+                        detail = maru::Win_Declare;
+                    } else {
+                        result = maru::Abort;
+                        detail = maru::Abort_GameAborted;
+                    }
+                    sfen.setGameResult(turn, result, detail);
+                    break;
+                }
+            } else if (match.hasCaptured("keywordLine")) {
+                auto keywordStr = match.captured("keyword");
+                auto descriptionStr = match.captured("description");
+                if (keywordStr == QString::fromUtf8("先手")) {
+                    senteName = descriptionStr;
+                } else if (keywordStr == QString::fromUtf8("後手")) {
+                    goteName = descriptionStr;
+                } else if (keywordStr == QString::fromUtf8("棋戦")) {
+                    event = descriptionStr;
+                } else {
+                    continue;
+                }
+            }
+        } else {
+            qWarning() << "Unknown KIF command:" << line;
+            return sfen;
+        }
+    }
+
+    // 対局者
+    sfen.setPlayers(senteName, goteName);
+    // 棋戦名
+    sfen.setEventName(event);
+
+    if (ok) {
+        *ok = true;
+    }
+    return sfen;
+}
+
 
 QString Sfen::toCsa() const
 {

@@ -410,7 +410,7 @@ Are you sure?</source>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="638"/>
-        <location filename="maincontroller.cpp" line="1714"/>
+        <location filename="maincontroller.cpp" line="1713"/>
         <source>Engine error</source>
         <translation type="unfinished">エンジンエラー</translation>
     </message>
@@ -474,7 +474,7 @@ Are you sure?</source>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="1283"/>
-        <location filename="maincontroller.cpp" line="1756"/>
+        <location filename="maincontroller.cpp" line="1755"/>
         <source>Information</source>
         <translation type="unfinished">情報</translation>
     </message>
@@ -494,18 +494,18 @@ Are you sure?</source>
         <location filename="maincontroller.cpp" line="355"/>
         <location filename="maincontroller.cpp" line="373"/>
         <location filename="maincontroller.cpp" line="393"/>
-        <location filename="maincontroller.cpp" line="1431"/>
+        <location filename="maincontroller.cpp" line="1430"/>
         <source>Resign</source>
         <translation type="unfinished">投了</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1431"/>
+        <location filename="maincontroller.cpp" line="1430"/>
         <source>Resign?</source>
         <translation type="unfinished">投了しますか</translation>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="337"/>
-        <location filename="maincontroller.cpp" line="1433"/>
+        <location filename="maincontroller.cpp" line="1432"/>
         <source>Abort</source>
         <translation type="unfinished">中断</translation>
     </message>
@@ -517,40 +517,40 @@ Please wait a moment.</source>
 しばらくお待ちください。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1433"/>
+        <location filename="maincontroller.cpp" line="1432"/>
         <source>Abort?</source>
         <translation type="unfinished">中断しますか</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1448"/>
+        <location filename="maincontroller.cpp" line="1447"/>
         <source>You resigned.</source>
         <translation type="unfinished">あなたは投了しました。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1473"/>
-        <location filename="maincontroller.cpp" line="1478"/>
+        <location filename="maincontroller.cpp" line="1472"/>
+        <location filename="maincontroller.cpp" line="1477"/>
         <source>The computer declared victory by entering the king, according to CSA rules.</source>
         <translation type="unfinished">コンピュータが入玉勝ちを宣言しました。勝ち宣言はCSAルールに基づいています。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1506"/>
-        <location filename="maincontroller.cpp" line="1514"/>
+        <location filename="maincontroller.cpp" line="1505"/>
+        <location filename="maincontroller.cpp" line="1513"/>
         <source>You win!</source>
         <translation type="unfinished">参りました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1508"/>
+        <location filename="maincontroller.cpp" line="1507"/>
         <source>COM win!</source>
         <translation type="unfinished">コンピュータの勝利</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1585"/>
-        <location filename="maincontroller.cpp" line="1604"/>
+        <location filename="maincontroller.cpp" line="1584"/>
+        <location filename="maincontroller.cpp" line="1603"/>
         <source>Even</source>
         <translation type="unfinished">互角</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1643"/>
+        <location filename="maincontroller.cpp" line="1642"/>
         <source>Pnd</source>
         <oldsource>Ponder</oldsource>
         <translation type="unfinished">読み筋</translation>
@@ -561,42 +561,42 @@ Please wait a moment.</source>
         <translation type="obsolete">  秒読み</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1680"/>
+        <location filename="maincontroller.cpp" line="1679"/>
         <source>Out of time.</source>
         <translation type="unfinished">時間切れです。</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1702"/>
+        <location filename="maincontroller.cpp" line="1701"/>
         <source>Warning</source>
         <translation type="unfinished">警告</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1702"/>
+        <location filename="maincontroller.cpp" line="1701"/>
         <source>Enter at least one condition.</source>
         <translation type="unfinished">１つ以上の条件にチェックを入れてください</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1756"/>
+        <location filename="maincontroller.cpp" line="1755"/>
         <source>Analysis aborted</source>
         <translation type="unfinished">解析を停止しました</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1786"/>
+        <location filename="maincontroller.cpp" line="1785"/>
         <source>Elapsed</source>
         <translation type="unfinished">経過時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1790"/>
+        <location filename="maincontroller.cpp" line="1789"/>
         <source>Analysis Time</source>
         <translation type="unfinished">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1802"/>
+        <location filename="maincontroller.cpp" line="1801"/>
         <source>NPS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1881"/>
+        <location filename="maincontroller.cpp" line="1880"/>
         <source>Start</source>
         <translation type="unfinished">開始</translation>
     </message>
@@ -605,12 +605,12 @@ Please wait a moment.</source>
         <translation type="obsolete">解析時間</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1794"/>
+        <location filename="maincontroller.cpp" line="1793"/>
         <source>Depth</source>
         <translation type="unfinished">深さ</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1798"/>
+        <location filename="maincontroller.cpp" line="1797"/>
         <source>Nodes</source>
         <translation type="unfinished">ノード</translation>
     </message>
@@ -623,7 +623,7 @@ Please wait a moment.</source>
         <translation type="obsolete">後手勝ち</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="1636"/>
+        <location filename="maincontroller.cpp" line="1635"/>
         <source>Best</source>
         <translation type="unfinished">最善</translation>
     </message>
@@ -1275,8 +1275,8 @@ Please wait a moment.</source>
     <message>
         <location filename="../forms/recorddialog.ui" line="110"/>
         <location filename="ui_recorddialog.h" line="132"/>
-        <source>Load a game record in CSA or SFEN format.</source>
-        <translation type="unfinished">棋譜を読み込みます (CSA/SFEN)</translation>
+        <source>Load a game record in KIF, CSA or SFEN format.</source>
+        <translation type="unfinished">棋譜を読み込みます (KIF/CSA/SFEN)</translation>
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="116"/>
@@ -1287,8 +1287,8 @@ Please wait a moment.</source>
     <message>
         <location filename="../forms/recorddialog.ui" line="128"/>
         <location filename="ui_recorddialog.h" line="134"/>
-        <source>Load a game record from the Net in CSA or SFEN format.</source>
-        <translation type="unfinished">ネットから棋譜を読み込みます (CSA/SFEN)</translation>
+        <source>Load a game record from the Net in KIF, CSA or SFEN format.</source>
+        <translation type="unfinished">ネットから棋譜を読み込みます (KIF/CSA/SFEN)</translation>
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="147"/>
@@ -1299,8 +1299,8 @@ Please wait a moment.</source>
     <message>
         <location filename="../forms/recorddialog.ui" line="178"/>
         <location filename="ui_recorddialog.h" line="140"/>
-        <source>Load a game record file of CSA or SFEN format.</source>
-        <translation type="unfinished">棋譜ファイルを読み込みます (CSA/SFEN)</translation>
+        <source>Load a game record file of KIF, CSA or SFEN format.</source>
+        <translation type="unfinished">棋譜ファイルを読み込みます (KIF/CSA/SFEN)</translation>
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="191"/>
@@ -1357,7 +1357,7 @@ Please wait a moment.</source>
         <location filename="recorddialog.cpp" line="61"/>
         <location filename="recorddialog.cpp" line="104"/>
         <location filename="recorddialog.cpp" line="134"/>
-        <location filename="recorddialog.cpp" line="320"/>
+        <location filename="recorddialog.cpp" line="325"/>
         <source>Notation Error</source>
         <translation type="unfinished">棋譜読込エラー</translation>
     </message>
@@ -1365,7 +1365,7 @@ Please wait a moment.</source>
         <location filename="recorddialog.cpp" line="61"/>
         <location filename="recorddialog.cpp" line="104"/>
         <location filename="recorddialog.cpp" line="134"/>
-        <location filename="recorddialog.cpp" line="320"/>
+        <location filename="recorddialog.cpp" line="325"/>
         <source>Load Error</source>
         <translation type="unfinished">読込エラー</translation>
     </message>
@@ -1375,17 +1375,17 @@ Please wait a moment.</source>
         <translation type="unfinished">ファイル保存</translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="236"/>
+        <location filename="recorddialog.cpp" line="241"/>
         <source> vs </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="299"/>
+        <location filename="recorddialog.cpp" line="304"/>
         <source>Error</source>
         <translation type="unfinished">エラー</translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="299"/>
+        <location filename="recorddialog.cpp" line="304"/>
         <source>Failed to retrieve the Shogi game record.</source>
         <translation type="unfinished">棋譜の取得に失敗しました</translation>
     </message>
