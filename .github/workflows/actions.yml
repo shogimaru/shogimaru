@@ -7,7 +7,6 @@ on:
       - '**'
       - '!docs/**'
   pull_request:
-    branches: [develop]
     paths:
       - '**'
       - '!docs/**'
@@ -41,7 +40,7 @@ jobs:
       working-directory: src/test
       run: |
         qmake
-        make
+        nmake
         marutest
     - name: deploy
       run: windeployqt.exe .\dist\shogimaru.exe
