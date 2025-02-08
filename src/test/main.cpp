@@ -19,7 +19,8 @@ private slots:
     void testFromKif();
     void testGenerateKifJa_data();
     void testGenerateKifJa();
-    void benchmarkSfen();
+    void benchmarkCsa2Sfen();
+    void benchmarkKif2Sfen();
 };
 
 
@@ -211,7 +212,7 @@ void MaruTest::testGenerateKifJa()
 }
 
 
-void MaruTest::benchmarkSfen()
+void MaruTest::benchmarkCsa2Sfen()
 {
     const QByteArray csa("V2.2\nN+hoge\nN-foo\nP1-KY-KE-GI-KI-OU-KI-GI-KE-KY\nP2 * -HI *  *  *  *  * -KA * \nP3-FU-FU-FU-FU-FU-FU-FU-FU-FU\nP4 *  *  *  *  *  *  *  *  * \nP5 *  *  *  *  *  *  *  *  * \nP6 *  *  *  *  *  *  *  *  * \nP7+FU+FU+FU+FU+FU+FU+FU+FU+FU\nP8 * +KA *  *  *  *  * +HI * \nP9+KY+KE+GI+KI+OU+KI+GI+KE+KY\n+\n+2878HI\n-3334FU\n+5948OU\n-8384FU\n+4838OU\n-5142OU\n+7776FU\n-8485FU\n+8877KA\n-2277UM\n+8977KE\n-4232OU\n+7888HI\n-1314FU\n+1716FU\n-7172GI\n+7968GI\n-4142KI\n+6766FU\n-6364FU\n+6978KI\n-7263GI\n+5756FU\n-6354GI\n+8889HI\n-6152KI\n+3948GI\n-2133KE\n+6867GI\n-9394FU\n+9796FU\n-4344FU\n+4857GI\n-5243KI\n+4948KI\n-4445FU\n+7675FU\n-3435FU\n+6776GI\n-9495FU\n+9695FU\n-8586FU\n+8786FU\n-9195KY\n+7687GI\n-0098FU\n+9998KY\n-9598NY\n+8798GI\n-8292HI\n+0097KY\n-9262HI\n+9887GI\n-0076KY\n+0083KA\n-7677KY\n+7877KI\n-0044KE\n+4858KI\n-1415FU\n+1615FU\n-3536FU\n+3736FU\n-4436KE\n+0037FU\n-0028KA\n+1917KY\n-3325KE\n+3736FU\n-2517NK\n+5868KI\n-1115KY\n+0014FU\n-3122GI\n+9792NY\n-6465FU\n+6665FU\n-4546FU\n+4746FU\n-0045FU\n+3848OU\n-4546FU\n+4858OU\n-0082FU\n+8394UM\n-6265HI\n+0048FU\n-0044KY\n+0035KE\n-6545HI\n+0049KY\n-0034FU\n+3543NK\n-5443GI\n+9281NY\n-1727NK\n+0055KE\n-4354GI\n+9461UM\n-3233OU\n+6151UM\n-0065KE\n+7766KI\n-6557NK\n+6857KI\n-0065FU\n+6665KI\n-3324OU\n+6554KI\n-5354FU\n+5142UM\n-0033GI\n+4243UM\n-5455FU\n+1413TO\n-0066FU\n+5766KI\n-2425OU\n+0057KE\n-4647TO\n+4847FU\n-2839UM\n+5867OU\n%TORYO\n");
 
@@ -221,6 +222,16 @@ void MaruTest::benchmarkSfen()
     }
 }
 
+
+void MaruTest::benchmarkKif2Sfen()
+{
+    const QByteArray kif("手合割：平手\n先手：hoge\n後手：foo\n手数----指手---------消費時間--\n   1   ７八飛(28)\n   2   ３四歩(33)\n   3   ４八玉(59)\n   4   ８四歩(83)\n   5   ３八玉(48)\n   6   ４二玉(51)\n   7   ７六歩(77)\n   8   ８五歩(84)\n   9   ７七角(88)\n  10   同　角成(22)\n  11   同　桂(89)\n  12   ３二玉(42)\n  13   ８八飛(78)\n  14   １四歩(13)\n  15   １六歩(17)\n  16   ７二銀(71)\n  17   ６八銀(79)\n  18   ４二金(41)\n  19   ６六歩(67)\n  20   ６四歩(63)\n  21   ７八金(69)\n  22   ６三銀(72)\n  23   ５六歩(57)\n  24   ５四銀(63)\n  25   ８九飛(88)\n  26   ５二金(61)\n  27   ４八銀(39)\n  28   ３三桂(21)\n  29   ６七銀(68)\n  30   ９四歩(93)\n  31   ９六歩(97)\n  32   ４四歩(43)\n  33   ５七銀(48)\n  34   ４三金(52)\n  35   ４八金(49)\n  36   ４五歩(44)\n  37   ７五歩(76)\n  38   ３五歩(34)\n  39   ７六銀(67)\n  40   ９五歩(94)\n  41   同　歩(96)\n  42   ８六歩(85)\n  43   同　歩(87)\n  44   ９五香(91)\n  45   ８七銀(76)\n  46   ９八歩打\n  47   同　香(99)\n  48   同　香成(95)\n  49   同　銀(87)\n  50   ９二飛(82)\n  51   ９七香打\n  52   ６二飛(92)\n  53   ８七銀(98)\n  54   ７六香打\n  55   ８三角打\n  56   ７七香(76)\n  57   同　金(78)\n  58   ４四桂打\n  59   ５八金(48)\n  60   １五歩(14)\n  61   同　歩(16)\n  62   ３六歩(35)\n  63   同　歩(37)\n  64   同　桂(44)\n  65   ３七歩打\n  66   ２八角打\n  67   １七香(19)\n  68   ２五桂(33)\n  69   ３六歩(37)\n  70   １七桂成(25)\n  71   ６八金(58)\n  72   １五香(11)\n  73   １四歩打\n  74   ２二銀(31)\n  75   ９二香成(97)\n  76   ６五歩(64)\n  77   同　歩(66)\n  78   ４六歩(45)\n  79   同　歩(47)\n  80   ４五歩打\n  81   ４八玉(38)\n  82   ４六歩(45)\n  83   ５八玉(48)\n  84   ８二歩打\n  85   ９四角成(83)\n  86   ６五飛(62)\n  87   ４八歩打\n  88   ４四香打\n  89   ３五桂打\n  90   ４五飛(65)\n  91   ４九香打\n  92   ３四歩打\n  93   ４三桂成(35)\n  94   同　銀(54)\n  95   ８一成香(92)\n  96   ２七成桂(17)\n  97   ５五桂打\n  98   ５四銀(43)\n  99   ６一馬(94)\n 100   ３三玉(32)\n 101   ５一馬(61)\n 102   ６五桂打\n 103   ６六金(77)\n 104   ５七桂成(65)\n 105   同　金(68)\n 106   ６五歩打\n 107   同　金(66)\n 108   ２四玉(33)\n 109   ５四金(65)\n 110   同　歩(53)\n 111   ４二馬(51)\n 112   ３三銀打\n 113   ４三馬(42)\n 114   ５五歩(54)\n 115   １三歩成(14)\n 116   ６六歩打\n 117   同　金(57)\n 118   ２五玉(24)\n 119   ５七桂打\n 120   ４七歩成(46)\n 121   同　歩(48)\n 122   ３九角成(28)\n 123   ６七玉(58)\n 124   投了\n");
+
+    QBENCHMARK
+    {
+        Sfen::fromKif(kif).toSfen();
+    }
+}
 
 QTEST_GUILESS_MAIN(MaruTest)
 #include "main.moc"

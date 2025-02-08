@@ -37,6 +37,12 @@ jobs:
         set CL=/MP
         qmake CONFIG+=release
         nmake
+    - name: test
+      working-directory: src/test
+      run: |
+        qmake
+        make
+        marutest
     - name: deploy
       run: windeployqt.exe .\dist\shogimaru.exe
 
@@ -52,6 +58,12 @@ jobs:
           make -j4
       - name: version
         run: shogimaru.app/Contents/MacOS/shogimaru -v
+      - name: test
+        working-directory: src/test
+        run: |
+          qmake
+          make
+          ./marutest
 
   build-macos14:
     runs-on: macos-14
@@ -65,6 +77,12 @@ jobs:
           make -j4
       - name: version
         run: shogimaru.app/Contents/MacOS/shogimaru -v
+      - name: test
+        working-directory: src/test
+        run: |
+          qmake
+          make
+          ./marutest
 
   build-macos13:
     runs-on: macos-13
@@ -78,6 +96,12 @@ jobs:
           make -j4
       - name: version
         run: shogimaru.app/Contents/MacOS/shogimaru -v
+      - name: test
+        working-directory: src/test
+        run: |
+          qmake
+          make
+          ./marutest
 
   build-ubuntu-clang:
     runs-on: ubuntu-24.04
@@ -93,6 +117,12 @@ jobs:
           make -j4
       - name: version
         run: ./shogimaru -v
+      - name: test
+        working-directory: src/test
+        run: |
+          qmake
+          make
+          ./marutest
 
   build-ubuntu22-gcc:
     runs-on: ubuntu-22.04
@@ -108,6 +138,12 @@ jobs:
           make -j4
       - name: version
         run: ./shogimaru -v
+      - name: test
+        working-directory: src/test
+        run: |
+          qmake
+          make
+          ./marutest
 
   build-ubuntu22-clang:
     runs-on: ubuntu-22.04
@@ -123,3 +159,9 @@ jobs:
           make -j4
       - name: version
         run: ./shogimaru -v
+      - name: test
+        working-directory: src/test
+        run: |
+          qmake
+          make
+          ./marutest

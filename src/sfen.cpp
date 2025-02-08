@@ -607,12 +607,12 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
     const QString turnPattern = QString::fromUtf8("(?<turn>[▲△])");
     const QString colNum = QString::fromUtf8("[１２３４５６７８９]");
     const QString rowNum = QString::fromUtf8("[一二三四五六七八九]");
-    const QString targetPattern = "(?<target>" % colNum % rowNum % QString::fromUtf8("|同　?)");
+    const QString targetPattern = QString("(?<target>") % colNum % rowNum % QString::fromUtf8("|同　?)");
     const QString piecePattern = QString::fromUtf8("(?<piece>[歩香桂銀金角飛玉と馬龍]|成[香桂銀])");
     const QString promotePattern = QString::fromUtf8("(?<promote>成)");
     const QString sourcePattern = QString::fromUtf8("(?<source>\\(\\d\\d\\)|打)");
     const QString movePattern =
-        "(?<move>" % turnPattern % "?"
+        QString("(?<move>") % turnPattern % "?"
         % targetPattern
         % piecePattern
         % promotePattern % "?"
@@ -657,13 +657,13 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
         auto match = kifuLine.match(line);
 
         if (match.hasMatch()) {
-            if (match.hasCaptured("moveLine")) {
+            if (match.capturedStart("moveLine") >= 0) {
                 auto moveNum = match.captured("moveNum");
                 if (moveNum.toInt() != currentMoveNum) {
                     continue;
                 }
 
-                if (match.hasCaptured("move")) {
+                if (match.capturedStart("move") >= 0) {
                     QByteArray move;
                     auto targetStr = match.captured("target");
                     auto pieceStr = match.captured("piece");
@@ -692,7 +692,7 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
                         move += previousTarget;
                     }
 
-                    if (match.hasCaptured("promote")) {
+                    if (match.capturedStart("promote") >= 0) {
                         move += '+';
                     }
 
@@ -704,7 +704,7 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
                         qCritical() << "Error notation:" << match.captured("moveLine");
                         return sfen;
                     }
-                } else if (match.hasCaptured("special")) {
+                } else if (match.capturedStart("special") >= 0) {
                     auto specialStr = match.captured("special");
 
                     maru::Turn turn = (currentMoveNum % 2 == 1) ? maru::Sente : maru::Gote;
@@ -760,7 +760,7 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
                     sfen.setGameResult(turn, result, detail);
                     break;
                 }
-            } else if (match.hasCaptured("keywordLine")) {
+            } else if (match.capturedStart("keywordLine") >= 0) {
                 auto keywordStr = match.captured("keyword");
                 auto descriptionStr = match.captured("description");
                 if (keywordStr == QString::fromUtf8("先手")) {
