@@ -107,7 +107,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Load a game record in KIF, CSA or SFEN format.</string>
+      <string>Load a game record in CSA, KIF or SFEN format.</string>
      </property>
     </widget>
    </widget>
@@ -120,12 +120,12 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>411</width>
+       <width>401</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Load a game record from the Net in KIF, CSA or SFEN format.</string>
+      <string>Load a game record from the Net.</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="urlLineEdit">
@@ -170,12 +170,12 @@
       <rect>
        <x>10</x>
        <y>30</y>
-       <width>371</width>
+       <width>411</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>Load a game record file of KIF, CSA or SFEN format.</string>
+      <string>Load a game record file of CSA, KIF or SFEN format.</string>
      </property>
     </widget>
     <widget class="QPushButton" name="fileOpenButton">
@@ -219,7 +219,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Save the current game record.</string>
+      <string>Save the current game record in CSA format.</string>
      </property>
     </widget>
    </widget>

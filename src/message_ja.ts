@@ -1273,22 +1273,10 @@ Please wait a moment.</source>
         <translation type="unfinished">読込</translation>
     </message>
     <message>
-        <location filename="../forms/recorddialog.ui" line="110"/>
-        <location filename="ui_recorddialog.h" line="132"/>
-        <source>Load a game record in KIF, CSA or SFEN format.</source>
-        <translation type="unfinished">棋譜を読み込みます (KIF/CSA/SFEN)</translation>
-    </message>
-    <message>
         <location filename="../forms/recorddialog.ui" line="116"/>
         <location filename="ui_recorddialog.h" line="139"/>
         <source>URL</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../forms/recorddialog.ui" line="128"/>
-        <location filename="ui_recorddialog.h" line="134"/>
-        <source>Load a game record from the Net in KIF, CSA or SFEN format.</source>
-        <translation type="unfinished">ネットから棋譜を読み込みます (KIF/CSA/SFEN)</translation>
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="147"/>
@@ -1299,8 +1287,8 @@ Please wait a moment.</source>
     <message>
         <location filename="../forms/recorddialog.ui" line="178"/>
         <location filename="ui_recorddialog.h" line="140"/>
-        <source>Load a game record file of KIF, CSA or SFEN format.</source>
-        <translation type="unfinished">棋譜ファイルを読み込みます (KIF/CSA/SFEN)</translation>
+        <source>Load a game record file of CSA, KIF or SFEN format.</source>
+        <translation type="unfinished">棋譜ファイルを読み込みます (CSA/KIF/SFEN)</translation>
     </message>
     <message>
         <location filename="../forms/recorddialog.ui" line="191"/>
@@ -1317,10 +1305,25 @@ Please wait a moment.</source>
         <translation type="unfinished">保存</translation>
     </message>
     <message>
+        <location filename="../forms/recorddialog.ui" line="110"/>
+        <location filename="ui_recorddialog.h" line="132"/>
+        <source>Load a game record in CSA, KIF or SFEN format.</source>
+        <oldsource>Load a game record in KIF, CSA or SFEN format.</oldsource>
+        <translation type="unfinished">棋譜を読み込みます (CSA/KIF/SFEN)</translation>
+    </message>
+    <message>
+        <location filename="../forms/recorddialog.ui" line="128"/>
+        <location filename="ui_recorddialog.h" line="134"/>
+        <source>Load a game record from the Net.</source>
+        <oldsource>Load a game record from the Net in CSA, KIF or SFEN format.</oldsource>
+        <translation type="unfinished">ネットから棋譜を読み込みます (CSA/KIF/SFEN)</translation>
+    </message>
+    <message>
         <location filename="../forms/recorddialog.ui" line="222"/>
         <location filename="ui_recorddialog.h" line="144"/>
-        <source>Save the current game record.</source>
-        <translation type="unfinished">現在の棋譜を保存します</translation>
+        <source>Save the current game record in CSA format.</source>
+        <oldsource>Save the current game record.</oldsource>
+        <translation type="unfinished">現在の棋譜をCSA形式で保存します</translation>
     </message>
     <message>
         <source>Upload a game record of CSA or SFEN format.</source>
