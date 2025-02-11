@@ -44,7 +44,7 @@ jobs:
         set CL=/MP
         qmake
         nmake
-        marutest
+        release\marutest.exe
     - name: deploy
       run: windeployqt.exe .\dist\shogimaru.exe
 
