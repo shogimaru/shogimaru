@@ -184,6 +184,7 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
     options["BookDir"].setValue(maru::appResourcePath("assets/YaneuraOu"));
     options["BookFile"].setValue("user_book1.db");
     options["EvalDir"].setValue(maru::appResourcePath("assets/YaneuraOu/nnue-halfkp256"));
+    options["SlowMover"].setValue(20);
     options["FV_SCALE"].setValue(24);
     options["Stochastic_Ponder"].setValue(true);
 }
