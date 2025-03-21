@@ -229,6 +229,7 @@ void SettingsDialog::showEngineOptions(int index)
         int type = engineData.types.value(key).toInt();
         auto value = options.value(key).toString();
         item = new QTableWidgetItem(value, type);
+        //qDebug() << "reset opt key:" << key << " value:" << value;
 
         if (type == QMetaType::Bool) {
             Qt::CheckState state = (value == QLatin1String("true")) ? Qt::Checked : Qt::Unchecked;

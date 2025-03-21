@@ -7,7 +7,7 @@ constexpr auto DEFAULT_SETTINGS_JSON_FILE_NAME = "assets/defaults/wasm_engines.j
 constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
 constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
-constexpr int  SETTINGS_JSON_VERSION = 2;
+constexpr int  SETTINGS_JSON_VERSION = 3;
 
 
 static QString settingsJsonPath()
@@ -182,9 +182,9 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
     options["Threads"].setValue(threads);
 
     options["BookDir"].setValue(maru::appResourcePath("assets/YaneuraOu"));
-    options["BookFile"].setValue("user_book1.db");
+    options["BookFile"].setValue(QString("user_book1.db"));
     options["EvalDir"].setValue(maru::appResourcePath("assets/YaneuraOu/nnue-halfkp256"));
-    options["SlowMover"].setValue(20);
+    options["SlowMover"].setValue(40);
     options["FV_SCALE"].setValue(24);
     options["Stochastic_Ponder"].setValue(true);
 }

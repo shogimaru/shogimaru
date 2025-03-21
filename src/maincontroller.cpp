@@ -419,7 +419,7 @@ void MainController::newGame()
     int basicTime = user.basicTime();
     int byoyomi = user.byoyomi();
 
-    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && byoyomi == 0)) {
+    if (basicTime == 0 && byoyomi == 0) {
         _startDialog->open();
         return;
     }
@@ -521,7 +521,7 @@ void MainController::newRatingGame()
     int basicTime = user.basicTime();
     int byoyomi = user.byoyomi();
 
-    if ((basicTime == 0 && byoyomi == 0) || (user.method() == maru::Fischer && byoyomi == 0)) {
+    if (basicTime == 0 && byoyomi == 0) {
         _startRatingDialog->open();
         return;
     }
