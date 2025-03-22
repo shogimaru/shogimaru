@@ -203,6 +203,7 @@ void RecordDialog::open()
 #endif
 
     // HTTP request
+    _errorCount = 0;
     request(url, &RecordDialog::parseJsonArray);
 
     _ui->textEdit->clear();
@@ -220,7 +221,6 @@ void RecordDialog::parseJsonArray()
         return;
     }
 
-    _errorCount = 0;
     _ui->listWidget->clear();
     auto body = reply->readAll();
     QJsonDocument doc = QJsonDocument::fromJson(body);
@@ -284,7 +284,6 @@ void RecordDialog::parseRecordJson()
         return;
     }
 
-    _errorCount = 0;
     _ui->listWidget->setEnabled(true);
     if (reply->error() != QNetworkReply::NoError) {
         qCritical() << reply->errorString();
