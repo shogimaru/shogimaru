@@ -320,6 +320,18 @@ void Engine::engineError()
 }
 
 
+void Engine::slotEngineFinished(int exitCode)
+{
+    if (exitCode == 1) {
+        qWarning() << "Engine Aborted";
+        _error = "Engine Aborted";
+        emit errorOccurred();
+        close();
+    } else {
+        qDebug() << "Engine finished: " << exitCode;
+    }
+}
+
 // 手番再設定
 void Engine::setTurn()
 {

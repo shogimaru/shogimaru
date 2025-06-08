@@ -96,6 +96,7 @@ protected slots:
     void getResponse();
     void usiNewGame();
     void engineError();
+    void slotEngineFinished(int exitCode);
 
 private:
     bool openContext(const QString &path);  // start process/thread

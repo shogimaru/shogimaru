@@ -43,6 +43,7 @@ bool Engine::openContext(const QString &path)
     if (ret) {
         Command::setEngine(process);
         _engineContext = process;
+        connect(process, &QProcess::finished, this, &Engine::slotEngineFinished);
     } else {
         delete process;
     }
