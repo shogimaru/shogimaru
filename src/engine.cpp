@@ -58,9 +58,14 @@ bool Engine::open(const QString &path)
 
             for (auto &response : responses) {
                 auto str = QString::fromStdString(response).trimmed();
-                // qDebug() << str;
+                qDebug() << str;
                 if (str == "usiok") {
                     return true;
+                }
+
+                if (str.startsWith("Error ")) {
+                    qDebug() << ("Engine " + str);
+                    return false;
                 }
 
                 if (str.startsWith("id name ")) {
@@ -255,7 +260,7 @@ bool Engine::newGame(int slowMover)
 
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
-    _errorTimer->start(20000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
+    _errorTimer->start(40000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
     _lastPondered.clear();
     return true;
 }
@@ -288,7 +293,7 @@ bool Engine::startAnalysis()
 
     Command::instance().request("isready");
     _timer->start(66);  // 受信開始
-    _errorTimer->start(20000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
+    _errorTimer->start(40000);  // エラータイマー開始（初回のisreadyは結構時間がかかる）
     return true;
 }
 
