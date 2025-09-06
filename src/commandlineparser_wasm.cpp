@@ -1,6 +1,7 @@
 #include "commandlineparser.h"
 #include <emscripten/val.h>
 #include <emscripten.h>
+#include <QDebug>
 
 
 void CommandLineParser::process(const QCoreApplication &)

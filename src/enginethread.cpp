@@ -1,12 +1,12 @@
 #include <enginethread.h>
 #include <QDebug>
 
-extern int YaneuraOu();
+extern int yaneuraOu();
 
 
 void EngineThread::run()
 {
-    YaneuraOu();
+    yaneuraOu();
 }
 
 
