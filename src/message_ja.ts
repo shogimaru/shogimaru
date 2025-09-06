@@ -106,12 +106,12 @@
         <translation type="obsolete">エンジンエラー</translation>
     </message>
     <message>
-        <location filename="engine_native.cpp" line="79"/>
+        <location filename="engine_native.cpp" line="80"/>
         <source>Failed to start the engine</source>
         <translation type="unfinished">エンジンを起動できません</translation>
     </message>
     <message>
-        <location filename="engine_native.cpp" line="79"/>
+        <location filename="engine_native.cpp" line="80"/>
         <source>Engine error</source>
         <translation type="unfinished">エンジンエラー</translation>
     </message>
@@ -330,12 +330,11 @@ Are you sure?</source>
         <translation type="unfinished">バージョン</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="292"/>
         <source>YaneuraOu</source>
-        <translation type="unfinished">やねうら王</translation>
+        <translation type="obsolete">やねうら王</translation>
     </message>
     <message>
-        <location filename="maincontroller.cpp" line="295"/>
+        <location filename="maincontroller.cpp" line="292"/>
         <source>Platform</source>
         <translation type="unfinished">プラットフォーム</translation>
     </message>
@@ -508,6 +507,11 @@ Are you sure?</source>
         <location filename="maincontroller.cpp" line="1432"/>
         <source>Abort</source>
         <translation type="unfinished">中断</translation>
+    </message>
+    <message>
+        <location filename="maincontroller.cpp" line="294"/>
+        <source>Shogi Engine</source>
+        <translation type="unfinished">思考エンジン</translation>
     </message>
     <message>
         <location filename="maincontroller.cpp" line="1317"/>
@@ -1231,7 +1235,7 @@ Please wait a moment.</source>
         <translation type="unfinished">エンジン選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="541"/>
+        <location filename="settingsdialog.cpp" line="542"/>
         <source>Select Directory</source>
         <translation type="unfinished">ディレクトリ選択</translation>
     </message>
@@ -1360,7 +1364,7 @@ Please wait a moment.</source>
         <location filename="recorddialog.cpp" line="61"/>
         <location filename="recorddialog.cpp" line="104"/>
         <location filename="recorddialog.cpp" line="134"/>
-        <location filename="recorddialog.cpp" line="325"/>
+        <location filename="recorddialog.cpp" line="324"/>
         <source>Notation Error</source>
         <translation type="unfinished">棋譜読込エラー</translation>
     </message>
@@ -1368,7 +1372,7 @@ Please wait a moment.</source>
         <location filename="recorddialog.cpp" line="61"/>
         <location filename="recorddialog.cpp" line="104"/>
         <location filename="recorddialog.cpp" line="134"/>
-        <location filename="recorddialog.cpp" line="325"/>
+        <location filename="recorddialog.cpp" line="324"/>
         <source>Load Error</source>
         <translation type="unfinished">読込エラー</translation>
     </message>
@@ -1383,12 +1387,12 @@ Please wait a moment.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="304"/>
+        <location filename="recorddialog.cpp" line="303"/>
         <source>Error</source>
         <translation type="unfinished">エラー</translation>
     </message>
     <message>
-        <location filename="recorddialog.cpp" line="304"/>
+        <location filename="recorddialog.cpp" line="303"/>
         <source>Failed to retrieve the Shogi game record.</source>
         <translation type="unfinished">棋譜の取得に失敗しました</translation>
     </message>
@@ -1544,70 +1548,70 @@ Please wait a moment.</source>
         <translation type="obsolete">実行ファイル (*)</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="298"/>
+        <location filename="settingsdialog.cpp" line="299"/>
         <source>Invalid file</source>
         <translation type="unfinished">ファイル不正</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="298"/>
+        <location filename="settingsdialog.cpp" line="299"/>
         <source>File not executable</source>
         <translation type="unfinished">実行可能なファイルではありません</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="334"/>
+        <location filename="settingsdialog.cpp" line="335"/>
         <source>Delete %1.
 Are you sure?</source>
         <translation type="unfinished">%1 を削除します。
 よろしいですか。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="335"/>
+        <location filename="settingsdialog.cpp" line="336"/>
         <source>Delete engine</source>
         <translation type="unfinished">エンジン削除</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="518"/>
+        <location filename="settingsdialog.cpp" line="519"/>
         <source>Select the Book file to set the BookDir</source>
         <oldsource>Select Book File</oldsource>
         <translation type="unfinished">BookDirを設定するために定跡ファイルを選択してください</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="529"/>
+        <location filename="settingsdialog.cpp" line="530"/>
         <source>Select the Eval file to set the EvalDir.</source>
         <oldsource>Select Eval File</oldsource>
         <translation type="unfinished">EvelDirを設定するために評価関数ファイルを選択してください</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="557"/>
+        <location filename="settingsdialog.cpp" line="558"/>
         <source>Select File</source>
         <translation type="unfinished">ファイル選択</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="584"/>
+        <location filename="settingsdialog.cpp" line="585"/>
         <source>Default</source>
         <translation type="unfinished">初期値</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="596"/>
+        <location filename="settingsdialog.cpp" line="597"/>
         <source>Max</source>
         <translation type="unfinished">最大</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="600"/>
+        <location filename="settingsdialog.cpp" line="601"/>
         <source>Min</source>
         <translation type="unfinished">最小</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="237"/>
-        <location filename="settingsdialog.cpp" line="568"/>
-        <location filename="settingsdialog.cpp" line="587"/>
+        <location filename="settingsdialog.cpp" line="238"/>
+        <location filename="settingsdialog.cpp" line="569"/>
+        <location filename="settingsdialog.cpp" line="588"/>
         <source>true</source>
         <translation type="unfinished">オン</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="237"/>
-        <location filename="settingsdialog.cpp" line="568"/>
-        <location filename="settingsdialog.cpp" line="587"/>
+        <location filename="settingsdialog.cpp" line="238"/>
+        <location filename="settingsdialog.cpp" line="569"/>
+        <location filename="settingsdialog.cpp" line="588"/>
         <source>false</source>
         <translation type="unfinished">オフ</translation>
     </message>
@@ -1616,12 +1620,12 @@ Are you sure?</source>
         <translation type="obsolete">%1 オプションは削除できません。</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="611"/>
+        <location filename="settingsdialog.cpp" line="612"/>
         <source>Reset option</source>
         <translation type="unfinished">オプションリセット</translation>
     </message>
     <message>
-        <location filename="settingsdialog.cpp" line="611"/>
+        <location filename="settingsdialog.cpp" line="612"/>
         <source>Reset the engine options.
 Are you sure?</source>
         <translation type="unfinished">エンジンオプションをリセットします。

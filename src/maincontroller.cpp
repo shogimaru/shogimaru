@@ -36,7 +36,7 @@
 const QSize BaseMainWindowSize(960, 820);
 const QList<int> RatingList = {maru::R1000, maru::R1200, maru::R1400, maru::R1600, maru::R1800, maru::R2000, maru::R2200, maru::R2400, maru::R2600, maru::R2800, maru::R3000};
 #ifdef Q_OS_WASM
-constexpr auto YANEURAOU_VERSION_STR = "8.50 Suisho5";
+constexpr auto ENGINE_VERSION_STR = "Suisho5 / YaneuraOu 8.50";
 #endif
 
 static int engineSkillLevel(int level, int defaultValue = 0)
@@ -288,11 +288,11 @@ void MainController::createInfoBox()
     //text += "<p><a href='https://shogimaru.com' style='color: #0066cc; text-decoration: none;'>https://shogimaru.com</a></p>";
     text += QString("<table style='margin-top: 24px;'><tbody>");
     text += QString("<tr><td>") + tr("Version") + " : </td><td>" + maru::SHOGIMARU_VERSION_STR + "</td></tr>";
-#ifdef Q_OS_WASM
-    text += QString("<tr><td>") + tr("YaneuraOu") + " : </td><td>" + YANEURAOU_VERSION_STR + "</td></tr>";
-#endif
     text += QString("<tr><td>Qt : </td><td>") + QT_VERSION_STR + "</td></tr>";
     text += QString("<tr><td>") + tr("Platform") + " : </td><td>" + QSysInfo::prettyProductName() + "</td></tr>";
+#ifdef Q_OS_WASM
+    text += QString("<tr><td>") + tr("Shogi Engine") + " : </td><td>" + ENGINE_VERSION_STR + "</td></tr>";
+#endif
     text += "</tbody></table>";
 
     _infoBox->setText(text);
