@@ -112,7 +112,7 @@ void RecordDialog::parseRecord()
 bool RecordDialog::isReadable(const QString &text)
 {
     for (auto c : text) {
-        if (c.category() < 3 || c.category() > 27) {
+        if (c.category() < 3 || c.category() == QChar::Symbol_Modifier) {
             return false;
         }
     }

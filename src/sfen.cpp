@@ -608,7 +608,7 @@ Sfen Sfen::fromKif(const QString &kif, bool *ok)
     const QString colNum = QString::fromUtf8("[１２３４５６７８９]");
     const QString rowNum = QString::fromUtf8("[一二三四五六七八九]");
     const QString targetPattern = "(?<target>" + colNum + rowNum + QString::fromUtf8("|同　?)");
-    const QString piecePattern = QString::fromUtf8("(?<piece>[歩香桂銀金角飛玉と馬龍]|成[香桂銀])");
+    const QString piecePattern = QString::fromUtf8("(?<piece>[歩香桂銀金角飛玉と馬龍竜]|成[香桂銀])");
     const QString promotePattern = QString::fromUtf8("(?<promote>成)");
     const QString sourcePattern = QString::fromUtf8("(?<source>\\(\\d\\d\\)|打)");
     const QString movePattern = "(?<move>" + turnPattern + "?" + targetPattern
