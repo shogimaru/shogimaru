@@ -4,10 +4,10 @@
 #ifdef Q_OS_WASM
 constexpr auto DEFAULT_SETTINGS_JSON_FILE_NAME = "assets/defaults/wasm_engines.json";
 #endif
+constexpr int  SETTINGS_JSON_VERSION = 4;  // WASMでエンジンを変えたら再読み込みさせるためインクリメントせよ
 constexpr auto SETTINGS_JSON_FILE_NAME = "engines.json";
 constexpr auto AVAILABLE_ENGINES_KEY = "availableEngines";
 constexpr auto SELECTED_ENGINE_INDEX_KEY = "selectedEngineIndex";
-constexpr int  SETTINGS_JSON_VERSION = 3;
 
 
 static QString settingsJsonPath()
@@ -56,7 +56,7 @@ EngineSettings EngineSettings::loadJsonData(const QByteArray &data)
     auto json = QJsonDocument::fromJson(data).object();
 
 #ifdef Q_OS_WASM
-    if (json["version"] != SETTINGS_JSON_VERSION) {
+    if (!json["version"].isNull() && json["version"].toInt() != SETTINGS_JSON_VERSION) {
         // WASM版の思考エンジンが変わったら、バージョンを変えて再読み込みさせる
         return settings;
     }
@@ -185,7 +185,7 @@ void EngineSettings::setCustomOptions(QVariantMap &options)
     options["BookFile"].setValue(QString("user_book1.db"));
     options["EvalDir"].setValue(maru::appResourcePath("assets/YaneuraOu/nnue-halfkp256"));
     options["SlowMover"].setValue(40);
-    options["FV_SCALE"].setValue(24);
+    options["FV_SCALE"].setValue(20);
     options["Stochastic_Ponder"].setValue(true);
 }
 

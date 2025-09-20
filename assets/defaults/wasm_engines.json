@@ -1,12 +1,11 @@
 {
   "availableEngines": [
     {
-      "name": "YaneuraOu NNUE 8.50git Suisho5",
+      "name": "tanuki-Hao / YaneuraOu V9.00",
       "options": {},
       "defaultOptions": {},
       "path": ""
     }
   ],
-  "selectedEngineIndex": 0,
-  "version": 3
+  "selectedEngineIndex": 0
 }
