@@ -5,11 +5,11 @@ rem
 rem Edit this line to run the batch file for Qt environment.
 rem
 
-set SHOGIMARU_VERSION=1.5.5
+set SHOGIMARU_VERSION=1.5.6
 set BASEDIR=%~dp0
 set TARGET=shogimaru-%SHOGIMARU_VERSION%
 
-call "C:\Qt\6.8.3\msvc2022_64\bin\qtenv2.bat"
+call "C:\Qt\6.11.1\msvc2022_64\bin\qtenv2.bat"
 
 set VSVER=2022
 set ARCH=amd64
