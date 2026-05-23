@@ -16,7 +16,6 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonValue>
-#include <stdexcept>
 #include <map>
 
 static const QString BASE_URL = QStringLiteral("https://shogidb2.com");
