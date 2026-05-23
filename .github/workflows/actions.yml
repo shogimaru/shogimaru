@@ -147,7 +147,7 @@ jobs:
           make
           ./marutest
 
-  build-ubuntu22-clang:
+  build-ubuntu22:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@main
@@ -157,7 +157,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6websockets6-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 libgl1-mesa-dev clang make cmake
       - name: build
         run: |
-          qmake6 -spec linux-clang CONFIG+=release
+          qmake6 CONFIG+=release
           make -j4
       - name: version
         run: ./shogimaru -v

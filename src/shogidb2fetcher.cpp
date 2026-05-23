@@ -74,7 +74,7 @@ static QByteArray fetchUrl(const QUrl &url, int timeout = 5000)
         timer.stop();
         if (reply->error() != QNetworkReply::NoError) {
             const QString err = reply->errorString();
-            qCritical() << err.toStdString();
+            qCritical() << err;
             //throw std::runtime_error(err.toStdString());
         } else {
             body = reply->readAll();
@@ -949,10 +949,12 @@ QString ShogiDB2Fetcher::fetch(const QString &pageUrl, int maxNext)
         loop.quit();
     });
 
+#if QT_VERSION >= 0x060500
     QObject::connect(&ws, &QWebSocket::errorOccurred, [&](QAbstractSocket::SocketError) {
         errorMessage = ws.errorString();
         loop.quit();
     });
+#endif
 
     QNetworkRequest wsReq {QUrl(wsUrl)};
     wsReq.setRawHeader("User-Agent", USER_AGENT);
