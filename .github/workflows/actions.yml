@@ -24,10 +24,10 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
-        version:      6.8.1
+        version:      6.8.3
         host:         windows
         target:       desktop
-        modules:      qtmultimedia
+        modules:      qtmultimedia qtwebsockets
         setup-python: false
     - name: build
       shell: cmd
@@ -48,8 +48,27 @@ jobs:
     - name: deploy
       run: windeployqt.exe .\dist\shogimaru.exe
 
-  build-macos:
-    runs-on: macos-latest
+  build-macos26:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@main
+      - name: Homebrew
+        run: brew install qt6 libiconv
+      - name: build
+        run: |
+          qmake CONFIG+=release
+          make -j4
+      - name: version
+        run: shogimaru.app/Contents/MacOS/shogimaru -v
+      - name: test
+        working-directory: src/test
+        run: |
+          qmake
+          make
+          ./marutest
+
+  build-macos15:
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@main
       - name: Homebrew
@@ -86,25 +105,6 @@ jobs:
           make
           ./marutest
 
-  build-macos13:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@main
-      - name: Homebrew
-        run: brew install qt6 libiconv
-      - name: build
-        run: |
-          qmake CONFIG+=release
-          make -j4
-      - name: version
-        run: shogimaru.app/Contents/MacOS/shogimaru -v
-      - name: test
-        working-directory: src/test
-        run: |
-          qmake
-          make
-          ./marutest
-
   build-ubuntu-clang:
     runs-on: ubuntu-24.04
     steps:
@@ -112,7 +112,7 @@ jobs:
       - name: apt
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 libgl1-mesa-dev clang make cmake
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 libqt6websockets6 qmake6 libgl1-mesa-dev clang make cmake
       - name: build
         run: |
           qmake6 -spec linux-clang CONFIG+=release
@@ -133,7 +133,7 @@ jobs:
       - name: apt
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 libgl1-mesa-dev g++ make cmake
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 libqt6websockets6 qmake6 libgl1-mesa-dev g++ make cmake
       - name: build
         run: |
           qmake6 CONFIG+=release
@@ -154,7 +154,7 @@ jobs:
       - name: apt
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 qmake6 libgl1-mesa-dev clang make cmake
+          sudo apt-get install -y --no-install-recommends qt6-base-dev qt6-multimedia-dev libqt6gui6 libqt6network6 libqt6widgets6 libqt6websockets6 qmake6 libgl1-mesa-dev clang make cmake
       - name: build
         run: |
           qmake6 -spec linux-clang CONFIG+=release
