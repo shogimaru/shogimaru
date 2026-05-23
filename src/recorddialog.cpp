@@ -3,6 +3,7 @@
 #include "stringconverter.h"
 #include "ui_recorddialog.h"
 #include "westerntabstyle.h"
+#include "shogidb2fetcher.h"
 #include <QDebug>
 #include <QFileDialog>
 #include <QJsonArray>
@@ -204,17 +205,33 @@ void RecordDialog::open()
 
     // HTTP request
     _errorCount = 0;
-    request(url, &RecordDialog::parseJsonArray);
+    //request(url, &RecordDialog::parseJsonArray);
 
     _ui->textEdit->clear();
     _sfen.clear();
     _ui->listWidget->setEnabled(true);
+
+    ShogiDB2Fetcher fetcher;
+    auto gameitems = fetcher.fetchRss();
+    for (auto game : gameitems) {
+        QString str;
+        str = game.published.mid(0, 10);
+        str += ' ';
+        str += game.title;
+
+        auto *item = new QListWidgetItem(str, _ui->listWidget);
+        item->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        item->setData(Qt::UserRole, game.id);
+        _ui->listWidget->addItem(item);
+    }
+
     QDialog::open();
 }
 
 
 void RecordDialog::parseJsonArray()
 {
+#if 0
     QNetworkReply *reply = dynamic_cast<QNetworkReply *>(sender());
     if (!reply) {
         qCritical() << "Logic Error " << __FILE__ << __LINE__;
@@ -247,37 +264,56 @@ void RecordDialog::parseJsonArray()
         item->setData(Qt::UserRole, obj);
         _ui->listWidget->addItem(item);
     }
+#endif
 }
 
 
 void RecordDialog::loadItem(QListWidgetItem *item)
 {
+#if 1
+    auto id = item->data(Qt::UserRole).toString();
+    readRecord(id);
+#else
     auto obj = item->data(Qt::UserRole).toJsonObject();
-    QString hash = obj.value("hash").toString();
-    readRecord(hash);
+    QString id = obj.value("id").toString();
+    readRecord(id);
+#endif
 }
 
 
-void RecordDialog::readRecord(const QString &hash)
+void RecordDialog::readRecord(const QString &id)
 {
-    const QString Db2Url("https://api.shogidb2.com/games/%1");
+#if 1
+    const QString Db2Url("https://shogidb2.com/games/%1");
+    ShogiDB2Fetcher fetcher;
+    QString csa = fetcher.fetch(Db2Url.arg(id));
 
-    auto url = Db2Url.arg(hash);
-#ifdef Q_OS_WASM
-    url.remove(QRegularExpression(R"(^https?://)"));
-    url.prepend("https://shogimaru.com/url/");
-#endif
-
-    if (!hash.isEmpty()) {
-        // HTTP request
-        request(url, &RecordDialog::parseRecordJson);
-        _ui->listWidget->setEnabled(false);
+    if (!csa.isEmpty() && validate(csa)) {
+        accept();
+    } else {
+        MessageBox::information(tr("Notation Error"), tr("Load Error"));
     }
+#else
+//     const QString Db2Url("https://api.shogidb2.com/games/%1");
+
+//     auto url = Db2Url.arg(id);
+// #ifdef Q_OS_WASM
+//     url.remove(QRegularExpression(R"(^https?://)"));
+//     url.prepend("https://shogimaru.com/url/");
+// #endif
+
+//     if (!id.isEmpty()) {
+//         // HTTP request
+//         request(url, &RecordDialog::parseRecordJson);
+//         _ui->listWidget->setEnabled(false);
+//     }
+#endif
 }
 
 
 void RecordDialog::parseRecordJson()
 {
+#if 0
     QNetworkReply *reply = dynamic_cast<QNetworkReply *>(sender());
     if (!reply) {
         qCritical() << "Logic Error " << __FILE__ << __LINE__;
@@ -323,4 +359,5 @@ void RecordDialog::parseRecordJson()
     } else {
         MessageBox::information(tr("Notation Error"), tr("Load Error"));
     }
+#endif
 }

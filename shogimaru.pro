@@ -1,6 +1,6 @@
 TARGET   = shogimaru
 TEMPLATE = app
-QT      += core gui widgets network
+QT      += core gui widgets network websockets
 CONFIG  += c++17
 CODECFORTR = UTF-8
 MOC_DIR  = .obj/
@@ -15,7 +15,7 @@ UI_DIR = src/
 
 wasm {
   CONFIG +=
-  LIBS = engines/YaneuraOu/source/YaneuraOu.wasm
+  LIBS = -Wl,--whole-archive engines/YaneuraOu/source/YaneuraOu.wasm -Wl,--no-whole-archive
   SOURCES += src/maincontroller_wasm.cpp
   SOURCES += src/file_wasm.cpp
   SOURCES += src/engine_wasm.cpp
@@ -98,6 +98,7 @@ SOURCES += \
         src/environmentvariablesdialog.cpp \
         src/userenvironmentvariabledialog.cpp \
         src/browseenginedialog.cpp \
+        src/shogidb2fetcher.cpp \
         src/maincontroller.cpp
 
 HEADERS += \
@@ -136,6 +137,7 @@ HEADERS += \
         src/environmentvariablesdialog.h \
         src/userenvironmentvariabledialog.h \
         src/browseenginedialog.h \
+        src/shogidb2fetcher.h \
         src/maincontroller.h
 
 FORMS += \

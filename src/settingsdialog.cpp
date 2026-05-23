@@ -370,7 +370,7 @@ static QString jpText(const QString &name)
         {QLatin1String("USI_Hash"), QString::fromUtf8(u8"置換表のサイズ(MB)")},
         {QLatin1String("USI_Ponder"), QString::fromUtf8(u8"相手番の時にエンジンが思考するフラグ")},
         {QLatin1String("Stochastic_Ponder"), QString::fromUtf8(u8"先読み(Ponder)が有効な場合に相手局面を探索するフラグ")},
-        {QLatin1String("MultiPV"), QString::fromUtf8(u8"読み筋(PV)の数（5件まで表示可）")},
+        {QLatin1String("MultiPV"), QString::fromUtf8(u8"解析時の読み筋(PV)の数（5件まで表示可、対局時は1固定）")},
         {QLatin1String("NetworkDelay"), QString::fromUtf8(u8"通信時の平均遅延時間（ミリ秒）")},
         {QLatin1String("NetworkDelay2"), QString::fromUtf8(u8"通信時の最大遅延時間（ミリ秒）")},
         {QLatin1String("MinimumThinkingTime"), QString::fromUtf8(u8"最小思考時間（ミリ秒）")},
