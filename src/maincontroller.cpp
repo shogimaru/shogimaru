@@ -98,6 +98,10 @@ MainController::MainController(QWidget *parent) :
     _opeButtonGroup(new OperationButtonGroup)
 {
     _ui->setupUi(this);
+    // 棋譜フォント
+    QFont font = _ui->recordWidget->font();
+    font.setPixelSize(14);
+    _ui->recordWidget->setFont(font);
     _ui->centralWidget->setLayout(_ui->mainVLayout);  // レイアウト
     // 評価グラフ
     _graph->setParent(_ui->graphWidget);
