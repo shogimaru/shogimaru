@@ -51,7 +51,6 @@ wasm {
 }
 
 msvc {
-  QMAKE_CXXFLAGS += /std:c++17 /Zc:__cplusplus /utf-8
   RC_FILE = resources/windows/app.rc
 }
 
