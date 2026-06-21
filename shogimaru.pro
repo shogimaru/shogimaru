@@ -1,7 +1,7 @@
 TARGET   = shogimaru
 TEMPLATE = app
 QT      += core gui widgets network websockets
-CONFIG  += c++17
+CONFIG  += c++20
 CODECFORTR = UTF-8
 MOC_DIR  = .obj/
 OBJECTS_DIR = .obj/
@@ -26,6 +26,8 @@ wasm {
   SOURCES += src/stringconverter_iconv.cpp
   HEADERS += src/enginethread.h
   SOURCES += src/enginethread.cpp
+  HEADERS += src/cp932decoder.h
+  SOURCES += src/cp932decoder.cpp
   DESTDIR  = html/
 } else {
   QT      += multimedia

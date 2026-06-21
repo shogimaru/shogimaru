@@ -25,11 +25,14 @@ public:
     int kingCoord(maru::Turn owner) const;  // 玉の座標
     void move(Piece *from, Piece *to, bool promote = false, bool update = true);  // 指す
     bool canMove(const Piece *piece, int coord) const;
+    QList<int> getKingMovableCoords(maru::Turn owner) const;
     QPair<Piece*, QString> lastMovedPiece() const { return _lastMove; }
     bool isCheck() const;  // 最終手が王手か
+    bool mated() const;
     QList<Piece*> searchMovablePeace(maru::Turn turn, int coord) const;
     bool startGame(const QByteArray &sfen);
     void setSfen(const QByteArray &sfen, bool movable, const QByteArray &lastMove = QByteArray());
+    void movePieceByUsi(const QByteArray &coord, maru::Turn turn, bool update);
 
     static QPixmap board();  // 将棋盤
 
@@ -48,7 +51,6 @@ protected slots:
 
 protected:
     void clear();  // オブジェクト削除
-    void movePieceByUsi(const QByteArray &coord, maru::Turn turn, bool update);
     void updatePos();
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;

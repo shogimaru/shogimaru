@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QString>
+#include <QNetworkAccessManager>
 
 
 struct GameItem {
@@ -18,5 +19,12 @@ public:
     { }
 
     QList<GameItem> fetchRss();
-    QString fetch(const QString &pageUrl, int maxNext = 400);
+    QString fetchCsa(const QString &url, int maxNext = 400);
+    QByteArray getHttpReply(const QString &url, int timeout = 5000);
+
+private:
+    QList<GameItem> parseRss(const QByteArray &xml);
+
+    QNetworkAccessManager _manager;
+    //int _errorCount {0};
 };

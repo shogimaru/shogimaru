@@ -3,7 +3,6 @@
 #include <QRegularExpression>
 #include <QUrl>
 #include <QUrlQuery>
-#include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QNetworkCookieJar>
@@ -19,11 +18,7 @@
 #include <map>
 
 static const QString BASE_URL = QStringLiteral("https://shogidb2.com");
-
-static const QByteArray USER_AGENT =
-    "Mozilla/5.0 (X11; Linux x86_64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/122.0.0.0 Safari/537.36";
+static const QByteArray USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:150.0) Gecko/20100101 Firefox/150.0";
 
 struct LiveViewRoot {
     QString id;
@@ -48,47 +43,8 @@ static QString extractGameId(const QString &link)
     return m.captured(1);
 }
 
-static QByteArray fetchUrl(const QUrl &url, int timeout = 5000)
-{
-    QNetworkAccessManager manager;
 
-    QNetworkRequest req(url);
-    req.setRawHeader("User-Agent", "Mozilla/5.0 (compatible; shogidb2-rss-fetcher/1.0)");
-    req.setRawHeader("Accept", "application/rss+xml, application/xml, text/xml, */*");
-
-    QNetworkReply *reply = manager.get(req);
-
-    QByteArray body;
-    QEventLoop loop;
-    QTimer timer;
-    timer.setSingleShot(true);
-
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
-
-    timer.start(timeout);
-    loop.exec();
-
-    if (timer.isActive()) {
-        timer.stop();
-        if (reply->error() != QNetworkReply::NoError) {
-            const QString err = reply->errorString();
-            qCritical() << err;
-            //throw std::runtime_error(err.toStdString());
-        } else {
-            body = reply->readAll();
-        }
-    } else {
-        reply->abort();
-        qCritical() <<"Network timeout";
-        //throw std::runtime_error("Network timeout");
-    }
-
-    reply->deleteLater();
-    return body;
-}
-
-static QList<GameItem> parseRss(const QByteArray &xml)
+QList<GameItem> ShogiDB2Fetcher::parseRss(const QByteArray &xml)
 {
     QList<GameItem> games;
     QXmlStreamReader reader(xml);
@@ -165,92 +121,6 @@ static QString htmlUnescape(QString s)
     return s;
 }
 
-// static QString stripHtmlTags(QString html)
-// {
-//     html.replace(QRegularExpression(R"(<script[^>]*>.*?</script>)",
-//                                     QRegularExpression::CaseInsensitiveOption |
-//                                     QRegularExpression::DotMatchesEverythingOption),
-//                  " ");
-
-//     html.replace(QRegularExpression(R"(<style[^>]*>.*?</style>)",
-//                                     QRegularExpression::CaseInsensitiveOption |
-//                                     QRegularExpression::DotMatchesEverythingOption),
-//                  " ");
-
-//     html.replace(QRegularExpression(R"(<[^>]+>)"), " ");
-//     html = htmlUnescape(html);
-//     html.replace(QRegularExpression(R"(\s+)"), " ");
-//     return html.trimmed();
-// }
-
-// static QString normalizeGameId(const QString &url)
-// {
-//     static const QRegularExpression re(R"(/games/([^/?#]+))");
-//     const auto m = re.match(url);
-//     if (!m.hasMatch()) {
-//         throw std::runtime_error("URL から game_id を抽出できませんでした");
-//     }
-//     return m.captured(1);
-// }
-
-// static QString withSuffix(const QString &path, const QString &suffix)
-// {
-//     QFileInfo fi(path);
-//     const QString dir = fi.absolutePath();
-//     const QString base = fi.completeBaseName();
-//     return dir + "/" + base + suffix;
-// }
-
-// static QString removeSuffix(const QString &path)
-// {
-//     QFileInfo fi(path);
-//     const QString dir = fi.absolutePath();
-//     const QString base = fi.completeBaseName();
-//     return dir + "/" + base;
-// }
-
-static QNetworkRequest makeHtmlRequest(const QUrl &url)
-{
-    QNetworkRequest req(url);
-    req.setRawHeader("User-Agent", USER_AGENT);
-    req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-    req.setRawHeader("Accept-Language", "ja,en-US;q=0.9,en;q=0.8");
-    req.setRawHeader("Referer", (BASE_URL + "/").toUtf8());
-    req.setRawHeader("Cache-Control", "no-cache");
-    req.setRawHeader("Pragma", "no-cache");
-    return req;
-}
-
-static QString fetchHtml(QNetworkAccessManager &nam, const QString &url)
-{
-    QNetworkReply *reply = nam.get(makeHtmlRequest(QUrl(url)));
-
-    QByteArray body;
-    QEventLoop loop;
-    QTimer timer;
-    timer.setSingleShot(true);
-
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QObject::connect(&timer, &QTimer::timeout, [&] {
-        reply->abort();
-        loop.quit();
-    });
-
-    timer.start(30000);
-    loop.exec();
-
-    if (reply->error() != QNetworkReply::NoError) {
-        const QString err = reply->errorString();
-        qCritical() << "HTTP error: " << err;
-        //throw std::runtime_error(("HTTP error: " + err).toStdString());
-    } else {
-        body = reply->readAll();
-    }
-
-    reply->deleteLater();
-
-    return QString::fromUtf8(body);
-}
 
 static QString extractCsrfToken(const QString &html)
 {
@@ -273,6 +143,7 @@ static QString extractCsrfToken(const QString &html)
     }
     return {};
 }
+
 
 static QStringList extractTrackStatic(const QString &html)
 {
@@ -309,6 +180,7 @@ static QStringList extractTrackStatic(const QString &html)
     return assets;
 }
 
+
 static QString attrValue(const QString &tag, const QString &attr)
 {
     QRegularExpression re(
@@ -320,6 +192,7 @@ static QString attrValue(const QString &tag, const QString &attr)
     }
     return {};
 }
+
 
 static LiveViewRoot extractLiveViewRoot(const QString &html)
 {
@@ -396,6 +269,7 @@ static LiveViewRoot extractLiveViewRoot(const QString &html)
     return {id, session, staticValue, {}};
 }
 
+
 static QString normalizeHtmlText(QString s)
 {
     s.replace(QRegularExpression(R"(<[^>]+>)"), " ");
@@ -403,6 +277,7 @@ static QString normalizeHtmlText(QString s)
     s.replace(QRegularExpression(R"(\s+)"), " ");
     return s.trimmed();
 }
+
 
 static QString extractTableValueByHeader(const QString &html, const QString &header)
 {
@@ -425,6 +300,7 @@ static QString extractTableValueByHeader(const QString &html, const QString &hea
     return normalizeHtmlText(m.captured(1));
 }
 
+
 static PlayerNames extractPlayerNames(const QString &html)
 {
     PlayerNames names;
@@ -443,6 +319,7 @@ static PlayerNames extractPlayerNames(const QString &html)
     return names;
 }
 
+
 static QString guessLvTopic(const LiveViewRoot &root)
 {
     if (root.id.isEmpty()) {
@@ -451,6 +328,7 @@ static QString guessLvTopic(const LiveViewRoot &root)
     }
     return "lv:" + root.id;
 }
+
 
 static QString buildWsUrl(const QString &csrfToken, const QStringList &trackStatic, const QString &pageUrl)
 {
@@ -476,6 +354,7 @@ static QString buildWsUrl(const QString &csrfToken, const QStringList &trackStat
     return url.toString();
 }
 
+
 static QJsonArray parseFrame(const QString &raw)
 {
     QJsonArray arr;
@@ -496,6 +375,7 @@ static QJsonArray parseFrame(const QString &raw)
 
     return arr;
 }
+
 
 static QString buildCookieHeader(QNetworkAccessManager &nam, const QUrl &url)
 {
@@ -520,6 +400,7 @@ static void appendToBucket(QJsonObject &bucket, const QString &key, const QJsonV
     arr.append(value);
     bucket[key] = arr;
 }
+
 
 static void collectInterestingObject(const QJsonObject &obj, QJsonObject &bucket)
 {
@@ -547,6 +428,7 @@ static void collectInterestingObject(const QJsonObject &obj, QJsonObject &bucket
     }
 }
 
+
 static void collectInteresting(const QJsonValue &v, QJsonObject &bucket)
 {
     if (v.isObject()) {
@@ -558,6 +440,7 @@ static void collectInteresting(const QJsonValue &v, QJsonObject &bucket)
         }
     }
 }
+
 
 static void extractMoveRecordsWalk(const QJsonValue &v, QJsonArray &found)
 {
@@ -603,12 +486,14 @@ static void extractMoveRecordsWalk(const QJsonValue &v, QJsonArray &found)
     }
 }
 
+
 static QJsonArray extractMoveRecordsFromObj(const QJsonValue &obj)
 {
     QJsonArray found;
     extractMoveRecordsWalk(obj, found);
     return found;
 }
+
 
 static bool hasToryo(const QJsonArray &moves)
 {
@@ -627,6 +512,7 @@ static bool hasToryo(const QJsonArray &moves)
 
     return false;
 }
+
 
 static QJsonArray dedupeAndSortMoves(const QJsonArray &moves)
 {
@@ -667,7 +553,8 @@ static QJsonArray dedupeAndSortMoves(const QJsonArray &moves)
     return result;
 }
 
-static QString buildCsaFromMoves(const QJsonArray &moves, const PlayerNames &players)
+
+static QString buildCsaFromMoves(const QJsonArray &moves, const PlayerNames &players, const QString &eventName)
 {
     if (moves.isEmpty()) {
         qCritical() << "No moves that can be converted to CSA";
@@ -679,6 +566,7 @@ static QString buildCsaFromMoves(const QJsonArray &moves, const PlayerNames &pla
     lines << "V2.2";
     lines << "N+" + players.sente;
     lines << "N-" + players.gote;
+    lines << "$EVENT:" + eventName;
     lines << "PI";
     lines << "+";
 
@@ -696,27 +584,31 @@ static QString buildCsaFromMoves(const QJsonArray &moves, const PlayerNames &pla
 
 QList<GameItem> ShogiDB2Fetcher::fetchRss()
 {
-    const QString url = "https://shogidb2.com/rss";
-    QByteArray xml = fetchUrl(QUrl(url));
+    QString url = BASE_URL + "/rss";
+
+#ifdef Q_OS_WASM
+    url.remove(QRegularExpression(R"(^https?://)"));
+    url.prepend("https://shogimaru.com/url/");
+#endif
+
+    QByteArray xml = getHttpReply(url);
     return parseRss(xml);
 }
 
 
-QString ShogiDB2Fetcher::fetch(const QString &pageUrl, int maxNext)
+QString ShogiDB2Fetcher::fetchCsa(const QString &url, int maxNext)
 {
-    QNetworkAccessManager nam;
-    nam.setCookieJar(new QNetworkCookieJar(&nam));
-
-    const QString htmlText = fetchHtml(nam, pageUrl);
+    const QString htmlText = QString::fromUtf8(getHttpReply(url));
     const PlayerNames players = extractPlayerNames(htmlText);
+    const QString eventName = extractTableValueByHeader(htmlText, QStringLiteral("棋戦詳細"));
 
     const QString csrfToken = extractCsrfToken(htmlText);
     const LiveViewRoot lvRoot = extractLiveViewRoot(htmlText);
 
     const QStringList trackStatic = extractTrackStatic(htmlText);
     const QString topic = guessLvTopic(lvRoot);
-    const QString wsUrl = buildWsUrl(csrfToken, trackStatic, pageUrl);
-    const QString cookieHeader = buildCookieHeader(nam, QUrl(BASE_URL));
+    const QString wsUrl = buildWsUrl(csrfToken, trackStatic, url);
+    const QString cookieHeader = buildCookieHeader(_manager, QUrl(BASE_URL));
 
     QJsonArray trackStaticJson;
     for (const auto &x : trackStatic) {
@@ -724,7 +616,7 @@ QString ShogiDB2Fetcher::fetch(const QString &pageUrl, int maxNext)
     }
 
     QJsonArray cookieNames;
-    for (const auto &c : nam.cookieJar()->cookiesForUrl(QUrl(BASE_URL))) {
+    for (const auto &c : _manager.cookieJar()->cookiesForUrl(QUrl(BASE_URL))) {
         cookieNames.append(QString::fromUtf8(c.name()));
     }
 
@@ -850,7 +742,7 @@ QString ShogiDB2Fetcher::fetch(const QString &pageUrl, int maxNext)
         params["_track_static"] = track;
 
         QJsonObject joinPayload;
-        joinPayload["url"] = pageUrl;
+        joinPayload["url"] = url;
         joinPayload["params"] = params;
         joinPayload["session"] = lvRoot.session;
         joinPayload["static"] = lvRoot.staticValue;
@@ -958,7 +850,7 @@ QString ShogiDB2Fetcher::fetch(const QString &pageUrl, int maxNext)
     QNetworkRequest wsReq {QUrl(wsUrl)};
     wsReq.setRawHeader("User-Agent", USER_AGENT);
     wsReq.setRawHeader("Origin", BASE_URL.toUtf8());
-    wsReq.setRawHeader("Referer", pageUrl.toUtf8());
+    wsReq.setRawHeader("Referer", url.toUtf8());
     wsReq.setRawHeader("Cookie", cookieHeader.toUtf8());
     wsReq.setRawHeader("Cache-Control", "no-cache");
     wsReq.setRawHeader("Pragma", "no-cache");
@@ -985,6 +877,45 @@ QString ShogiDB2Fetcher::fetch(const QString &pageUrl, int maxNext)
         //throw std::runtime_error(QString("Could not extract 'moves'").toStdString());
     }
 
-    return buildCsaFromMoves(dedupedMoves, players);
+    return buildCsaFromMoves(dedupedMoves, players, eventName);
 }
 
+
+QByteArray ShogiDB2Fetcher::getHttpReply(const QString &url, int timeout)
+{
+    QNetworkRequest req(url);
+    req.setRawHeader("User-Agent", USER_AGENT);
+    req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    req.setRawHeader("Accept-Language", "ja,en-US;q=0.9,en;q=0.8");
+    req.setRawHeader("Referer", (BASE_URL + "/").toUtf8());
+    req.setRawHeader("Cache-Control", "no-cache");
+    req.setRawHeader("Pragma", "no-cache");
+
+    QNetworkReply *reply = _manager.get(req);
+    QByteArray body;
+    QEventLoop loop;
+    QTimer timer;
+    timer.setSingleShot(true);
+
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+
+    timer.start(timeout);
+    loop.exec();
+
+    if (timer.isActive()) {
+        timer.stop();
+        if (reply->error() != QNetworkReply::NoError) {
+            const QString err = reply->errorString();
+            qCritical() << err;
+        } else {
+            body = reply->readAll();
+        }
+    } else {
+        reply->abort();
+        qCritical() <<"Network timeout";
+    }
+
+    reply->deleteLater();
+    return body;
+}

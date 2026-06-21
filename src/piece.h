@@ -49,6 +49,7 @@ public:
     Name name() const { return _name; }
     QString kanjiName() const;
     QByteArray sfen() const;
+    int coord() const { return data(maru::Coord).toInt(); }
     maru::Turn owner() const { return _owner; }
     void setOwner(maru::Turn owner) { _owner = owner; }
     bool isPromoted() const;

@@ -54,7 +54,7 @@ QString Recorder::record(const QPair<Piece *, QString> &move, bool check, const 
         return QString();
     }
 
-    int coord = piece->data(maru::Coord).toInt();
+    int coord = piece->coord();
     int fromcrd = move.second.toInt();
     bool promoted = move.second.contains('+');
 
@@ -110,7 +110,7 @@ QString Recorder::kifString(maru::Turn turn, const QPair<Piece *, QString> &move
     QByteArray usi;
     QByteArray piece = move.first->sfen();
     int fromcrd = move.second.toInt();
-    int tocoord = move.first->data(maru::Coord).toInt();
+    int tocoord = move.first->coord();
     if (fromcrd < 11 || fromcrd > 99) {
         // 打つ
         usi += piece.toUpper();
@@ -188,6 +188,15 @@ bool Recorder::isIllegalMove(int index) const
         maru::Illegal_OverlookedCheck, maru::Illegal_PerpetualCheck, maru::Illegal_Other};
 
     return index == _pvList.count() - 1 && IllegalMoves.contains(_result.second);
+}
+
+// 王手か
+bool Recorder::isCheckMove(int index) const
+{
+    if (index > 0 && index <= _illegalItems.count()) {
+        return _illegalItems[index - 1].check;
+    }
+    return false;
 }
 
 // 指し手 index:インデックス(0オリジン)

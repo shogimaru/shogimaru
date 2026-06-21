@@ -35,7 +35,6 @@ signals:
     void saveFileSelected(const QString &filePath);
 
 private:
-    bool isReadable(const QString &text);
     bool validate(const QString &record);
     template <typename Func> void request(const QString &url, Func slot);
 

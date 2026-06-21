@@ -3,6 +3,6 @@
 
 namespace maru {
 
-QString fromShiftJis(const QByteArray &sjis);
+QString fromShiftJis(const QByteArray &sjis, bool &error);
 
 }

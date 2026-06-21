@@ -414,25 +414,19 @@ bool Engine::go(const QByteArrayList &moves, bool ponder, int senteTime, int got
         return false;
     }
 
-    QByteArray cmd = "position ";
+    position(_startPositionSfen, moves);
+    QByteArray cmd;
     cmd.reserve(256);
-    cmd += (_startPositionSfen.isEmpty()) ? QByteArray("startpos") : QByteArray("sfen ") + _startPositionSfen;
-    if (!moves.isEmpty()) {
-        cmd += " moves ";
-        cmd += moves.join(' ');
-    }
-    Command::instance().request(cmd.toStdString());
-    // qDebug() << "cmd: " << cmd;
 
     if (ponder) {
         _state = Pondering;
         _ponderingMoves = moves;
-        cmd = "go ponder";
+        cmd += "go ponder";
     } else {
         _state = Going;
         _ponderingMoves.clear();
         _lastPondered.clear();
-        cmd = "go";
+        cmd += "go";
     }
 
     cmd += substrTime();
@@ -449,12 +443,13 @@ void Engine::stop()
 
     switch (_state) {
     case Idle:
-        Command::instance().request("stop");
+        //Command::instance().request("stop");
         break;
 
     case Going:
     case Pondering:
         Command::instance().request("stop");
+        Command::instance().pollFor("bestmove", 1000, response);
         Command::instance().clearResponse();
         _state = Idle;
         break;
@@ -468,42 +463,54 @@ void Engine::stop()
 }
 
 
-bool Engine::mated(const QByteArrayList &moves)
+void Engine::position(const QByteArray &startPosition, const QByteArrayList &moves)
 {
-    QByteArray startpos = (_startPositionSfen.isEmpty()) ? QByteArray("startpos") : _startPositionSfen;
-    return mated(startpos, moves);
+    QString cmd = (startPosition.isEmpty()) ? QByteArray("position startpos") : QByteArray("position sfen ") + startPosition;
+
+    if (!moves.isEmpty()) {
+        cmd.reserve(1024);
+        cmd += " moves ";
+        cmd += moves.join(" ");
+    }
+
+    Command::instance().request(cmd.toStdString());
 }
 
+// 詰将棋用
+// bool Engine::mated(const QByteArrayList &moves)
+// {
+//     QByteArray startpos = (_startPositionSfen.isEmpty()) ? QByteArray("startpos") : _startPositionSfen;
+//     return mated(startpos, moves);
+// }
 
-bool Engine::mated(const QByteArray &startPosition, const QByteArrayList &moves)
-{
-    // エンジンは打ち歩詰めを反則と認識するので局面を初期配置として送って判断させること
+// 詰将棋用
+// bool Engine::mated(const QByteArray &startPosition, const QByteArrayList &moves)
+// {
+//     // エンジンは打ち歩詰めを反則と認識するので局面を初期配置として送って判断させること
 
-    switch (_state) {
-    case Idle:
-    case Going:
-    case Pondering: {
-        QString cmd = QString("position sfen ") + startPosition;
-        if (!moves.isEmpty()) {
-            cmd += " moves ";
-            cmd += moves.join(" ");
-        }
+//     switch (_state) {
+//     case Idle:
+//     case Going:
+//     case Pondering: {
+//         stop();
+//         position(startPosition, moves);
+//         Command::instance().request("go mate 100");
+//         std::list<std::string> res;
+//         Command::instance().pollFor("bestmove", 1000, res);
+//         stop();
 
-        Command::instance().request(cmd.toStdString());
-        Command::instance().request("mated");
-        auto res = Command::instance().poll(1000);
-        if (res.empty()) {
-            return false;
-        }
-        return (*res.begin() == "1");
-    }
-    case GameReady:
-    default:
-        // do nothing
-        break;
-    }
-    return false;
-}
+//         if (res.empty()) {
+//             return false;
+//         }
+//         return (res.front().find("score mate -0 ") != std::string::npos || res.front().find("score mate -1 ") != std::string::npos);
+//     }
+//     case GameReady:
+//     default:
+//         // do nothing
+//         break;
+//     }
+//     return false;
+// }
 
 
 void Engine::quit()

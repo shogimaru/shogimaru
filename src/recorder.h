@@ -65,6 +65,7 @@ public:
     bool isRepetition() const;  // 最後の手が千日手か
     bool isPerpetualCheck() const;  // 連続王手の千日手か
     bool isIllegalMove(int index) const;  // 禁じ手か
+    bool isCheckMove(int index) const;  // 王手か
     QByteArray move(int index) const;  // 指し手
     QByteArrayList moves(int index) const;
     QByteArray sfen(int index) const;

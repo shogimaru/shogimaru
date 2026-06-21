@@ -66,9 +66,10 @@ public:
     void quit();
     bool go(const QByteArrayList &position, int senteTime, int goteTime, int byoyomi, int incTime);  // 考慮開始
     bool ponder(int senteTime, int goteTime, int byoyomi, int incTime);  // 先読み開始
+    void position(const QByteArray &startPosition, const QByteArrayList &moves); // 局面を送信
     void stop();  // 考慮中止
-    bool mated(const QByteArrayList &moves);  // 局面が詰んでいるか
-    bool mated(const QByteArray &startPosition, const QByteArrayList &moves = QByteArrayList());
+    //bool mated(const QByteArrayList &moves);  // 局面が詰んでいるか（詰将棋用）
+    //bool mated(const QByteArray &startPosition, const QByteArrayList &moves = QByteArrayList());  // 詰将棋用
     QByteArray lastPondered() const { return _lastPondered; }
     maru::Turn currentTurn() const { return _turn; }
     bool hasSkillLevelOption() const;

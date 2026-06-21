@@ -52,6 +52,7 @@ std::string CBus::get(int msecs)
         ret = _commands.front();
         _commands.pop_front();
     }
+    //qDebug() << ret;
     return ret;
 }
 
@@ -76,6 +77,7 @@ std::list<std::string> CBus::getAll(int msecs)
         ret = _commands;  // copy
         _commands.clear();
     }
+
     return ret;
 }
 
@@ -158,6 +160,7 @@ bool Command::pollFor(const std::string &waitingResponse, int msecs, std::list<s
     do {
         auto res = _response->get(ms);
         if (!res.empty()) {
+            //qDebug() << "##" << res.c_str();
             response.push_back(res);
 
             if (res.find(waitingResponse) == 0) {

@@ -135,7 +135,7 @@ void Board::updatePos()
     for (auto *piece : items()) {
         Piece *p = dynamic_cast<Piece *>(piece);
         if (p) {
-            int crd = p->data(maru::Coord).toInt();
+            int crd = p->coord();
             if (crd >= 11 && crd <= 99) {
                 // 盤上
                 int col = NUM_ROWS - (crd / 10);
@@ -292,7 +292,7 @@ void Board::act()
         return;
     }
 
-    int dstCrd = dst->data(maru::Coord).toInt();
+    int dstCrd = dst->coord();
 
     // 駒移動 or 打てるか
     if (!canMove(_current, dstCrd)) {
@@ -318,7 +318,7 @@ void Board::act()
     }
 
     // 持ち駒は打つ（成れない）
-    int currentCrd = _current->data(maru::Coord).toInt();
+    int currentCrd = _current->coord();
     if (currentCrd < 11 || currentCrd > 99) {
         move(_current, dst, false);
         _current = nullptr;
@@ -376,7 +376,7 @@ QList<Piece *> Board::searchMovablePeace(maru::Turn turn, int coord) const
     for (QGraphicsItem *item : items()) {
         Piece *piece = dynamic_cast<Piece *>(item);
         if (piece && piece->name() != Piece::None) {
-            int crd = piece->data(maru::Coord).toInt();
+            int crd = piece->coord();
             if (crd >= 11 && crd <= 99 && piece->owner() == turn) {
                 if (canMove(piece, coord)) {
                     ret << piece;
@@ -433,7 +433,7 @@ static auto search_piece = [](const QList<QGraphicsItem *> &items, int coord) ->
     for (auto *item : items) {
         Piece *p = dynamic_cast<Piece *>(item);
         if (p) {
-            if (p->data(maru::Coord).toInt() == coord) {
+            if (p->coord() == coord) {
                 return p;
             }
         }
@@ -461,7 +461,7 @@ QList<Piece *> Board::pieces(maru::Turn owner, Piece::Name name) const
     for (auto *piece : items()) {
         Piece *p = dynamic_cast<Piece *>(piece);
         if (p) {
-            int crd = p->data(maru::Coord).toInt();
+            int crd = p->coord();
             if (p->name() == name && p->owner() == owner && crd >= 11 && crd <= 99) {
                 pieces << (Piece *)p;
             }
@@ -487,10 +487,10 @@ QList<Piece *> Board::piecesInHand(maru::Turn owner) const
     QList<Piece *> pieces;
 
     for (auto *p : items()) {
-        p = dynamic_cast<Piece *>(p);
-        if (p) {
-            if (p->data(maru::Coord).toInt() == owner) {
-                pieces << (Piece *)p;
+        Piece *pc = dynamic_cast<Piece *>(p);
+        if (pc) {
+            if (pc->coord() == owner) {
+                pieces << pc;
             }
         }
     }
@@ -504,7 +504,7 @@ int Board::kingCoord(maru::Turn owner) const
     plist << pieces(owner, Piece::KingOu);
     plist << pieces(owner, Piece::KingGyoku);
     const Piece *piece = plist.first();
-    return piece->data(maru::Coord).toInt();
+    return piece->coord();
 }
 
 
@@ -519,8 +519,8 @@ void Board::move(Piece *from, Piece *to, bool promote, bool update)
     }
 
     from->setBadge(0);
-    int fromcrd = from->data(maru::Coord).toInt();  // 元のマス位置
-    int crd = to->data(maru::Coord).toInt();  // 先のマス位置
+    int fromcrd = from->coord();  // 元のマス位置
+    int crd = to->coord();  // 先のマス位置
     if (!crd) {
         qDebug() << "items:" << items().count();
     }
@@ -635,6 +635,39 @@ static const MovableCoordsMap &movableCoordsMap()
     return map;
 }
 
+// 玉が移動できるマス（移動先に駒の有無は無視）
+QList<int> Board::getKingMovableCoords(maru::Turn owner) const
+{
+    QList<int> coords;
+
+    QList<Piece *> plist;
+    plist << pieces(owner, Piece::KingOu);
+    plist << pieces(owner, Piece::KingGyoku);
+    const Piece *piece = plist.first();
+
+    if (!piece || piece->name() == Piece::None) {
+        return coords;
+    }
+
+    const int currentCrd = piece->coord();
+
+    if (currentCrd < 11 || currentCrd > 99) {  // 駒打ち
+        return coords;
+    }
+
+    MovableCoords crds = movableCoordsMap().value(piece->owner() | piece->name());
+
+    // 1マス移動
+    for (int d : crds[0]) {
+        int movable = currentCrd + d;
+        if (movable >= 11 && movable <= 99 && (movable % 10)) {
+            coords << movable;
+        }
+    }
+
+    return coords;
+}
+
 
 // 駒として移動できるマスか／駒が打てるかの判定
 bool Board::canMove(const Piece *piece, int coord) const
@@ -646,7 +679,7 @@ bool Board::canMove(const Piece *piece, int coord) const
     }
 
     MovableCoords crds = movableCoordsMap().value(piece->owner() | piece->name());
-    const int currentCrd = piece->data(maru::Coord).toInt();
+    const int currentCrd = piece->coord();
 
     if (currentCrd < 11 || currentCrd > 99) {  // 駒打ち
         // マスに駒がないか
@@ -655,6 +688,7 @@ bool Board::canMove(const Piece *piece, int coord) const
             return ret;
         }
 
+        // 打てるマスか
         int row = coord % 10;
         ret = crds[2].contains(row);
 
@@ -665,7 +699,7 @@ bool Board::canMove(const Piece *piece, int coord) const
             // 長距離移動
             for (int d : crds[1]) {
                 int crt = currentCrd;
-                while (crt >= 11 && crt <= 99) {
+                while (crt >= 11 && crt <= 99 && (crt % 10)) {
                     crt += d;
                     if (crt == coord) {
                         ret = true;
@@ -683,15 +717,111 @@ bool Board::canMove(const Piece *piece, int coord) const
     return ret;
 }
 
-
+// 王手か
 bool Board::isCheck() const
 {
-    auto *piece = lastMovedPiece().first;
-    if (piece) {
-        maru::Turn opponent = (piece->owner() == maru::Sente) ? maru::Gote : maru::Sente;
-        return canMove(piece, kingCoord(opponent));
+    maru::Turn kingside = _currentTurn;
+    maru::Turn checkingside = (_currentTurn == maru::Sente) ? maru::Gote : maru::Sente;
+    return !searchMovablePeace(checkingside, kingCoord(kingside)).isEmpty();
+}
+
+
+bool Board::mated() const
+{
+    maru::Turn kingside = _currentTurn;
+    maru::Turn checkingside = (_currentTurn == maru::Sente) ? maru::Gote : maru::Sente;
+
+    int kingcrd = kingCoord(kingside);
+    const auto checkpcs = searchMovablePeace(checkingside, kingcrd);  // 王手している駒
+
+    if (checkpcs.isEmpty()) {
+        return false;
     }
-    return false;
+
+    // 王手した駒を玉以外の自駒で取れるか
+    if (checkpcs.count() == 1) {
+        int chkcrd = checkpcs[0]->coord();  // 王手している駒の位置
+        auto pics = searchMovablePeace(kingside, chkcrd);
+        for (auto p : pics) {
+            if (p->name() != Piece::KingOu && p->name() != Piece::KingGyoku) {
+                return false;
+            }
+        }
+    }
+
+    // 玉の逃げ場があるか
+    auto coords = getKingMovableCoords(kingside);  // 玉の移動可能マス
+    for (int c : coords) {
+        auto *pic = piece(c);
+        if (pic->name() == Piece::None || pic->owner() == checkingside) {
+            auto pics = searchMovablePeace(checkingside, c);  // 相手の駒が利いているか
+            if (pics.isEmpty()) {
+                return false;
+            }
+        }
+    }
+
+    // 駒と駒の間のマスを探すラムダ
+    auto getGaps = [](int a, int b, int direction) {
+        QList<int> gaps;
+
+        do {
+            b += direction;
+            if (b == a) {
+                return gaps;
+            }
+            gaps << b;
+        } while (b >= 11 && b <= 99 && (b % 10));
+
+        gaps.clear();
+        return gaps;
+    };
+
+    // 飛車、角、龍、馬、香の王手の場合で合駒が打てるか
+    if (checkpcs.count() == 1) {
+        const auto *chkpc = checkpcs[0];
+        if (chkpc->name() == Piece::Rook || chkpc->name() == Piece::Bishop
+            || chkpc->name() == Piece::Lance || chkpc->name() == Piece::PromotedRook
+            || chkpc->name() == Piece::PromotedBishop) {
+
+            QList<int> directions;
+
+            if (chkpc->name() == Piece::Rook || chkpc->name() == Piece::PromotedRook) {
+                directions = {-1, 1, -10, 10};  // 飛車、龍
+            } else if (chkpc->name() == Piece::Bishop || chkpc->name() == Piece::PromotedBishop) {
+                directions = {-11, 11};  // 角、馬
+            } else {
+                directions = {-1, 1};  // 香
+            }
+
+            QList<int> gapcrds;
+            int chkcrd = chkpc->coord();  // 王手している駒の位置
+
+            for (int d : directions) {
+                auto gaps = getGaps(kingcrd, chkcrd, d);
+                if (gaps.isEmpty()) {
+                    continue;
+                }
+
+                for (auto gp : gaps) {
+                    // 打てる合駒があるか
+                    auto hands = piecesInHand(kingside);
+                    for (auto hndpc : hands) {
+                        if (canMove(hndpc, gp)) {
+                            return false;
+                        }
+                    }
+
+                    // 移動合ができるか
+                    if (!searchMovablePeace(kingside, gp).isEmpty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 

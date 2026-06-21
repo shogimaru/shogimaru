@@ -96,8 +96,9 @@ void RecordDialog::parseRecord()
 
     auto kifu = reply->readAll();
     // SJISでトライ
-    QString str = maru::fromShiftJis(kifu);
-    if (!isReadable(str)) {  // 文字化けならUTF-8で読み込む
+    bool error;
+    QString str = maru::fromShiftJis(kifu, error);
+    if (error) {  // 文字化けならUTF-8で読み込む
         str = QString::fromUtf8(kifu);
     }
 
@@ -109,25 +110,15 @@ void RecordDialog::parseRecord()
     QDialog::accept();
 }
 
-// 文字化け有無
-bool RecordDialog::isReadable(const QString &text)
-{
-    for (auto c : text) {
-        if (c.category() < 3 || c.category() == QChar::Symbol_Modifier) {
-            return false;
-        }
-    }
-    return !text.isEmpty();
-};
-
 
 void RecordDialog::openFile()
 {
     auto fileContentReady = [this](const QString &, const QByteArray &fileContent) {
         if (!fileContent.isEmpty()) {
             // SJISでトライ
-            QString str = maru::fromShiftJis(fileContent);
-            if (!isReadable(str)) {  // 文字化けならUTF-8で読み込む
+            bool error;
+            QString str = maru::fromShiftJis(fileContent, error);
+            if (error) {  // 文字化けならUTF-8で読み込む
                 str = QString::fromUtf8(fileContent);
             }
 
@@ -194,17 +185,17 @@ void RecordDialog::request(const QString &url, Func slot)
 
 void RecordDialog::open()
 {
-    constexpr int NUM_RECORDS = 100;
-    const QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
+//     constexpr int NUM_RECORDS = 100;
+//     const QString ShogiDbUrl = "https://api.shogidb2.com/latest?offset=0&limit=%1";
 
-    auto url = ShogiDbUrl.arg(NUM_RECORDS);
-#ifdef Q_OS_WASM
-    url.remove(QRegularExpression(R"(^https?://)"));
-    url.prepend("https://shogimaru.com/url/");
-#endif
+//     auto url = ShogiDbUrl.arg(NUM_RECORDS);
+// #ifdef Q_OS_WASM
+//     url.remove(QRegularExpression(R"(^https?://)"));
+//     url.prepend("https://shogimaru.com/url/");
+// #endif
 
     // HTTP request
-    _errorCount = 0;
+    //_errorCount = 0;
     //request(url, &RecordDialog::parseJsonArray);
 
     _ui->textEdit->clear();
@@ -283,31 +274,21 @@ void RecordDialog::loadItem(QListWidgetItem *item)
 
 void RecordDialog::readRecord(const QString &id)
 {
-#if 1
-    const QString Db2Url("https://shogidb2.com/games/%1");
     ShogiDB2Fetcher fetcher;
-    QString csa = fetcher.fetch(Db2Url.arg(id));
+
+#ifdef Q_OS_WASM
+    const QString url("https://shogimaru.com/csa/%1");
+    QString csa = fetcher.getHttpReply(url.arg(id));
+#else
+    const QString Db2Url("https://shogidb2.com/games/%1");
+    QString csa = fetcher.fetchCsa(Db2Url.arg(id));
+#endif
 
     if (!csa.isEmpty() && validate(csa)) {
         accept();
     } else {
         MessageBox::information(tr("Notation Error"), tr("Load Error"));
     }
-#else
-//     const QString Db2Url("https://api.shogidb2.com/games/%1");
-
-//     auto url = Db2Url.arg(id);
-// #ifdef Q_OS_WASM
-//     url.remove(QRegularExpression(R"(^https?://)"));
-//     url.prepend("https://shogimaru.com/url/");
-// #endif
-
-//     if (!id.isEmpty()) {
-//         // HTTP request
-//         request(url, &RecordDialog::parseRecordJson);
-//         _ui->listWidget->setEnabled(false);
-//     }
-#endif
 }
 
 

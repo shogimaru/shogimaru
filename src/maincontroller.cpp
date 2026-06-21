@@ -98,10 +98,15 @@ MainController::MainController(QWidget *parent) :
     _opeButtonGroup(new OperationButtonGroup)
 {
     _ui->setupUi(this);
+    // 棋士名フォント
+    QFont plfont = _ui->senteLabel->font();
+    plfont.setPixelSize(15);
+    _ui->senteLabel->setFont(plfont);
+    _ui->goteLabel->setFont(plfont);
     // 棋譜フォント
-    QFont font = _ui->recordWidget->font();
-    font.setPixelSize(14);
-    _ui->recordWidget->setFont(font);
+    QFont recfont = _ui->recordWidget->font();
+    recfont.setPixelSize(14);
+    _ui->recordWidget->setFont(recfont);
     _ui->centralWidget->setLayout(_ui->mainVLayout);  // レイアウト
     // 評価グラフ
     _graph->setParent(_ui->graphWidget);
@@ -172,7 +177,7 @@ MainController::MainController(QWidget *parent) :
     connect(&Engine::instance(), &Engine::serializingModel, this, &MainController::showSerializingModel);
     connect(_clock, &ChessClock::secondElapsed, this, &MainController::updateRemainingTime);
     connect(_clock, &ChessClock::timeout, this, &MainController::gameoverTimeout);
-    connect(_board, &Board::moved, this, &MainController::move);
+    connect(_board, &Board::moved, this, &MainController::move, Qt::QueuedConnection);
     connect(_graph, &EvaluationGraph::currentMoveChanged, this, &MainController::setCurrentRecordRow);
     connect(_ui->recordWidget, &QListWidget::currentRowChanged, _graph, &EvaluationGraph::setCurrentMove);
     connect(_ui->messageTableWidget, &QTableWidget::currentCellChanged, this, &MainController::slotPonderedItemSelected);
@@ -186,7 +191,7 @@ MainController::MainController(QWidget *parent) :
     connect(_opeButtonGroup, &OperationButtonGroup::lastPosition, this, &MainController::showLastPosition);
     _ponderTimer.callOnTimeout(this, &MainController::slotAnalysisTimeout);
 
-    auto scaleBoard = [=](int index) {  // 拡大率変更
+    auto scaleBoard = [this](int index) {  // 拡大率変更
         int scale = _boardScaleBox->itemData(index).toInt();
         if (scale > 0) {
             _boardScale = scale;
@@ -671,6 +676,13 @@ void MainController::startGo()
         _analysisTimerId = startTimer(1000);
         _analysisTotalTime.start();
         _analysisTime.start();
+
+        User &user = User::load();
+        int pondtime = user.analysisTimeSeconds() * 1000;
+        if (pondtime > 0) {
+            // 解析時間タイマー
+            _ponderTimer.start(pondtime);  // restart
+        }
     } else {
         qCritical() << "Invalid mode:" << _mode << "line:" << __LINE__;
     }
@@ -960,15 +972,10 @@ bool MainController::isIllegalMove()
             }
 
             // 打ち歩詰めチェック
-            bool check = _board->isCheck();
-            if (check) {  // 王手か
-                QByteArray sfen = _recorder->sfen(_recorder->count() - 1);
-                bool mated = Engine::instance().mated(sfen);  // その局面が詰んでいるか
-                if (mated) {
-                    stopGame(currentTurn, maru::Illegal, maru::Illegal_DropPawnMate);
-                    showGameoverBox(tr("Illegal - Drop Pawn Mate."));  // 打ち歩詰めは禁じ手です。
-                    return true;
-                }
+            if (_board->mated()) {
+                stopGame(currentTurn, maru::Illegal, maru::Illegal_DropPawnMate);
+                showGameoverBox(tr("Illegal - Drop Pawn Mate."));  // 打ち歩詰めは禁じ手です。
+                return true;
             }
         }
 
@@ -1027,16 +1034,11 @@ void MainController::setTurn(maru::Turn turn)
 
     if (_mode == Rating || _mode == Game) {
         if (_players[turn].type() == maru::Human) {
-            if (_board->isCheck()) {  // 最後の手が王手か
-                // 詰みチェック
-                Engine::instance().stop();
-                bool mated = Engine::instance().mated(_recorder->sfen(_recorder->count() - 1));
-                if (mated) {
-                    // 詰み
-                    stopGame(turn, maru::Loss, maru::Loss_Resign);
-                    showGameoverBox(tr("Checkmate."));  // 詰みました
-                    return;
-                }
+            if (_board->mated()) {  // 詰みチェック
+                // 詰み
+                stopGame(turn, maru::Loss, maru::Loss_Resign);
+                showGameoverBox(tr("Checkmate."));  // 詰みました
+                return;
             }
         }
 
@@ -1188,11 +1190,6 @@ void MainController::pondered(const PonderInfo &info)
         // 最新の先読み情報
         _lastPonder = pi;
 
-        // 詰みありになるとエンジンは読み筋を返さなくなる場合あり
-        if (pi.mate || _ponderTimer.isActive()) {
-            _ponderTimer.start(20000);  // restart
-        }
-
         User &user = User::load();
         if (pi.pv.value(0) == "resign"
             || (_analysisTime.elapsed() >= user.analysisTimeSeconds() * 1000 && user.analysisTimeSeconds() > 0)
@@ -1217,7 +1214,7 @@ void MainController::nextAnalysis()
     if (_analysisMoves < _recorder->count() - 1) {
         // 次の手解析
         while (true) {
-            auto staticsfen = _recorder->sfen(++_analysisMoves);  // 次の局面へ
+            ++_analysisMoves;  // 次の局面へ
 
             // 禁じ手か
             bool illegal = _recorder->isIllegalMove(_analysisMoves);
@@ -1228,11 +1225,12 @@ void MainController::nextAnalysis()
             }
 
             // 詰みでないかどうか
-            bool mated = Engine::instance().mated(staticsfen);
-            if (!mated) {
+            setCurrentRecordRow(_analysisMoves);
+            if (!_board->mated()) {
                 break;
             }
 
+            // 詰みの場合
             auto turn = _recorder->turn(_analysisMoves);
             int score = (turn == maru::Sente) ? -9999 : 9999;
             _recorder->recordPonderingScore(_analysisMoves, 1, ScoreItem(score));
@@ -1247,9 +1245,14 @@ void MainController::nextAnalysis()
         // 解析開始
         auto sfen = _recorder->sfenMoves(_analysisMoves);
         Engine::instance().analysis(sfen);
-        setCurrentRecordRow(_analysisMoves);
         _analysisTime.start();
         _ui->messageTableWidget->clear();  // クリア
+
+        User &user = User::load();
+        int pondtime = user.analysisTimeSeconds() * 1000;
+        if (pondtime > 0) {
+            _ponderTimer.start(pondtime);  // restart
+        }
 
     } else {
         // 解析終了
@@ -1293,7 +1296,7 @@ void MainController::stopAnalysis()
 
 void MainController::slotAnalysisTimeout()
 {
-    qDebug() << "Detected non-communication for analysis";
+    qDebug() << "Ponder timed out";
     nextAnalysis();
 }
 
@@ -1706,8 +1709,15 @@ void MainController::startAnalysis()
         return;
     }
 
-    showSpinner();  // スピナー表示
     int moves = (_analysisDialog->scope() == AnalysisDialog::All) ? 0 : qBound(0, _ui->recordWidget->currentRow(), _recorder->count() - 1);
+
+    if (_board->mated()) {  // 詰みチェック
+        _analysisMoves = moves;
+        stopAnalysis();
+        return;
+    }
+
+    showSpinner();  // スピナー表示
     bool startok = startEngineForAnalysis(moves);
     showRemainingTime(maru::Sente, 0, 0);  // 先手残り時間
     showRemainingTime(maru::Gote, 0, 0);  // 後手残り時間
@@ -1899,9 +1909,14 @@ void MainController::loadSfen()
     clear();
     QListWidgetItem *item = nullptr;
     Sfen sfen = _recordDialog->result();
+    _board->startGame(Sfen::defaultPostion());
+    maru::Turn turn = maru::Sente;
 
     for (auto &mv : sfen.allMoves()) {
-        QString kif = _recorder->record(mv.first, mv.second, false);
+        _board->movePieceByUsi(mv.second, turn, false);  // 駒を動かして王手チェック
+        turn = (turn == maru::Sente) ? maru::Gote : maru::Sente;
+        bool check = _board->isCheck();
+        QString kif = _recorder->record(mv.first, mv.second, check);
         int count = _ui->recordWidget->count();
         QString str = QString("%1  %2").arg(count, 3).arg(kif);
         item = new QListWidgetItem(str, _ui->recordWidget);
